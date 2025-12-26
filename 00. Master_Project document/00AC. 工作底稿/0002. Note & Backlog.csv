@@ -46,5 +46,6 @@ MM 	 DD 	 Description 	    Progress
 12	11	 index需修改跟各模組對應路徑	 Open
 12	11	 需釐清從LINE記帳(而沒有從app端註冊)的user的註冊流程。流程應是：使用者加入LINE OA後記第一筆帳時，WH->LBK->AM註冊並在firebase開一個帳戶及帳本後->在firebase記帳	 Closed
 12	11	 若已在LINE記過帳的user到app如何註冊及綁定？	 Open
+12	17	 設定LINE OA裡面輸入?會跳出使用說明	 Open
 12	17	 研究memo qucik reply功能	 Closed
 12	24	 若要編輯工作日誌或任何文件，請在main branch裡面做	 Critical

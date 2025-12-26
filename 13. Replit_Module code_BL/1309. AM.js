@@ -1,14 +1,14 @@
 /**
  * 1309. AM.js - 帳號管理模組
- * @version v8.0.3
- * @date 2025-12-16
+ * @version v8.0.4
+ * @date 2025-12-19
  * @description 處理用戶註冊、登入、帳本基礎結構初始化等功能
  * @compliance 嚴格遵守0070文件 - 禁止hard coding，遵守dataflow
- * @update v8.0.3: DCN-0023職責重構 - 完全移除與WCM模組重複功能，職責邊界清晰
+ * @update v8.0.4: 階段五整合 - 新增LBK模組pendingTransactions子集合初始化功能
  */
 
 console.log('🔍 AM.js 模組開始載入...');
-console.log('📋 AM.js 版本: v8.0.3');
+console.log('📋 AM.js 版本: v8.0.4');
 
 // 引入必要模組
 console.log('📦 AM.js: 開始引入依賴模組...');
@@ -137,6 +137,14 @@ try {
 
 const BM = require("./1312. BM.js");
 const CM = require("./1313. CM.js");
+
+// 階段五新增：引入LBK模組用於pendingTransactions子集合初始化
+let LBK;
+try {
+  LBK = require("./1315. LBK.js");
+} catch (error) {
+  console.warn('⚠️ LBK模組載入失敗，pendingTransactions初始化將跳過:', error.message);
+}
 
 // 備用函數已移除 - 科目和配置管理功能已轉移至WCM模組 (DCN-0023)
 
@@ -1432,6 +1440,7 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
     let walletCount = 0;
     let budgetInitialized = false;
     let collaborationInitialized = false;
+    let pendingTransactionsInitialized = false; // 移到函數開始定義
 
     try {
       // 1. 調用WCM模組進行科目初始化
@@ -1449,19 +1458,25 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
         console.warn(`⚠️ ${functionName}: WCM模組不可用，科目初始化跳過`);
       }
 
-      // 2. 調用WCM模組進行帳戶初始化
-      console.log(`💳 ${functionName}: 調用WCM模組進行帳戶初始化...`);
+      // 2. 調用WCM模組進行帳戶初始化 - 統一wallet概念
+      console.log(`💳 ${functionName}: 調用WCM模組進行wallets子集合初始化...`);
 
       if (WCM && typeof WCM.WCM_createWallet === 'function') {
         const walletResult = await WCM.WCM_createWallet(userLedgerId, { userId: UID }, { createDefaultWallets: true });
         if (walletResult.success) {
           walletCount = walletResult.data.totalWallets || 0;
-          console.log(`✅ ${functionName}: WCM帳戶初始化完成，建立${walletCount}個帳戶`);
+          console.log(`✅ ${functionName}: WCM wallets子集合初始化完成，建立${walletCount}個錢包帳戶`);
+
+          // 確保wallets子集合與系統其他部分的wallet概念統一
+          console.log(`🔗 ${functionName}: wallet概念統一 - 所有支付方式現在都統一使用wallet ID`);
         } else {
-          console.warn(`⚠️ ${functionName}: WCM帳戶初始化失敗: ${walletResult.error?.message || walletResult.message}`);
+          console.warn(`⚠️ ${functionName}: WCM wallets初始化失敗: ${walletResult.error?.message || walletResult.message}`);
+          // 設置預設wallet以確保系統可正常運作
+          walletCount = 0;
         }
       } else {
-        console.warn(`⚠️ ${functionName}: WCM模組不可用，帳戶初始化跳過`);
+        console.warn(`⚠️ ${functionName}: WCM模組不可用，無法初始化wallets子集合`);
+        walletCount = 0;
       }
 
       // 3. 調用BM模組進行預算結構初始化
@@ -1482,6 +1497,21 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
         console.log(`✅ ${functionName}: CM協作結構初始化完成`);
       } else {
         console.warn(`⚠️ ${functionName}: CM協作結構初始化失敗: ${collaborationResult.message}`);
+      }
+
+      // 5. 階段五新增：調用LBK模組進行pendingTransactions子集合初始化
+      console.log(`📋 ${functionName}: 調用LBK模組進行pendingTransactions子集合初始化...`);
+      
+      if (LBK && typeof LBK.LBK_initializePendingTransactionsSubcollection === 'function') {
+        const pendingResult = await LBK.LBK_initializePendingTransactionsSubcollection(userLedgerId, { userId: UID });
+        if (pendingResult.success) {
+          pendingTransactionsInitialized = true;
+          console.log(`✅ ${functionName}: LBK pendingTransactions子集合初始化完成`);
+        } else {
+          console.warn(`⚠️ ${functionName}: LBK pendingTransactions子集合初始化失敗: ${pendingResult.error}`);
+        }
+      } else {
+        console.warn(`⚠️ ${functionName}: LBK模組不可用，無法初始化pendingTransactions子集合`);
       }
 
     } catch (moduleError) {
@@ -1568,14 +1598,14 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
       throw new Error(`帳本驗證失敗: ${verifyError.message}`);
     }
 
-    // 階段四完成：記錄詳細的模組整合統計
+    // 階段五完成：記錄詳細的模組整合統計
     const executionTime = Date.now() - startTime;
 
     await DL.DL_log(
       "AM",
       functionName,
       "INFO",
-      `階段四完成：用戶 ${UID} 帳本初始化完成，整合WCM/BM/CM模組，共載入 ${subjectCount} 筆科目，${walletCount} 個帳戶，預算結構: ${budgetInitialized ? '完成' : '失敗'}，協作結構: ${collaborationInitialized ? '完成' : '失敗'}，執行時間: ${executionTime}ms`,
+      `階段五完成：用戶 ${UID} 帳本初始化完成，整合WCM/BM/CM/LBK模組，共載入 ${subjectCount} 筆科目，${walletCount} 個帳戶，預算結構: ${budgetInitialized ? '完成' : '失敗'}，協作結構: ${collaborationInitialized ? '完成' : '失敗'}，pendingTransactions: ${pendingTransactionsInitialized ? '完成' : '失敗'}，執行時間: ${executionTime}ms`,
       UID,
       userLedgerId,
     );
@@ -1596,14 +1626,18 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
         cm: {
           collaborationStructureInitialized: collaborationInitialized,
           available: !!CM
+        },
+        lbk: {
+          pendingTransactionsInitialized: pendingTransactionsInitialized,
+          available: !!LBK
         }
       },
       fsStructureResult: structureResult,
       initializationComplete: true,
-      stage: "v8.0.0_module_integration_complete",
+      stage: "v8.0.4_complete_integration",
       subjectCount: subjectCount,
       walletCount: walletCount,
-      message: `階段四完成：帳本 ${userLedgerId} 建立成功，AM專注基礎結構，WCM處理主數據，BM處理預算，CM處理協作`
+      message: `階段五完成：帳本 ${userLedgerId} 建立成功，AM專注基礎結構，WCM處理主數據，BM處理預算，CM處理協作，LBK處理多階段記帳`
     };
   } catch (error) {
     console.error(`❌ ${functionName} for user ${UID} failed:`, error);
@@ -5181,7 +5215,7 @@ console.log('   ├── DCN-0012 API端點處理函數 (22個)');
 console.log('   ├── DCN-0014 API處理函數 (19個)');
 console.log('   ├── DCN-0020 帳本結構初始化 (專注基礎結構)');
 console.log('   └── 總計: 59個函數 (移除4個重複函數)');
-console.log('🔧 DCN-0023職責重構: 完全移除與WCM模組重複功能');
+console.log('🔧 DCN-0023職責重構: 完全移除與WCM重複功能');
 console.log('🎯 職責邊界: AM專注帳號管理+帳本基礎結構，WCM負責科目和帳戶管理');
 console.log('🔧 整合模式: AM_initializeUserLedger() 調用WCM模組進行科目和帳戶初始化');
 console.log('📊 資料流: AM → WCM (科目+帳戶) → Firebase');

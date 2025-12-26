@@ -1,0 +1,268 @@
+
+{
+  "version": "1.0.0",
+  "lastUpdated": "2025-12-19",
+  "description": "Pending Transaction 預設配置 - 用於暫存多階段處理的記帳資料",
+  "module": "LBK",
+  "configType": "pendingTransaction",
+  
+  "defaultFields": {
+    "pendingId": {
+      "type": "string",
+      "required": true,
+      "description": "暫存記錄唯一識別碼",
+      "format": "auto-generated"
+    },
+    "userId": {
+      "type": "string", 
+      "required": true,
+      "description": "用戶ID"
+    },
+    "ledgerId": {
+      "type": "string",
+      "required": true,
+      "description": "帳本ID"
+    },
+    "originalInput": {
+      "type": "string",
+      "required": true,
+      "description": "用戶原始輸入",
+      "example": "便當100凱基"
+    },
+    "parsedData": {
+      "type": "object",
+      "required": true,
+      "description": "已解析的資料",
+      "structure": {
+        "amount": {
+          "type": "number",
+          "required": true,
+          "description": "金額"
+        },
+        "description": {
+          "type": "string", 
+          "required": false,
+          "description": "描述"
+        },
+        "rawCategoryName": {
+          "type": "string",
+          "required": false,
+          "description": "原始科目關鍵字"
+        },
+        "rawWallet": {
+          "type": "string",
+          "required": false,
+          "description": "原始支付方式關鍵字"
+        }
+      }
+    },
+    "walletSynonyms": {
+      "type": "string",
+      "required": false,
+      "description": "用戶原始輸入的支付方式，來自wallets子集合的synonyms",
+      "example": "花旗"
+    },
+    "walletId": {
+      "type": "string",
+      "required": false,
+      "description": "對應wallets子集合的walletId主鍵，建立直接關聯",
+      "example": "debit"
+    },
+    "parsedData": {
+      "type": "object",
+      "required": true,
+      "description": "已解析的資料",
+      "structure": {
+        "amount": {
+          "type": "number",
+          "required": true,
+          "description": "金額"
+        },
+        "description": {
+          "type": "string", 
+          "required": false,
+          "description": "描述"
+        },
+        "rawSubject": {
+          "type": "string",
+          "required": false,
+          "description": "原始科目關鍵字"
+        },
+        "rawWallet": {
+          "type": "string",
+          "required": false,
+          "description": "原始支付方式關鍵字"
+        }
+      }
+    },
+    "processingStage": {
+      "type": "string",
+      "required": true,
+      "description": "處理階段",
+      "enum": ["PENDING_SUBJECT", "PENDING_WALLET", "COMPLETED", "CANCELLED"],
+      "default": "PENDING_SUBJECT"
+    },
+    "resolvedData": {
+      "type": "object",
+      "required": false,
+      "description": "已解決的資料",
+      "structure": {
+        "subjectId": {
+          "type": "string",
+          "required": false,
+          "description": "已選擇的科目ID"
+        },
+        "subjectName": {
+          "type": "string",
+          "required": false,
+          "description": "已選擇的科目名稱"
+        },
+        "walletId": {
+          "type": "string",
+          "required": false,
+          "description": "已選擇的支付方式ID"
+        },
+        "walletId": {
+          "type": "string",
+          "required": false,
+          "description": "已選擇的錢包ID，對應wallets子集合的walletId主鍵"
+        },
+        "walletName": {
+          "type": "string",
+          "required": false,
+          "description": "已選擇的錢包名稱，對應wallets子集合的walletName"
+        }
+      }
+    },
+    "ambiguityInfo": {
+      "type": "object",
+      "required": false,
+      "description": "歧義消除資訊",
+      "structure": {
+        "currentAmbiguity": {
+          "type": "string",
+          "enum": ["subject", "wallet", "none"],
+          "description": "當前歧義類型"
+        },
+        "subjectOptions": {
+          "type": "array",
+          "description": "科目選項列表"
+        },
+        "walletOptions": {
+          "type": "array",
+          "description": "支付方式選項列表"
+        }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "required": true,
+      "description": "元數據",
+      "structure": {
+        "source": {
+          "type": "string",
+          "default": "LINE",
+          "description": "來源平台"
+        },
+        "module": {
+          "type": "string",
+          "default": "LBK",
+          "description": "處理模組"
+        },
+        "version": {
+          "type": "string",
+          "default": "v1.4.8",
+          "description": "模組版本"
+        }
+      }
+    },
+    "status": {
+      "type": "string",
+      "required": true,
+      "description": "記錄狀態",
+      "enum": ["active", "completed", "cancelled", "expired"],
+      "default": "active"
+    },
+    "createdAt": {
+      "type": "timestamp",
+      "required": true,
+      "description": "建立時間"
+    },
+    "updatedAt": {
+      "type": "timestamp",
+      "required": true,
+      "description": "更新時間"
+    },
+    "expiresAt": {
+      "type": "timestamp",
+      "required": true,
+      "description": "過期時間",
+      "defaultOffset": "30 minutes"
+    }
+  },
+
+  "stateTransitions": {
+    "PENDING_SUBJECT": {
+      "nextStates": ["PENDING_WALLET", "COMPLETED", "CANCELLED"],
+      "description": "等待科目選擇"
+    },
+    "PENDING_WALLET": {
+      "nextStates": ["COMPLETED", "CANCELLED"],
+      "description": "等待支付方式選擇"
+    },
+    "COMPLETED": {
+      "nextStates": [],
+      "description": "處理完成"
+    },
+    "CANCELLED": {
+      "nextStates": [],
+      "description": "已取消"
+    }
+  },
+
+  "businessRules": {
+    "expirationPolicy": {
+      "defaultExpirationMinutes": 30,
+      "maxExpirationMinutes": 120,
+      "description": "預設30分鐘過期，最多可延長至120分鐘"
+    },
+    "stateValidation": {
+      "PENDING_SUBJECT": {
+        "requiredFields": ["originalInput", "parsedData.amount"],
+        "optionalFields": ["parsedData.description", "parsedData.rawSubject", "parsedData.rawWallet"]
+      },
+      "PENDING_WALLET": {
+        "requiredFields": ["originalInput", "parsedData.amount", "resolvedData.subjectId"],
+        "optionalFields": ["parsedData.description", "parsedData.rawWallet", "walletSynonyms"]
+      },
+      "COMPLETED": {
+        "requiredFields": ["originalInput", "parsedData.amount", "resolvedData.subjectId", "resolvedData.walletId", "walletId"],
+        "optionalFields": ["walletSynonyms"]
+      }
+    },
+    "cleanup": {
+      "autoCleanupExpired": true,
+      "cleanupIntervalHours": 6,
+      "retentionDays": 7
+    }
+  },
+
+  "integration": {
+    "relatedCollections": {
+      "ledgers": "parent collection",
+      "categories": "reference for subject resolution", 
+      "wallets": "reference for wallet resolution via walletId primary key",
+      "transactions": "target collection after completion"
+    },
+    "walletRelationship": {
+      "walletSynonyms": "stores user original input, maps to wallets.synonyms field",
+      "walletId": "direct foreign key reference to wallets.walletId primary key",
+      "purpose": "establish precise database relationship and preserve user input for synonym learning"
+    },
+    "eventTriggers": {
+      "onCreate": ["validate_structure", "set_expiration"],
+      "onUpdate": ["validate_state_transition", "update_timestamp"],
+      "onExpire": ["cleanup_expired_records"]
+    }
+  }
+}

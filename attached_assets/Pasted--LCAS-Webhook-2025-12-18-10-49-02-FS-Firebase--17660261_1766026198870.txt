@@ -1,0 +1,257 @@
+🚀 LCAS Webhook 啟動中...
+📅 啟動時間: 2025/12/18 上午10:49:02
+📦 部署模式載入模組...
+✅ 階段五完成：FS模組已移除，Firebase操作由各專門模組直接處理
+✅ Firebase配置驗證通過
+✅ Firebase動態配置建立成功
+✅ Firebase Admin SDK初始化成功
+✅ Firestore實例取得成功
+✅ DL模組：Firebase動態配置載入成功
+✅ DL 模組載入成功
+⚠️ BK 模組未正確載入，跳過初始化
+⚠️ LBK 模組未正確載入，跳過初始化
+⚠️ SR 模組未正確載入，跳過初始化
+📊 主試算表檢查: 成功
+📝 日誌表檢查: 成功
+🏷️ 科目表檢查: 成功
+🎉 階段五完成：FS模組移除狀態確認
+✅ FS模組已完全移除，職責分散完成
+📋 Firebase操作現由以下專門模組處理:
+  - AM模組：帳號管理相關Firebase操作
+  - WCM模組：帳戶與科目管理相關Firebase操作
+  - BM模組：預算管理相關Firebase操作
+  - CM模組：協作管理相關Firebase操作
+  - 其他模組：直接使用firebase-config模組
+❌ BK模組載入失敗，無法檢查函數
+✅ WH 模組已載入並啟動服務器
+💡 提示: WH 模組會在 Port 3000 建立服務器
+🎉 LCAS 2.0 DCN-0011 Phase 4 重構完成！
+📱 LINE Bot 核心功能完全保留：WH → LBK → Firestore
+🌐 index.js 專責 LINE Webhook 服務，運行於 Port 3000
+⚡ WH → LBK 直連路徑最佳化：WH → LBK → Firestore
+🚀 LINE OA 快速記帳：效能最佳化，處理時間 < 2秒
+📋 Rich Menu/APP 路徑：完整保留 WH → DD → BK 功能
+📅 SR 排程提醒模組完整整合：支援排程提醒、Quick Reply統計、付費功能控制
+🏥 健康檢查機制已優化：專注LINE服務監控
+🛡️ 增強錯誤處理已啟用：全域異常捕獲與記錄
+🔧 架構重構完成版本：v2.4.0 - 雙服務分離架構
+📦 API端點遷移完成統計：
+   🚚 已完全遷移至ASL.js (Port 5000)：132個RESTful API端點
+   📱 保留LINE Webhook專用：5個核心端點
+   ✅ 完美職責分離：RESTful API ↔ LINE Webhook
+🎯 DCN-0011 Phase 4完成：index.js重構，雙服務架構實現
+📈 系統架構優化達成：單一職責 + 獨立部署 + 維護便利 + 可擴展性
+🌐 LCAS 2.0 LINE Webhook 服務已啟動於 Port 3000
+📡 基礎服務已就緒，正在背景載入完整功能...
+📦 載入WH模組...
+🔧 WCM模組v1.2.4 初始化：預設錢包欄位映射修復版
+🔄 循環依賴修復：移除AM模組直接引用
+💰 預設錢包建立強化：完整錯誤處理和批次處理邏輯
+✅ 函數導出驗證：WCM_createCategory = function
+✅ 函數導出驗證：WCM_createWallet = function
+✅ 函數導出驗證：WCM_load0099SubjectData = function
+✅ 函數導出驗證：WCM_loadDefaultConfigs = function
+📋 架構調整：支援協作帳本路徑 (collaborations/{ledgerId}/{collection})
+✅ 與1311.FS.js子集合架構保持一致
+🚀 WCM模組現已全面支援協作帳本路徑
+💎 預設錢包建立機制：強化配置驗證、錯誤處理和批次處理
+🔧 欄位映射修復：完整映射0302配置檔案所有欄位，包含synonyms支援
+📝 符合0070 DB schema：確保wallets子集合欄位完整性
+✨ 階段二修復完成，預設錢包欄位映射已完全符合配置檔案驅動
+✅ BK模組v3.3.3：階段二路徑擴展 - 支援協作帳本路徑，實作動態路徑解析
+🔍 AM.js 模組開始載入...
+📋 AM.js 版本: v8.0.3
+📦 AM.js: 開始引入依賴模組...
+✅ AM.js: firebase-admin 引入成功
+✅ AM.js: axios 引入成功
+✅ AM.js: crypto 引入成功
+⚙️ AM.js: 開始定義AM_CONFIG配置物件...
+🔥 AM.js: 開始引入Firebase動態配置模組...
+✅ AM.js: Firebase動態配置模組引入成功
+🔧 AM.js: 初始化Firebase Admin SDK...
+✅ Firebase Admin SDK已初始化
+✅ AM.js: Firebase初始化完成，Firestore實例已取得
+📊 BM 預算管理模組載入中...
+✅ BM 預算管理模組v2.3.0載入完成 - 階段二整合：接管所有預算初始化功能
+🤝 CM 協作管理模組初始化中...
+[2025-12-18T02:49:02.405Z] [INFO] [CM] CM 協作管理模組初始化完成 [Location: CM_initialize]
+✅ CM 協作管理模組已成功啟動
+✅ CM 協作與帳本管理模組v2.4.0載入完成 - 階段一擴展：建立完整協作帳本子集合架構（members, transactions, wallets, budgets, categories）
+📤 AM.js: 開始導出模組函數...
+✅ AM.js: 所有函數定義完成，準備導出
+✅ AM模組8.0.3 DCN-0023職責重構完成！
+📋 功能概覽:
+   ├── 核心帳號管理功能 (18個)
+   ├── SR模組專用付費功能 (4個)
+   ├── DCN-0012 API端點處理函數 (22個)
+   ├── DCN-0014 API處理函數 (19個)
+   ├── DCN-0020 帳本結構初始化 (專注基礎結構)
+   └── 總計: 59個函數 (移除4個重複函數)
+🔧 DCN-0023職責重構: 完全移除與WCM重複功能
+🎯 職責邊界: AM專注帳號管理+帳本基礎結構，WCM負責科目和帳戶管理
+🔧 整合模式: AM_initializeUserLedger() 調用WCM模組進行科目和帳戶初始化
+📊 資料流: AM → WCM (科目+帳戶) → Firebase
+✨ v8.0.3重構成果: 移除重複函數，職責邊界清晰，避免功能衝突
+🎉 重構完成: AM模組功能精簡，與WCM模組職責劃分明確！
+🎯 AM.js 模組載入完成，59個函數已成功導出
+SR模組依賴載入警告: LBK_getWalletDisplayName is not defined
+📅 SR 排程提醒模組初始化中...
+✅ 階段五完成：FS模組已移除，消息去重使用NodeCache
+✅ Firebase Admin SDK已初始化
+✅ WH模組：Firebase動態配置初始化成功
+WH模組初始化，版本: 2.5.2 (2025-12-17) - 階段三完成：建立wallet Quick Reply處理功能
+WH模組環境變數檢查結果:
+  ✅ LINE_CHANNEL_SECRET: 已設定(32字符)
+  ✅ LINE_CHANNEL_ACCESS_TOKEN: 已設定(172字符)
+  ✅ Webhook_URL: 已設定(84字符)
+✅ 所有必要環境變數已正確設定
+✅ WH模組環境變數檢查完整
+✅ WH 模組載入成功
+✅ WH模組核心函數檢查通過
+🔄 延遲載入應用模組...
+✅ BK 模組載入成功
+❌ LBK 模組載入失敗: LBK_getWalletDisplayName is not defined
+❌ LBK 錯誤詳情: ReferenceError: LBK_getWalletDisplayName is not defined
+    at Object.<anonymous> (/home/runner/workspace/13. Replit_Module code_BL/1315. LBK.js:3532:29)
+    at Module._compile (node:internal/modules/cjs/loader:1730:14)
+    at Object..js (node:internal/modules/cjs/loader:1895:10)
+    at Module.load (node:internal/modules/cjs/loader:1465:32)
+    at Function._load (node:internal/modules/cjs/loader:1282:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:235:24)
+    at Module.require (node:internal/modules/cjs/loader:1487:12)
+    at require (node:internal/modules/helpers:135:16)
+    at loadApplicationModules (/home/runner/workspace/index.js:104:11)
+✅ DD 模組載入成功
+🔍 開始載入 AM 模組...
+✅ AM 模組載入成功
+✅ AM_createLineAccount函數檢查通過
+✅ AM模組版本: 8.0.3
+✅ SR 模組載入成功
+✅ 完整功能載入完成
+📋 DCN-0011 Phase 4 重構統計:
+   ✅ API端點遷移完成: 132個 → ASL.js (Port 5000)
+   🎯 Webhook端點保留: 5個 (LINE OA專用)
+   🏗️ 雙服務架構: 職責完全分離
+成功寫入 1 條日誌到 Firestore
+📅 已載入 0 個排程設定
+[2025-12-18T02:49:03.258Z] [INFO] [SR] SR 排程提醒模組初始化完成 [Location: SR_initialize]
+✅ SR 排程提醒模組已成功啟動
+[WH 2.0.16 LOG] WH 2.0.7: 收到LINE Webhook請求 [dd42965a] (INFO)
+檢測到需要回覆的訊息，啟用同步處理 [dd42965a]
+[WH 2.0.16 LOG] WH 2.0.16: 檢測到需要回覆的訊息，啟用同步處理 [dd42965a] (INFO)
+開始非同步處理請求 [dd42965a]
+[WH 2.0.16 LOG] WH 2.0.7: 開始非同步處理請求 [dd42965a] (INFO)
+[WH 2.0.16 LOG] WH 2.0.3: 開始處理事件: message [dd42965a] (INFO)
+處理消息事件: text [dd42965a]
+收到文本消息: "點心麵37" [dd42965a]
+[WH 2.0.16 LOG] WH 2.0.3: 收到文本消息: "點心麵37" [dd42965a] (INFO)
+開始AM用戶驗證流程 [dd42965a]
+[WH 2.0.16 LOG] WH 階段一: 開始AM用戶驗證流程 [dd42965a] (INFO)
+用戶不存在，開始自動註冊流程: Uae47d9d496e4596d70ed724a7d6e2948 [dd42965a]
+[WH 2.0.16 LOG] WH 階段一: 用戶不存在，開始自動註冊 Uae47d9d496e4596d70ed724a7d6e2948 [dd42965a] (INFO)
+[2025-12-18T02:49:32.044Z] [INFO] [DL] AM [Location: Object.AM_createLineAccount]
+✅ 自動註冊成功: Uae47d9d496e4596d70ed724a7d6e2948, 帳本ID: Uae47d9d496e4596d70ed724a7d6e2948 [dd42965a]
+[WH 2.0.16 LOG] WH 階段一: 自動註冊成功 Uae47d9d496e4596d70ed724a7d6e2948 [dd42965a] (INFO)
+用戶帳本驗證流程完成: Uae47d9d496e4596d70ed724a7d6e2948 [dd42965a]
+🔍 AM_getUserDefaultLedger: 查詢用戶 Uae47d9d496e4596d70ed724a7d6e2948 預設帳本...
+🔄 AM_getUserDefaultLedger: 為用戶 Uae47d9d496e4596d70ed724a7d6e2948 自動初始化預設帳本...
+🔄 AM_initializeUserLedger: 階段四完成版 - AM專注帳本基礎結構，整合其他模組功能
+📋 AM_initializeUserLedger: v8.0.0 - 調用WCM、BM、CM模組處理科目、帳戶、預算、協作功能
+📝 AM_initializeUserLedger: 準備建立帳本ID: user_Uae47d9d496e4596d70ed724a7d6e2948（符合1311.FS.js規範）
+  - 帳本主文檔 user_Uae47d9d496e4596d70ed724a7d6e2948 準備寫入（階段二優化版）
+  - 階段一修正：確保帳本結構存在...
+🔧 AM_initializeUserLedger: 直接使用Firebase建立帳本子集合結構...
+✅ AM_initializeUserLedger: 子集合 categories 初始化完成
+✅ AM_initializeUserLedger: 子集合 wallets 初始化完成
+✅ AM_initializeUserLedger: 子集合 budgets 初始化完成
+✅ AM_initializeUserLedger: transactions子集合保持空集合狀態（無_init文檔）
+  - 1311.FS.js結構建立成功: ["transactions","categories","wallets","budgets"]
+📋 AM_initializeUserLedger: 調用WCM模組進行科目初始化...
+[2025-12-18T02:49:32.763Z] [INFO] [DL] 開始創建科目: 批量載入 (帳本: user_Uae47d9d496e4596d70ed724a7d6e2948) [User: Uae47d9d496e4596d70ed724a7d6e2948] [Location: Object.DL_info]
+[2025-12-18T02:49:32.763Z] [INFO] [DL] WCM模組v1.2.0初始化開始 - 子集合架構 [Location: Object.DL_info]
+[2025-12-18T02:49:32.764Z] [INFO] [DL] WCM模組初始化完成v1.2.0 - 子集合架構 [Location: Object.DL_info]
+[2025-12-18T02:49:32.766Z] [INFO] [DL] 執行0099科目批量載入至帳本: user_Uae47d9d496e4596d70ed724a7d6e2948 [User: Uae47d9d496e4596d70ed724a7d6e2948] [Location: Object.DL_info]
+[2025-12-18T02:49:32.768Z] [INFO] [DL] 開始載入0099科目資料... [Location: Object.DL_info]
+[2025-12-18T02:49:32.768Z] [INFO] [DL] 成功載入 11 筆科目資料 [Location: Object.DL_info]
+[2025-12-18T02:49:32.948Z] [INFO] [DL] 批量載入完成: 11 筆科目 (路徑: ledgers/user_Uae47d9d496e4596d70ed724a7d6e2948/categories) [User: Uae47d9d496e4596d70ed724a7d6e2948] [Location: Object.DL_info]
+✅ AM_initializeUserLedger: WCM科目初始化完成，載入11筆科目
+💳 AM_initializeUserLedger: 調用WCM模組進行wallets子集合初始化...
+[2025-12-18T02:49:32.949Z] [INFO] [DL] 開始創建帳戶: 預設帳戶 (帳本: user_Uae47d9d496e4596d70ed724a7d6e2948) [User: Uae47d9d496e4596d70ed724a7d6e2948] [Location: Object.DL_info]
+[2025-12-18T02:49:32.950Z] [INFO] [DL] 執行預設帳戶建立至帳本: user_Uae47d9d496e4596d70ed724a7d6e2948 [User: Uae47d9d496e4596d70ed724a7d6e2948] [Location: Object.DL_info]
+[2025-12-18T02:49:32.951Z] [INFO] [DL] 開始載入預設配置資料... [Location: Object.DL_info]
+[2025-12-18T02:49:32.952Z] [INFO] [DL] 檢查配置目錄路徑: /home/runner/03. Default_config [Location: Object.DL_info]
+[2025-12-18T02:49:32.953Z] [INFO] [DL] 檢查配置目錄路徑: /home/runner/workspace/03. Default_config [Location: Object.DL_info]
+[2025-12-18T02:49:32.953Z] [INFO] [DL] 成功找到配置目錄: /home/runner/workspace/03. Default_config [Location: Object.DL_info]
+[2025-12-18T02:49:32.954Z] [INFO] [DL] 嘗試載入系統配置: /home/runner/workspace/03. Default_config/0301. Default_config.json [Location: Object.DL_info]
+[2025-12-18T02:49:32.956Z] [INFO] [DL] 載入系統配置成功: 1.0.0 [Location: Object.DL_info]
+[2025-12-18T02:49:32.956Z] [INFO] [DL] 載入0302預設錢包配置: /home/runner/workspace/03. Default_config/0302. Default_wallet.json [Location: Object.DL_info]
+[2025-12-18T02:49:32.957Z] [INFO] [DL] 成功載入0302預設帳戶配置: 3個帳戶定義 [Location: Object.DL_info]
+[2025-12-18T02:49:32.958Z] [INFO] [DL] 嘗試載入貨幣配置: /home/runner/workspace/03. Default_config/0303. Default_currency.json [Location: Object.DL_info]
+[2025-12-18T02:49:32.959Z] [INFO] [DL] 載入貨幣配置成功: 預設貨幣 TWD [Location: Object.DL_info]
+[2025-12-18T02:49:32.959Z] [INFO] [DL] 預設配置載入完成，成功載入: system, wallets, currency [Location: Object.DL_info]
+[2025-12-18T02:49:32.960Z] [INFO] [DL] 解析路徑：帳本ID=user_Uae47d9d496e4596d70ed724a7d6e2948, 操作=wallets [Location: Object.DL_info]
+[2025-12-18T02:49:32.961Z] [INFO] [DL] 動態路徑解析成功 (獨立帳本): ledgers/user_Uae47d9d496e4596d70ed724a7d6e2948/wallets [Location: Object.DL_info]
+[2025-12-18T02:49:32.961Z] [INFO] [DL] 開始批量建立3個預設錢包至路徑: ledgers/user_Uae47d9d496e4596d70ed724a7d6e2948/wallets [User: Uae47d9d496e4596d70ed724a7d6e2948] [Location: Object.DL_info]
+[2025-12-18T02:49:32.962Z] [INFO] [DL] 準備建立錢包: 現金 (cash) - cash [User: Uae47d9d496e4596d70ed724a7d6e2948] [Location: Object.DL_info]
+[2025-12-18T02:49:32.962Z] [INFO] [DL] 準備建立錢包: 銀行 (debit) - bank [User: Uae47d9d496e4596d70ed724a7d6e2948] [Location: Object.DL_info]
+[2025-12-18T02:49:32.962Z] [INFO] [DL] 準備建立錢包: 信用卡 (credit) - credit_card [User: Uae47d9d496e4596d70ed724a7d6e2948] [Location: Object.DL_info]
+[2025-12-18T02:49:33.098Z] [INFO] [DL] 預設帳戶建立成功: 3個帳戶已建立至 ledgers/user_Uae47d9d496e4596d70ed724a7d6e2948/wallets [User: Uae47d9d496e4596d70ed724a7d6e2948] [Location: Object.DL_info]
+✅ AM_initializeUserLedger: WCM wallets子集合初始化完成，建立3個錢包帳戶
+🔗 AM_initializeUserLedger: wallet概念統一 - 所有支付方式現在都統一使用wallet ID
+💰 AM_initializeUserLedger: 調用BM模組進行預算結構初始化...
+[BM_createBudgetsSubcollectionFramework] 階段二新增：建立預算子集合框架佔位符 - 帳本ID: user_Uae47d9d496e4596d70ed724a7d6e2948
+[BM_createBudgetsSubcollectionFramework] ✅ 預算子集合框架建立成功 - 路徑: ledgers/user_Uae47d9d496e4596d70ed724a7d6e2948/budgets
+[2025-12-18T02:49:33.211Z] [INFO] [DL] 建立預算子集合框架 - 帳本ID: user_Uae47d9d496e4596d70ed724a7d6e2948 [Location: BM.BM_createBudgetsSubcollectionFramework]
+✅ AM_initializeUserLedger: BM預算結構初始化完成
+🤝 AM_initializeUserLedger: 調用CM模組進行協作結構初始化...
+[2025-12-18T02:49:33.211Z] [INFO] [CM] 階段三：開始初始化協作系統完整架構 [User: Uae47d9d496e4596d70ed724a7d6e2948] [Location: CM_initializeCollaborationSystem]
+[2025-12-18T02:49:33.567Z] [INFO] [CM] 階段三：協作系統初始化完成 - 成功: 3/3 [User: Uae47d9d496e4596d70ed724a7d6e2948] [Location: CM_initializeCollaborationSystem]
+✅ AM_initializeUserLedger: CM協作結構初始化完成
+  - 階段一修正：預設帳戶由1311.FS.js統一處理
+  - 階段一修正：交易和預算子集合由1311.FS.js統一處理
+🔄 階段一修正：建立帳本主文檔...
+✅ 帳本主文檔建立成功: user_Uae47d9d496e4596d70ed724a7d6e2948
+  - 帳本 user_Uae47d9d496e4596d70ed724a7d6e2948 初始化標誌更新為 true
+  - 保留範例文檔以確保子集合結構完整性
+✅ 帳本 user_Uae47d9d496e4596d70ed724a7d6e2948 驗證成功
+✅ Categories集合: 已建立
+✅ Wallets集合: 已建立
+✅ Transactions集合: ❌未建立
+✅ Budgets集合: 已建立
+⚠️ 部分子集合未建立: transactions
+[2025-12-18T02:49:34.408Z] [INFO] [DL] AM [Location: AM_initializeUserLedger]
+用戶帳本驗證通過: user_Uae47d9d496e4596d70ed724a7d6e2948 [dd42965a]
+[WH 2.0.16 LOG] WH 階段一: AM驗證完成，轉發至LBK處理記帳 [dd42965a] (INFO)
+WH v2.5.0: LBK調用失敗，返回最小錯誤格式: ReferenceError: LBK_getWalletDisplayName is not defined
+WH_replyMessage: 收到類型 object 的訊息對象
+WH_replyMessage: 訊息對象結構: ["success","message","responseMessage","moduleCode","module","error"]
+WH_replyMessage: 訊息對象預覽: {"success":false,"message":"系統暫時無法處理您的請求，請稍後再試","responseMessage":"系統暫時無法處理您的請求，請稍後再試","moduleCode":"LBK","module":"LBK","error":"ReferenceError: LBK_getWalletDisplayName is not defined"}...
+WH_replyMessage: 發現responseMessage屬性 (string), 長度=18
+WH_replyMessage: 發現message屬性 (string)
+WH_replyMessage: 使用responseMessage屬性 (系統暫時無法處理您的請求，請稍後再試...)
+WH_replyMessage: 開始回覆訊息: 系統暫時無法處理您的請求，請稍後再試
+[WH 2.0.16 LOG] WH 2.0.3: 開始回覆訊息: 系統暫時無法處理您的請求，請稍後再試 (INFO)
+[WH 2.0.16 LOG] WH 2.0.3: 發送API請求到LINE平台 (INFO)
+LINE API 回覆結果: 200
+回覆訊息成功
+[WH 2.0.16 LOG] WH 2.0.3: 回覆訊息成功發送 (INFO)
+[WH 2.0.16 LOG] WH 階段一: LBK處理完成，已回覆用戶 [dd42965a] (INFO)
+DD_distributeData處理完成，結果預覽: {"success":false,"hasResponseMessage":true,"responseMsgLength":18,"errorType":"無","moduleCode":"LBK","hasPartialData":false} [dd42965a]
+WH v2.5.0: 完全信任LBK處理結果，準備轉發回覆 [dd42965a]
+[WH 2.0.16 LOG] WH 2.5.1: DCN-0024 階段二 - 正確傳遞Quick Reply參數 [dd42965a] (INFO)
+WH_replyMessage: 收到類型 object 的訊息對象
+WH_replyMessage: 訊息對象結構: ["success","message","responseMessage","moduleCode","module","error"]
+WH_replyMessage: 訊息對象預覽: {"success":false,"message":"系統暫時無法處理您的請求，請稍後再試","responseMessage":"系統暫時無法處理您的請求，請稍後再試","moduleCode":"LBK","module":"LBK","error":"ReferenceError: LBK_getWalletDisplayName is not defined"}...
+WH_replyMessage: 發現responseMessage屬性 (string), 長度=18
+WH_replyMessage: 發現message屬性 (string)
+WH_replyMessage: 使用responseMessage屬性 (系統暫時無法處理您的請求，請稍後再試...)
+WH_replyMessage: 開始回覆訊息: 系統暫時無法處理您的請求，請稍後再試
+[WH 2.0.16 LOG] WH 2.0.3: 開始回覆訊息: 系統暫時無法處理您的請求，請稍後再試 (INFO)
+[WH 2.0.16 LOG] WH 2.0.3: 發送API請求到LINE平台 (INFO)
+訊息回覆結果: {} [dd42965a]
+非同步處理完成，已清理數據 [dd42965a]
+[WH 2.0.16 LOG] WH 2.0.7: 非同步處理完成 [dd42965a] (INFO)
+WH_replyMessage 錯誤: AxiosError: Request failed with status code 400
+錯誤響應: {"message":"Invalid reply token"}
+[WH 2.0.16 LOG] WH 2.0.3: 回覆訊息異常: AxiosError: Request failed with status code 400 (ERROR)

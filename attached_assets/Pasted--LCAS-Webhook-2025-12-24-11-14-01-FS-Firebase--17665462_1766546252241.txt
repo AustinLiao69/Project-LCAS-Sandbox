@@ -1,0 +1,1036 @@
+🚀 LCAS Webhook 啟動中...
+📅 啟動時間: 2025/12/24 上午11:14:01
+📦 部署模式載入模組...
+✅ 階段五完成：FS模組已移除，Firebase操作由各專門模組直接處理
+✅ Firebase配置驗證通過
+✅ Firebase動態配置建立成功
+✅ Firebase Admin SDK初始化成功
+✅ Firestore實例取得成功
+✅ DL模組：Firebase動態配置載入成功
+✅ DL 模組載入成功
+⚠️ BK 模組未正確載入，跳過初始化
+⚠️ LBK 模組未正確載入，跳過初始化
+⚠️ SR 模組未正確載入，跳過初始化
+📊 主試算表檢查: 成功
+📝 日誌表檢查: 成功
+🏷️ 科目表檢查: 成功
+🎉 階段五完成：FS模組移除狀態確認
+✅ FS模組已完全移除，職責分散完成
+📋 Firebase操作現由以下專門模組處理:
+  - AM模組：帳號管理相關Firebase操作
+  - WCM模組：帳戶與科目管理相關Firebase操作
+  - BM模組：預算管理相關Firebase操作
+  - CM模組：協作管理相關Firebase操作
+  - 其他模組：直接使用firebase-config模組
+❌ BK模組載入失敗，無法檢查函數
+✅ WH 模組已載入並啟動服務器
+💡 提示: WH 模組會在 Port 3000 建立服務器
+🎉 LCAS 2.0 DCN-0011 Phase 4 重構完成！
+📱 LINE Bot 核心功能完全保留：WH → LBK → Firestore
+🌐 index.js 專責 LINE Webhook 服務，運行於 Port 3000
+⚡ WH → LBK 直連路徑最佳化：WH → LBK → Firestore
+🚀 LINE OA 快速記帳：效能最佳化，處理時間 < 2秒
+📋 Rich Menu/APP 路徑：完整保留 WH → DD → BK 功能
+📅 SR 排程提醒模組完整整合：支援排程提醒、Quick Reply統計、付費功能控制
+🏥 健康檢查機制已優化：專注LINE服務監控
+🛡️ 增強錯誤處理已啟用：全域異常捕獲與記錄
+🔧 架構重構完成版本：v2.4.0 - 雙服務分離架構
+📦 API端點遷移完成統計：
+   🚚 已完全遷移至ASL.js (Port 5000)：132個RESTful API端點
+   📱 保留LINE Webhook專用：5個核心端點
+   ✅ 完美職責分離：RESTful API ↔ LINE Webhook
+🎯 DCN-0011 Phase 4完成：index.js重構，雙服務架構實現
+📈 系統架構優化達成：單一職責 + 獨立部署 + 維護便利 + 可擴展性
+🌐 LCAS 2.0 LINE Webhook 服務已啟動於 Port 3000
+📡 基礎服務已就緒，正在背景載入完整功能...
+📦 載入WH模組...
+🔧 WCM模組v1.2.4 初始化：預設錢包欄位映射修復版
+🔄 循環依賴修復：移除AM模組直接引用
+💰 預設錢包建立強化：完整錯誤處理和批次處理邏輯
+✅ 函數導出驗證：WCM_createCategory = function
+✅ 函數導出驗證：WCM_createWallet = function
+✅ 函數導出驗證：WCM_load0099SubjectData = function
+✅ 函數導出驗證：WCM_loadDefaultConfigs = function
+📋 架構調整：支援協作帳本路徑 (collaborations/{ledgerId}/{collection})
+✅ 與1311.FS.js子集合架構保持一致
+🚀 WCM模組現已全面支援協作帳本路徑
+💎 預設錢包建立機制：強化配置驗證、錯誤處理和批次處理
+🔧 欄位映射修復：完整映射0302配置檔案所有欄位，包含synonyms支援
+📝 符合0070 DB schema：確保wallets子集合欄位完整性
+✨ 階段二修復完成，預設錢包欄位映射已完全符合配置檔案驅動
+✅ BK模組v3.3.3：階段二路徑擴展 - 支援協作帳本路徑，實作動態路徑解析
+🔍 AM.js 模組開始載入...
+📋 AM.js 版本: v8.0.4
+📦 AM.js: 開始引入依賴模組...
+✅ AM.js: firebase-admin 引入成功
+✅ AM.js: axios 引入成功
+✅ AM.js: crypto 引入成功
+⚙️ AM.js: 開始定義AM_CONFIG配置物件...
+🔥 AM.js: 開始引入Firebase動態配置模組...
+✅ AM.js: Firebase動態配置模組引入成功
+🔧 AM.js: 初始化Firebase Admin SDK...
+✅ Firebase Admin SDK已初始化
+✅ AM.js: Firebase初始化完成，Firestore實例已取得
+📊 BM 預算管理模組載入中...
+✅ BM 預算管理模組v2.3.0載入完成 - 階段二整合：接管所有預算初始化功能
+🤝 CM 協作管理模組初始化中...
+[2025-12-24T03:14:01.995Z] [INFO] [CM] CM 協作管理模組初始化完成 [Location: CM_initialize]
+✅ CM 協作管理模組已成功啟動
+✅ CM 協作與帳本管理模組v2.4.0載入完成 - 階段一擴展：建立完整協作帳本子集合架構（members, transactions, wallets, budgets, categories）
+📤 AM.js: 開始導出模組函數...
+✅ AM.js: 所有函數定義完成，準備導出
+✅ AM模組8.0.3 DCN-0023職責重構完成！
+📋 功能概覽:
+   ├── 核心帳號管理功能 (18個)
+   ├── SR模組專用付費功能 (4個)
+   ├── DCN-0012 API端點處理函數 (22個)
+   ├── DCN-0014 API處理函數 (19個)
+   ├── DCN-0020 帳本結構初始化 (專注基礎結構)
+   └── 總計: 59個函數 (移除4個重複函數)
+🔧 DCN-0023職責重構: 完全移除與WCM重複功能
+🎯 職責邊界: AM專注帳號管理+帳本基礎結構，WCM負責科目和帳戶管理
+🔧 整合模式: AM_initializeUserLedger() 調用WCM模組進行科目和帳戶初始化
+📊 資料流: AM → WCM (科目+帳戶) → Firebase
+✨ v8.0.3重構成果: 移除重複函數，職責邊界清晰，避免功能衝突
+🎉 重構完成: AM模組功能精簡，與WCM模組職責劃分明確！
+🎯 AM.js 模組載入完成，59個函數已成功導出
+📅 SR 排程提醒模組初始化中...
+✅ 階段五完成：FS模組已移除，消息去重使用NodeCache
+✅ Firebase Admin SDK已初始化
+✅ WH模組：Firebase動態配置初始化成功
+WH模組初始化，版本: 2.5.3 (2025-12-19) - 階段三完成：支援連續性Quick Reply處理，識別Pending Record相關事件
+WH模組環境變數檢查結果:
+  ✅ LINE_CHANNEL_SECRET: 已設定(32字符)
+  ✅ LINE_CHANNEL_ACCESS_TOKEN: 已設定(172字符)
+  ✅ Webhook_URL: 已設定(84字符)
+✅ 所有必要環境變數已正確設定
+✅ WH模組環境變數檢查完整
+✅ WH 模組載入成功
+✅ WH模組核心函數檢查通過
+🔄 延遲載入應用模組...
+✅ BK 模組載入成功
+✅ LBK 模組載入成功
+✅ DD 模組載入成功
+🔍 開始載入 AM 模組...
+✅ AM 模組載入成功
+✅ AM_createLineAccount函數檢查通過
+✅ AM模組版本: 8.0.3
+✅ SR 模組載入成功
+✅ 完整功能載入完成
+📋 DCN-0011 Phase 4 重構統計:
+   ✅ API端點遷移完成: 132個 → ASL.js (Port 5000)
+   🎯 Webhook端點保留: 5個 (LINE OA專用)
+   🏗️ 雙服務架構: 職責完全分離
+成功寫入 1 條日誌到 Firestore
+📅 已載入 0 個排程設定
+[2025-12-24T03:14:02.857Z] [INFO] [SR] SR 排程提醒模組初始化完成 [Location: SR_initialize]
+✅ SR 排程提醒模組已成功啟動
+[WH 2.0.16 LOG] WH 2.0.7: 收到LINE Webhook請求 [9b2afc9c] (INFO)
+檢測到需要回覆的訊息，啟用同步處理 [9b2afc9c]
+[WH 2.0.16 LOG] WH 2.0.16: 檢測到需要回覆的訊息，啟用同步處理 [9b2afc9c] (INFO)
+開始非同步處理請求 [9b2afc9c]
+[WH 2.0.16 LOG] WH 2.0.7: 開始非同步處理請求 [9b2afc9c] (INFO)
+[WH 2.0.16 LOG] WH 2.0.3: 開始處理事件: message [9b2afc9c] (INFO)
+處理消息事件: text [9b2afc9c]
+收到文本消息: "漢堡22222" [9b2afc9c]
+[WH 2.0.16 LOG] WH 2.0.3: 收到文本消息: "漢堡22222" [9b2afc9c] (INFO)
+開始AM用戶驗證流程 [9b2afc9c]
+[WH 2.0.16 LOG] WH 階段一: 開始AM用戶驗證流程 [9b2afc9c] (INFO)
+[2025-12-24T03:14:19.423Z] [INFO] [DL] AM [User: 帳號存在性驗證: Uae47d9d496e4596d70ed724a7d6e2948 (LINE)] [Location: Object.DL_info]
+用戶帳本驗證流程完成: Uae47d9d496e4596d70ed724a7d6e2948 [9b2afc9c]
+🔍 AM_getUserDefaultLedger: 查詢用戶 Uae47d9d496e4596d70ed724a7d6e2948 預設帳本...
+✅ AM_getUserDefaultLedger: 找到用戶預設帳本: user_Uae47d9d496e4596d70ed724a7d6e2948
+用戶帳本驗證通過: user_Uae47d9d496e4596d70ed724a7d6e2948 [9b2afc9c]
+[WH 2.0.16 LOG] WH 階段一: AM驗證完成，轉發至LBK處理記帳 [9b2afc9c] (INFO)
+WH v2.5.0: 純粹轉發至LBK處理 - 漢堡22222
+[2025-12-24T03:14:20.025Z] [INFO] [DL] 開始處理LINE OA請求 [9b2afc9c] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_processQuickBookkeeping]
+[2025-12-24T03:14:20.025Z] [DEBUG] [DL] 檢查統計查詢關鍵字: "漢堡22222" [9b2afc9c] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_checkStatisticsKeyword]
+[2025-12-24T03:14:20.026Z] [DEBUG] [DL] 用戶訊息解析: "漢堡22222" [9b2afc9c] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_parseUserMessage]
+[2025-12-24T03:14:20.026Z] [DEBUG] [DL] 階段三：開始簡化格式解析: "漢堡22222" [9b2afc9c] [Code: DEBUG] [Location: LBK_parseInputFormat]
+[2025-12-24T03:14:20.026Z] [INFO] [DL] 階段三：簡化解析結果: 科目="漢堡", 金額=22222, 支付方式="未指定" [9b2afc9c] [Code: INFO] [Location: LBK_parseInputFormat]
+[2025-12-24T03:14:20.026Z] [DEBUG] [DL] 提取金額: "漢堡22222" [9b2afc9c] [Code: DEBUG] [Location: LBK_extractAmount]
+[2025-12-24T03:14:20.027Z] [DEBUG] [DL] 查詢科目代碼: "漢堡" [9b2afc9c] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:14:20.027Z] [INFO] [DL] Firestore連線初始化成功 [Code: INFO] [Location: LBK_initializeFirestore]
+[2025-12-24T03:14:20.027Z] [DEBUG] [DL] 開始同義詞匹配，輸入: "漢堡" [9b2afc9c] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:14:20.150Z] [DEBUG] [DL] 查詢categories集合結果: 11 筆資料 [9b2afc9c] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:14:20.150Z] [DEBUG] [DL] 處理同義詞匹配: "漢堡"，科目: "生鮮雜貨"，同義詞數量: 0，同義詞內容: [] [9b2afc9c] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:14:20.150Z] [DEBUG] [DL] 處理同義詞匹配: "漢堡"，科目: "生活家用"，同義詞數量: 0，同義詞內容: [] [9b2afc9c] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:14:20.150Z] [DEBUG] [DL] 處理同義詞匹配: "漢堡"，科目: "交通費用"，同義詞數量: 1，同義詞內容: [洗車] [9b2afc9c] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:14:20.150Z] [DEBUG] [DL] 比較同義詞: "洗車" vs "漢堡" [9b2afc9c] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:14:20.150Z] [DEBUG] [DL] 處理同義詞匹配: "漢堡"，科目: "餐飲費用"，同義詞數量: 6，同義詞內容: [雞塊, 豆腐, 豆漿, 豆花, 滷味, 鮮乳] [9b2afc9c] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:14:20.151Z] [DEBUG] [DL] 比較同義詞: "雞塊" vs "漢堡" [9b2afc9c] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:14:20.151Z] [DEBUG] [DL] 比較同義詞: "豆腐" vs "漢堡" [9b2afc9c] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:14:20.151Z] [DEBUG] [DL] 比較同義詞: "豆漿" vs "漢堡" [9b2afc9c] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:14:20.151Z] [DEBUG] [DL] 比較同義詞: "豆花" vs "漢堡" [9b2afc9c] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:14:20.151Z] [DEBUG] [DL] 比較同義詞: "滷味" vs "漢堡" [9b2afc9c] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:14:20.151Z] [DEBUG] [DL] 比較同義詞: "鮮乳" vs "漢堡" [9b2afc9c] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:14:20.151Z] [DEBUG] [DL] 處理同義詞匹配: "漢堡"，科目: "娛樂消遣"，同義詞數量: 0，同義詞內容: [] [9b2afc9c] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:14:20.151Z] [DEBUG] [DL] 處理同義詞匹配: "漢堡"，科目: "運動嗜好"，同義詞數量: 1，同義詞內容: [呼拉圈] [9b2afc9c] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:14:20.151Z] [DEBUG] [DL] 比較同義詞: "呼拉圈" vs "漢堡" [9b2afc9c] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:14:20.151Z] [DEBUG] [DL] 處理同義詞匹配: "漢堡"，科目: "寵物生活"，同義詞數量: 0，同義詞內容: [] [9b2afc9c] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:14:20.151Z] [DEBUG] [DL] 處理同義詞匹配: "漢堡"，科目: "醫療費用"，同義詞數量: 0，同義詞內容: [] [9b2afc9c] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:14:20.151Z] [DEBUG] [DL] 處理同義詞匹配: "漢堡"，科目: "財務收入"，同義詞數量: 0，同義詞內容: [] [9b2afc9c] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:14:20.151Z] [DEBUG] [DL] 處理同義詞匹配: "漢堡"，科目: "財務支出"，同義詞數量: 0，同義詞內容: [] [9b2afc9c] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:14:20.151Z] [DEBUG] [DL] 處理同義詞匹配: "漢堡"，科目: "其他"，同義詞數量: 0，同義詞內容: [] [9b2afc9c] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:14:20.151Z] [INFO] [DL] 需要新科目歸類: 漢堡 [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_parseUserMessage]
+[2025-12-24T03:14:20.151Z] [INFO] [DL] 觸發新科目歸類流程: 漢堡 [9b2afc9c] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_processQuickBookkeeping]
+[2025-12-24T03:14:20.152Z] [INFO] [DL] 觸發新科目歧義消除流程: 漢堡 [9b2afc9c] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_processQuickBookkeeping]
+[2025-12-24T03:14:20.275Z] [INFO] [DL] Pending Record 創建成功: 1766546060152 [9b2afc9c] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_createPendingRecord]
+[2025-12-24T03:14:20.275Z] [INFO] [DL] 處理新科目歸類: 漢堡 [9b2afc9c] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_handleNewSubjectClassification]
+[2025-12-24T03:14:20.275Z] [DEBUG] [DL] 成功載入0099.json，共11筆科目資料 [Code: DEBUG] [Location: LBK_load0099SubjectConfig]
+[2025-12-24T03:14:20.276Z] [INFO] [DL] v1.4.3 生成科目歸類選單和Quick Reply，共11個動態選項 (來源:0099.json) [Code: INFO] [Location: LBK_buildClassificationMessage]
+已儲存pending記帳資料到快取: WH_PENDING_Uae47d9d496e4596d70ed724a7d6e2948 [9b2afc9c]
+[WH 2.0.16 LOG] WH 2.5.1: 已儲存pending記帳資料，等待用戶選擇科目 [9b2afc9c] (INFO)
+WH_replyMessage: 收到類型 object 的訊息對象
+WH_replyMessage: 訊息對象結構: ["success","message","responseMessage","quickReply","moduleCode","module","processingTime","moduleVersion","requiresUserSelection","pendingData"]
+WH_replyMessage: 訊息對象預覽: {"success":true,"message":"您的科目庫無此科目，請問「漢堡」屬於什麼科目？\n\n101 生鮮雜貨\n102 生活家用\n103 交通費用\n104 餐飲費用\n105 娛樂消遣\n106 運動嗜好\n107 寵物生活\n108 醫療費用\n201 財務收入\n301 財務支出\n999 其他","responseMessage":"您的科目庫無此科目，請問「漢堡」屬於什...
+WH_replyMessage: 發現responseMessage屬性 (string), 長度=121
+WH_replyMessage: 發現message屬性 (string)
+WH_replyMessage: 使用responseMessage屬性 (您的科目庫無此科目，請問「漢堡」屬於什麼科目？
+
+101 生...)
+WH_replyMessage: 開始回覆訊息: 您的科目庫無此科目，請問「漢堡」屬於什麼科目？
+
+101 生鮮雜貨
+102 生活家用
+103 交通費...
+[WH 2.0.16 LOG] WH 2.0.3: 開始回覆訊息: 您的科目庫無此科目，請問「漢堡」屬於什麼科目？
+
+101 生鮮雜貨
+102 生活家用
+103 交通費... (INFO)
+[WH 2.0.16 LOG] WH 2.0.3: 發送API請求到LINE平台 (INFO)
+LINE API 回覆結果: 200
+回覆訊息成功
+[WH 2.0.16 LOG] WH 2.0.3: 回覆訊息成功發送 (INFO)
+[WH 2.0.16 LOG] WH 階段一: LBK處理完成，已回覆用戶 [9b2afc9c] (INFO)
+DD_distributeData處理完成，結果預覽: {"success":true,"hasResponseMessage":true,"responseMsgLength":121,"errorType":"無","moduleCode":"LBK","hasPartialData":false} [9b2afc9c]
+WH v2.5.0: 完全信任LBK處理結果，準備轉發回覆 [9b2afc9c]
+[WH 2.0.16 LOG] WH 2.5.1: DCN-0024 階段二 - 正確傳遞Quick Reply參數 [9b2afc9c] (INFO)
+訊息處理結果: {"success":true,"message":"您的科目庫無此科目，請問「漢堡」屬於什麼科目？\n\n101 生鮮雜貨\n102 生活家用\n103 交通費用\n104 餐飲費用\n105 娛樂消遣\n106 運動嗜好\n107 寵物生活\n108 醫療費用\n201 財務收入\n301 財務支出\n999 其他","responseMessage":"您的科目庫無此科目，請問「漢堡」屬於什麼科目？\n\n101 生鮮雜貨\n102 生活家用\n103 交通費用\n104 餐飲費用\n105 娛樂消遣\n106 運動嗜好\n107 寵物生活\n108 醫療費用\n201 財務收入\n301 財務支出\n999 其他","quickReply":{"items":[{"type":"action","action":{"type":"postback","label":"101 生鮮雜貨","data":"classify_101_{\"subject\":\"漢堡\",\"amount\":22222,\"rawAmount\":\"22222\",\"paymentMethod\":null,\"userId\":\"Uae47d9d496e4596d70ed724a7d6e2948\",\"pendingId\":\"1766546060152\"}","displayText":"101 生鮮雜貨"}},{"type":"action","action":{"type":"postback","label":"102 生活家用","data":"classify_102_{\"subject\":\"漢堡\",\"amount\":22222,\"rawAmount\":\"22222\",\"paymentMethod\":null,\"userId\":\"Uae47d9d496e4596d70ed724a7d6e2948\",\"pendingId\":\"1766546060152\"}","displayText":"102 生活家用"}},{"type":"action","action":{"type":"postback","label":"103 交通費用","data":"classify_103_{\"subject\":\"漢堡\",\"amount\":22222,\"rawAmount\":\"22222\",\"paymentMethod\":null,\"userId\":\"Uae47d9d496e4596d70ed724a7d6e2948\",\"pendingId\":\"1766546060152\"}","displayText":"103 交通費用"}},{"type":"action","action":{"type":"postback","label":"104 餐飲費用","data":"classify_104_{\"subject\":\"漢堡\",\"amount\":22222,\"rawAmount\":\"22222\",\"paymentMethod\":null,\"userId\":\"Uae47d9d496e4596d70ed724a7d6e2948\",\"pendingId\":\"1766546060152\"}","displayText":"104 餐飲費用"}},{"type":"action","action":{"type":"postback","label":"105 娛樂消遣","data":"classify_105_{\"subject\":\"漢堡\",\"amount\":22222,\"rawAmount\":\"22222\",\"paymentMethod\":null,\"userId\":\"Uae47d9d496e4596d70ed724a7d6e2948\",\"pendingId\":\"1766546060152\"}","displayText":"105 娛樂消遣"}},{"type":"action","action":{"type":"postback","label":"106 運動嗜好","data":"classify_106_{\"subject\":\"漢堡\",\"amount\":22222,\"rawAmount\":\"22222\",\"paymentMethod\":null,\"userId\":\"Uae47d9d496e4596d70ed724a7d6e2948\",\"pendingId\":\"1766546060152\"}","displayText":"106 運動嗜好"}},{"type":"action","action":{"type":"postback","label":"107 寵物生活","data":"classify_107_{\"subject\":\"漢堡\",\"amount\":22222,\"rawAmount\":\"22222\",\"paymentMethod\":null,\"userId\":\"Uae47d9d496e4596d70ed724a7d6e2948\",\"pendingId\":\"1766546060152\"}","displayText":"107 寵物生活"}},{"type":"action","action":{"type":"postback","label":"108 醫療費用","data":"classify_108_{\"subject\":\"漢堡\",\"amount\":22222,\"rawAmount\":\"22222\",\"paymentMethod\":null,\"userId\":\"Uae47d9d496e4596d70ed724a7d6e2948\",\"pendingId\":\"1766546060152\"}","displayText":"108 醫療費用"}},{"type":"action","action":{"type":"postback","label":"201 財務收入","data":"classify_201_{\"subject\":\"漢堡\",\"amount\":22222,\"rawAmount\":\"22222\",\"paymentMethod\":null,\"userId\":\"Uae47d9d496e4596d70ed724a7d6e2948\",\"pendingId\":\"1766546060152\"}","displayText":"201 財務收入"}},{"type":"action","action":{"type":"postback","label":"301 財務支出","data":"classify_301_{\"subject\":\"漢堡\",\"amount\":22222,\"rawAmount\":\"22222\",\"paymentMethod\":null,\"userId\":\"Uae47d9d496e4596d70ed724a7d6e2948\",\"pendingId\":\"1766546060152\"}","displayText":"301 財務支出"}},{"type":"action","action":{"type":"postback","label":"999 其他","data":"classify_999_{\"subject\":\"漢堡\",\"amount\":22222,\"rawAmount\":\"22222\",\"paymentMethod\":null,\"userId\":\"Uae47d9d496e4596d70ed724a7d6e2948\",\"pendingId\":\"1766546060152\"}","displayText":"999 其他"}}]},"moduleCode":"LBK","module":"LBK","processingTime":1763942774.616,"moduleVersion":"1.4.3","requiresUserSelection":true,"pendingData":{"subject":"漢堡","amount":22222,"rawAmount":"22222","paymentMethod":null,"userId":"Uae47d9d496e4596d70ed724a7d6e2948","timestamp":"2025-12-24T03:14:20.276Z","processId":"9b2afc9c","originalInput":"漢堡22222","stageData":{"electedCategory":{},"categorySelected":true}}} [9b2afc9c]
+非同步處理完成，已清理數據 [9b2afc9c]
+[WH 2.0.16 LOG] WH 2.0.7: 非同步處理完成 [9b2afc9c] (INFO)
+[WH 2.0.16 LOG] WH 2.0.7: 收到LINE Webhook請求 [45ce39f5] (INFO)
+非回覆事件，使用非同步處理 [45ce39f5]
+開始非同步處理請求 [45ce39f5]
+[WH 2.0.16 LOG] WH 2.0.7: 開始非同步處理請求 [45ce39f5] (INFO)
+WH v2.5.3: 收到postback事件: classify_104_{"subject":"漢堡","amount":22222,"rawAmount":"22222","paymentMethod":null,"userId":"Uae47d9d496e4596d70ed724a7d6e2948","pendingId":"1766546060152"}
+[WH 2.0.16 LOG] WH 2.5.3: 階段一修復 - 識別postback事件類型: classify_104_{"subject":"漢堡","amount":22222,"rawAmount":"22222","paymentMethod":null,"userId":"Uae47d9d496e4596d70ed724a7d6e2948","pendingId":"1766546060152"} [45ce39f5] (INFO)
+WH v2.5.0: 純粹轉發至LBK處理 - classify_104_{"subject":"漢堡","amount":22222,"rawAmount":"22222","paymentMethod":null,"userId":"Uae47d9d496e4596d70ed724a7d6e2948","pendingId":"1766546060152"}
+[2025-12-24T03:14:24.919Z] [INFO] [DL] 開始處理LINE OA請求 [45ce39f5] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_processQuickBookkeeping]
+[2025-12-24T03:14:24.920Z] [INFO] [DL] 檢測到科目歸類postback格式訊息 [45ce39f5] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_processQuickBookkeeping]
+[2025-12-24T03:14:24.920Z] [INFO] [DL] 科目選擇完成，開始執行記帳: categoryId=104 [45ce39f5] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_processQuickBookkeeping]
+[2025-12-24T03:14:24.920Z] [INFO] [DL] 處理科目歸類postback: categoryId=104 [45ce39f5] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_handleClassificationPostback]
+[2025-12-24T03:14:24.920Z] [DEBUG] [DL] 成功載入0099.json，共11筆科目資料 [Code: DEBUG] [Location: LBK_load0099SubjectConfig]
+[2025-12-24T03:14:24.921Z] [DEBUG] [DL] 成功載入0099.json，共11筆科目資料 [Code: DEBUG] [Location: LBK_load0099SubjectConfig]
+[2025-12-24T03:14:24.921Z] [DEBUG] [DL] 建立科目映射表，共11個選項 (來源:0099.json) [Code: DEBUG] [Location: LBK_buildCategoryMapping]
+[2025-12-24T03:14:24.921Z] [INFO] [DL] 科目歸類選擇: 餐飲費用 [45ce39f5] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_handleClassificationPostback]
+[2025-12-24T03:14:24.921Z] [INFO] [DL] 階段一修復：添加科目同義詞: 漢堡 → 餐飲費用 (ID: 104) [45ce39f5] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_addSubjectSynonym]
+[2025-12-24T03:14:25.030Z] [INFO] [DL] 階段一修復：現有同義詞: [雞塊, 豆腐, 豆漿, 豆花, 滷味, 鮮乳] [45ce39f5] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_addSubjectSynonym]
+[2025-12-24T03:14:25.259Z] [INFO] [DL] 階段一修復：科目同義詞事務更新成功: "雞塊,豆腐,豆漿,豆花,滷味,鮮乳,漢堡" [45ce39f5] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_addSubjectSynonym]
+[2025-12-24T03:14:25.259Z] [INFO] [DL] 成功建立同義詞關聯: 漢堡 → 餐飲費用 [45ce39f5] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_handleClassificationPostback]
+[2025-12-24T03:14:25.378Z] [INFO] [DL] 階段一修復：更新 Pending Record 詳細資訊 - pendingId: 1766546060152, categorySelected: true, electedCategory: {"categoryId":"104","categoryName":"餐飲費用"} [45ce39f5] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_updatePendingRecord]
+成功寫入 51 條日誌到 Firestore
+[2025-12-24T03:14:25.514Z] [INFO] [DL] Pending Record 更新成功: 1766546060152 → PENDING_CATEGORY [45ce39f5] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_updatePendingRecord]
+[2025-12-24T03:14:25.515Z] [INFO] [DL] 階段一修復：Pending Record 科目資訊更新成功: 餐飲費用 [45ce39f5] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_handleClassificationPostback]
+[2025-12-24T03:14:25.515Z] [DEBUG] [DL] 階段三：開始簡化格式解析: "classify_104_{"subject":"漢堡","amount":22222,"rawAmount":"22222","paymentMethod":null,"userId":"Uae47d9d496e4596d70ed724a7d6e2948","pendingId":"1766546060152"}" [45ce39f5] [Code: DEBUG] [Location: LBK_parseInputFormat]
+[2025-12-24T03:14:25.515Z] [DEBUG] [DL] 檢測到系統內部postback格式，跳過解析: "classify_104_{"subject":"漢堡","amount":22222,"rawAmount":"22222","paymentMethod":null,"userId":"Uae47d9d496e4596d70ed724a7d6e2948","pendingId":"1766546060152"}" [45ce39f5] [Code: DEBUG] [Location: LBK_parseInputFormat]
+[2025-12-24T03:14:25.515Z] [INFO] [DL] 階段二修復：科目選擇完成，檢查支付方式: 刷卡 [45ce39f5] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_handleClassificationPostback]
+[2025-12-24T03:14:25.515Z] [DEBUG] [DL] 階段二：嚴格驗證錢包存在: walletId="null", walletName="刷卡" [45ce39f5] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_validateWalletExists]
+[2025-12-24T03:14:25.515Z] [DEBUG] [DL] 階段二：使用 walletName 嚴格查詢: "刷卡" [45ce39f5] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_validateWalletExists]
+[2025-12-24T03:14:25.515Z] [DEBUG] [DL] 階段二：嚴格查詢錢包: "刷卡" [45ce39f5] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getWalletByName]
+[2025-12-24T03:14:25.516Z] [DEBUG] [DL] 階段二：開始嚴格匹配，輸入: "刷卡" [45ce39f5] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getWalletByName]
+[2025-12-24T03:14:25.633Z] [DEBUG] [DL] 階段二：查詢 wallets 集合結果: 3 筆 active 資料 [45ce39f5] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getWalletByName]
+[2025-12-24T03:14:25.633Z] [DEBUG] [DL] 階段二：檢查同義詞: "刷卡"，錢包: "現金"，同義詞: [現金] [45ce39f5] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getWalletByName]
+[2025-12-24T03:14:25.633Z] [DEBUG] [DL] 階段二：檢查同義詞: "刷卡"，錢包: "信用卡"，同義詞: [信用卡, 星展] [45ce39f5] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getWalletByName]
+[2025-12-24T03:14:25.633Z] [DEBUG] [DL] 階段二：檢查同義詞: "刷卡"，錢包: "銀行轉帳"，同義詞: [銀行轉帳] [45ce39f5] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getWalletByName]
+[2025-12-24T03:14:25.634Z] [INFO] [DL] 階段二：未在 wallets 子集合中找到精確匹配: "刷卡" [45ce39f5] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_getWalletByName]
+[2025-12-24T03:14:25.634Z] [INFO] [DL] 階段二：錢包未在 wallets 子集合中找到，觸發用戶確認: 刷卡 [45ce39f5] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_validateWalletExists]
+[2025-12-24T03:14:25.634Z] [INFO] [DL] 支付方式需要歧義消除: undefined，轉入PENDING_WALLET狀態 [45ce39f5] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_handleClassificationPostback]
+成功寫入 16 條日誌到 Firestore
+[2025-12-24T03:14:25.739Z] [INFO] [DL] 階段一修復：更新 Pending Record 詳細資訊 - pendingId: 1766546060152, categorySelected: true, electedCategory: {"categoryId":"104","categoryName":"餐飲費用"} [45ce39f5] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_updatePendingRecord]
+[2025-12-24T03:14:25.851Z] [INFO] [DL] Pending Record 更新成功: 1766546060152 → PENDING_WALLET [45ce39f5] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_updatePendingRecord]
+WH_replyMessage: 收到類型 object 的訊息對象
+WH_replyMessage: 訊息對象結構: ["success","message","responseMessage","quickReply","moduleCode","module","processingTime","moduleVersion","requiresUserSelection","classificationCompleted","nextStage"]
+WH_replyMessage: 訊息對象預覽: {"success":true,"message":"科目歸類完成！已選擇「餐飲費用」\n\n檢測到未知支付方式「刷卡」，請問這屬於何種支付方式：","responseMessage":"科目歸類完成！已選擇「餐飲費用」\n\n檢測到未知支付方式「刷卡」，請問這屬於何種支付方式：","quickReply":{"items":[{"type":"action","action":{"type":"...
+WH_replyMessage: 發現responseMessage屬性 (string), 長度=44
+WH_replyMessage: 發現message屬性 (string)
+WH_replyMessage: 使用responseMessage屬性 (科目歸類完成！已選擇「餐飲費用」
+
+檢測到未知支付方式「刷卡...)
+WH_replyMessage: 開始回覆訊息: 科目歸類完成！已選擇「餐飲費用」
+
+檢測到未知支付方式「刷卡」，請問這屬於何種支付方式：
+[WH 2.0.16 LOG] WH 2.0.3: 開始回覆訊息: 科目歸類完成！已選擇「餐飲費用」
+
+檢測到未知支付方式「刷卡」，請問這屬於何種支付方式： (INFO)
+[WH 2.0.16 LOG] WH 2.0.3: 發送API請求到LINE平台 (INFO)
+LINE API 回覆結果: 200
+回覆訊息成功
+[WH 2.0.16 LOG] WH 2.0.3: 回覆訊息成功發送 (INFO)
+[WH 2.0.16 LOG] WH 2.5.3: postback處理完成並回覆用戶 [45ce39f5] (INFO)
+非同步處理完成，已清理數據 [45ce39f5]
+[WH 2.0.16 LOG] WH 2.0.7: 非同步處理完成 [45ce39f5] (INFO)
+[WH 2.0.16 LOG] WH 2.0.7: 收到LINE Webhook請求 [6198d7b9] (INFO)
+非回覆事件，使用非同步處理 [6198d7b9]
+開始非同步處理請求 [6198d7b9]
+[WH 2.0.16 LOG] WH 2.0.7: 開始非同步處理請求 [6198d7b9] (INFO)
+WH v2.5.3: 收到postback事件: wallet_type_credit_1766546060152
+[WH 2.0.16 LOG] WH 2.5.3: 階段一修復 - 識別postback事件類型: wallet_type_credit_1766546060152 [6198d7b9] (INFO)
+WH v2.5.0: 純粹轉發至LBK處理 - wallet_type_credit_1766546060152
+[2025-12-24T03:14:58.578Z] [INFO] [DL] 開始處理LINE OA請求 [6198d7b9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_processQuickBookkeeping]
+[2025-12-24T03:14:58.578Z] [INFO] [DL] 檢測到wallet類型選擇postback事件: wallet_type_credit_1766546060152 [6198d7b9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_processQuickBookkeeping]
+[2025-12-24T03:14:58.578Z] [INFO] [DL] 處理錢包確認postback: wallet_type_credit_1766546060152 [6198d7b9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_handleWalletConfirmationPostback]
+[2025-12-24T03:14:58.578Z] [INFO] [DL] 處理支付方式類型選擇: type=credit, pendingId=1766546060152 [6198d7b9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_handleWalletConfirmationPostback]
+[2025-12-24T03:14:58.579Z] [INFO] [DL] 階段四：處理支付方式類型選擇: type=credit, pendingId=1766546060152 [6198d7b9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_handleWalletTypeSelection]
+[2025-12-24T03:14:58.685Z] [DEBUG] [DL] 階段二：嚴格查詢錢包: "信用卡" [6198d7b9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getWalletByName]
+[2025-12-24T03:14:58.685Z] [DEBUG] [DL] 階段二：開始嚴格匹配，輸入: "信用卡" [6198d7b9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getWalletByName]
+[2025-12-24T03:14:58.796Z] [DEBUG] [DL] 階段二：查詢 wallets 集合結果: 3 筆 active 資料 [6198d7b9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getWalletByName]
+[2025-12-24T03:14:58.796Z] [DEBUG] [DL] 階段二：檢查同義詞: "信用卡"，錢包: "現金"，同義詞: [現金] [6198d7b9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getWalletByName]
+[2025-12-24T03:14:58.796Z] [INFO] [DL] 階段二：找到精確錢包名稱匹配: "信用卡" → "信用卡" [6198d7b9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_getWalletByName]
+[2025-12-24T03:14:58.796Z] [INFO] [DL] 階段二：返回錢包名稱精確匹配結果: 信用卡 [6198d7b9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_getWalletByName]
+[2025-12-24T03:14:58.797Z] [INFO] [DL] 階段五：動態查詢成功匹配錢包: 信用卡 → 信用卡 [6198d7b9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_handleWalletTypeSelection]
+[2025-12-24T03:14:58.905Z] [INFO] [DL] 階段一修復：更新 Pending Record 詳細資訊 - pendingId: 1766546060152, categorySelected: true, electedCategory: {"categoryName":"餐飲費用","categoryId":"104"} [6198d7b9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_updatePendingRecord]
+[2025-12-24T03:14:59.027Z] [INFO] [DL] Pending Record 更新成功: 1766546060152 → PENDING_WALLET [6198d7b9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_updatePendingRecord]
+[2025-12-24T03:14:59.027Z] [DEBUG] [DL] 階段三：開始簡化格式解析: "漢堡22222" [6198d7b9] [Code: DEBUG] [Location: LBK_parseInputFormat]
+[2025-12-24T03:14:59.028Z] [INFO] [DL] 階段三：簡化解析結果: 科目="漢堡", 金額=22222, 支付方式="未指定" [6198d7b9] [Code: INFO] [Location: LBK_parseInputFormat]
+[2025-12-24T03:14:59.136Z] [INFO] [DL] 階段四：開始完成Pending Record，科目已選: true, 錢包已選: true [6198d7b9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_completePendingRecord]
+[2025-12-24T03:14:59.136Z] [INFO] [DL] 階段一修復：開始驗證科目資訊 - stageData: {"categorySelected":true,"walletSelected":true,"electedCategory":{"categoryId":"104","categoryName":"餐飲費用"},"selectedWallet":{"walletId":"credit","type":"credit","walletName":"信用卡"}} [6198d7b9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_completePendingRecord]
+[2025-12-24T03:14:59.136Z] [INFO] [DL] 階段一修復：科目欄位提取結果 - subjectCode: 104, categoryName: 餐飲費用 [6198d7b9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_completePendingRecord]
+[2025-12-24T03:14:59.136Z] [INFO] [DL] 階段一修復：科目資料驗證完成: 餐飲費用 (代碼: 104) [6198d7b9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_completePendingRecord]
+[2025-12-24T03:14:59.136Z] [INFO] [DL] 階段五：錢包資料驗證完成: 信用卡 (ID: credit) [6198d7b9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_completePendingRecord]
+[2025-12-24T03:14:59.136Z] [INFO] [DL] 階段三：最終記帳資料驗證 - 金額: 22222, 科目: 餐飲費用, 支付方式: 信用卡 [6198d7b9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_completePendingRecord]
+[2025-12-24T03:14:59.136Z] [INFO] [DL] 階段三：Firestore記帳資料最終驗證 - ID: 1766546099136, 金額: 22222, 類型: expense, 科目: 餐飲費用, categoryId: 104 [6198d7b9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_completePendingRecord]
+[2025-12-24T03:14:59.137Z] [INFO] [DL] 階段四：直接執行記帳儲存，跳過重複科目查詢 [6198d7b9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_completePendingRecord]
+[2025-12-24T03:14:59.137Z] [INFO] [DL] 使用1301標準路徑儲存: ledgers/user_Uae47d9d496e4596d70ed724a7d6e2948/transactions [6198d7b9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_saveToFirestore]
+[2025-12-24T03:14:59.372Z] [INFO] [DL] 階段三：記帳結果資料構建完成 - 所有欄位已驗證無undefined值 [6198d7b9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_completePendingRecord]
+[2025-12-24T03:14:59.480Z] [INFO] [DL] 階段一修復：更新 Pending Record 詳細資訊 - pendingId: 1766546060152, categorySelected: true, electedCategory: {"categoryId":"104","categoryName":"餐飲費用"} [6198d7b9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_updatePendingRecord]
+[2025-12-24T03:14:59.591Z] [INFO] [DL] Pending Record 更新成功: 1766546060152 → COMPLETED [6198d7b9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_updatePendingRecord]
+[2025-12-24T03:14:59.591Z] [INFO] [DL] 階段四：Pending Record 記帳完成: 1766546060152 → 1766546099136 [6198d7b9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_completePendingRecord]
+[2025-12-24T03:14:59.592Z] [DEBUG] [DL] 階段二：開始處理備註文字: "漢堡22222", 金額: 22222, 支付方式: "信用卡" [undefined] [Code: DEBUG] [Location: LBK_removeAmountFromText]
+[2025-12-24T03:14:59.592Z] [INFO] [DL] 階段二：備註處理完成: "漢堡22222" → "漢堡" [undefined] [Code: INFO] [Location: LBK_removeAmountFromText]
+[2025-12-24T03:14:59.593Z] [DEBUG] [DL] 階段二：開始處理備註文字: "漢堡22222", 金額: 22222, 支付方式: "信用卡" [undefined] [Code: DEBUG] [Location: LBK_removeAmountFromText]
+[2025-12-24T03:14:59.593Z] [INFO] [DL] 階段二：備註處理完成: "漢堡22222" → "漢堡" [undefined] [Code: INFO] [Location: LBK_removeAmountFromText]
+WH_replyMessage: 收到類型 object 的訊息對象
+WH_replyMessage: 訊息對象結構: ["success","action","transactionId","bookkeepingData","message","responseMessage","moduleCode","module"]
+WH_replyMessage: 訊息對象預覽: {"success":true,"action":"transaction_completed","transactionId":"1766546099136","bookkeepingData":{"id":"1766546099136","transactionId":"1766546099136","amount":22222,"type":"expense","category":"104...
+WH_replyMessage: 發現responseMessage屬性 (string), 長度=84
+WH_replyMessage: 發現message屬性 (string)
+WH_replyMessage: 使用responseMessage屬性 (記帳成功！
+金額：22222元 (支出)
+支付方式：信用卡
+...)
+WH_replyMessage: 開始回覆訊息: 記帳成功！
+金額：22222元 (支出)
+支付方式：信用卡
+時間：2025/12/24 上午11:1...
+[WH 2.0.16 LOG] WH 2.0.3: 開始回覆訊息: 記帳成功！
+金額：22222元 (支出)
+支付方式：信用卡
+時間：2025/12/24 上午11:1... (INFO)
+[WH 2.0.16 LOG] WH 2.0.3: 發送API請求到LINE平台 (INFO)
+LINE API 回覆結果: 200
+回覆訊息成功
+[WH 2.0.16 LOG] WH 2.0.3: 回覆訊息成功發送 (INFO)
+[WH 2.0.16 LOG] WH 2.5.3: postback處理完成並回覆用戶 [6198d7b9] (INFO)
+非同步處理完成，已清理數據 [6198d7b9]
+[WH 2.0.16 LOG] WH 2.0.7: 非同步處理完成 [6198d7b9] (INFO)
+[WH 2.0.16 LOG] WH 2.0.7: 收到LINE Webhook請求 [1a8ed4d9] (INFO)
+檢測到需要回覆的訊息，啟用同步處理 [1a8ed4d9]
+[WH 2.0.16 LOG] WH 2.0.16: 檢測到需要回覆的訊息，啟用同步處理 [1a8ed4d9] (INFO)
+開始非同步處理請求 [1a8ed4d9]
+[WH 2.0.16 LOG] WH 2.0.7: 開始非同步處理請求 [1a8ed4d9] (INFO)
+[WH 2.0.16 LOG] WH 2.0.3: 開始處理事件: message [1a8ed4d9] (INFO)
+處理消息事件: text [1a8ed4d9]
+收到文本消息: "漢堡3333" [1a8ed4d9]
+[WH 2.0.16 LOG] WH 2.0.3: 收到文本消息: "漢堡3333" [1a8ed4d9] (INFO)
+開始AM用戶驗證流程 [1a8ed4d9]
+[WH 2.0.16 LOG] WH 階段一: 開始AM用戶驗證流程 [1a8ed4d9] (INFO)
+[2025-12-24T03:15:03.687Z] [INFO] [DL] AM [User: 帳號存在性驗證: Uae47d9d496e4596d70ed724a7d6e2948 (LINE)] [Location: Object.DL_info]
+用戶帳本驗證流程完成: Uae47d9d496e4596d70ed724a7d6e2948 [1a8ed4d9]
+🔍 AM_getUserDefaultLedger: 查詢用戶 Uae47d9d496e4596d70ed724a7d6e2948 預設帳本...
+✅ AM_getUserDefaultLedger: 找到用戶預設帳本: user_Uae47d9d496e4596d70ed724a7d6e2948
+用戶帳本驗證通過: user_Uae47d9d496e4596d70ed724a7d6e2948 [1a8ed4d9]
+[WH 2.0.16 LOG] WH 階段一: AM驗證完成，轉發至LBK處理記帳 [1a8ed4d9] (INFO)
+WH v2.5.0: 純粹轉發至LBK處理 - 漢堡3333
+[2025-12-24T03:15:03.900Z] [INFO] [DL] 開始處理LINE OA請求 [1a8ed4d9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_processQuickBookkeeping]
+[2025-12-24T03:15:03.900Z] [DEBUG] [DL] 檢查統計查詢關鍵字: "漢堡3333" [1a8ed4d9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_checkStatisticsKeyword]
+[2025-12-24T03:15:03.900Z] [DEBUG] [DL] 用戶訊息解析: "漢堡3333" [1a8ed4d9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_parseUserMessage]
+[2025-12-24T03:15:03.900Z] [DEBUG] [DL] 階段三：開始簡化格式解析: "漢堡3333" [1a8ed4d9] [Code: DEBUG] [Location: LBK_parseInputFormat]
+[2025-12-24T03:15:03.900Z] [INFO] [DL] 階段三：簡化解析結果: 科目="漢堡", 金額=3333, 支付方式="未指定" [1a8ed4d9] [Code: INFO] [Location: LBK_parseInputFormat]
+[2025-12-24T03:15:03.900Z] [DEBUG] [DL] 提取金額: "漢堡3333" [1a8ed4d9] [Code: DEBUG] [Location: LBK_extractAmount]
+[2025-12-24T03:15:03.900Z] [DEBUG] [DL] 查詢科目代碼: "漢堡" [1a8ed4d9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:03.900Z] [DEBUG] [DL] 開始同義詞匹配，輸入: "漢堡" [1a8ed4d9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:04.021Z] [DEBUG] [DL] 查詢categories集合結果: 11 筆資料 [1a8ed4d9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:04.021Z] [DEBUG] [DL] 處理同義詞匹配: "漢堡"，科目: "生鮮雜貨"，同義詞數量: 0，同義詞內容: [] [1a8ed4d9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:04.021Z] [DEBUG] [DL] 處理同義詞匹配: "漢堡"，科目: "生活家用"，同義詞數量: 0，同義詞內容: [] [1a8ed4d9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:04.021Z] [DEBUG] [DL] 處理同義詞匹配: "漢堡"，科目: "交通費用"，同義詞數量: 1，同義詞內容: [洗車] [1a8ed4d9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:04.022Z] [DEBUG] [DL] 比較同義詞: "洗車" vs "漢堡" [1a8ed4d9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:04.022Z] [DEBUG] [DL] 處理同義詞匹配: "漢堡"，科目: "餐飲費用"，同義詞數量: 7，同義詞內容: [雞塊, 豆腐, 豆漿, 豆花, 滷味, 鮮乳, 漢堡] [1a8ed4d9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:04.026Z] [DEBUG] [DL] 比較同義詞: "雞塊" vs "漢堡" [1a8ed4d9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:04.029Z] [DEBUG] [DL] 比較同義詞: "豆腐" vs "漢堡" [1a8ed4d9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:04.033Z] [DEBUG] [DL] 比較同義詞: "豆漿" vs "漢堡" [1a8ed4d9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:04.037Z] [DEBUG] [DL] 比較同義詞: "豆花" vs "漢堡" [1a8ed4d9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:04.041Z] [DEBUG] [DL] 比較同義詞: "滷味" vs "漢堡" [1a8ed4d9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:04.044Z] [DEBUG] [DL] 比較同義詞: "鮮乳" vs "漢堡" [1a8ed4d9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:04.047Z] [DEBUG] [DL] 比較同義詞: "漢堡" vs "漢堡" [1a8ed4d9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:04.049Z] [INFO] [DL] 找到精確同義詞匹配: "漢堡" → 同義詞:"漢堡" → 科目:"餐飲費用" [1a8ed4d9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:04.051Z] [DEBUG] [DL] 處理同義詞匹配: "漢堡"，科目: "娛樂消遣"，同義詞數量: 0，同義詞內容: [] [1a8ed4d9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:04.054Z] [DEBUG] [DL] 處理同義詞匹配: "漢堡"，科目: "運動嗜好"，同義詞數量: 1，同義詞內容: [呼拉圈] [1a8ed4d9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:04.059Z] [DEBUG] [DL] 比較同義詞: "呼拉圈" vs "漢堡" [1a8ed4d9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:04.062Z] [DEBUG] [DL] 處理同義詞匹配: "漢堡"，科目: "寵物生活"，同義詞數量: 0，同義詞內容: [] [1a8ed4d9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:04.069Z] [DEBUG] [DL] 處理同義詞匹配: "漢堡"，科目: "醫療費用"，同義詞數量: 0，同義詞內容: [] [1a8ed4d9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:04.073Z] [DEBUG] [DL] 處理同義詞匹配: "漢堡"，科目: "財務收入"，同義詞數量: 0，同義詞內容: [] [1a8ed4d9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:04.075Z] [DEBUG] [DL] 處理同義詞匹配: "漢堡"，科目: "財務支出"，同義詞數量: 0，同義詞內容: [] [1a8ed4d9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:04.077Z] [DEBUG] [DL] 處理同義詞匹配: "漢堡"，科目: "其他"，同義詞數量: 0，同義詞內容: [] [1a8ed4d9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:04.083Z] [DEBUG] [DL] 階段二：開始支付方式專項處理: "漢堡3333" [1a8ed4d9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_parsePaymentMethod]
+[2025-12-24T03:15:04.085Z] [DEBUG] [DL] 階段三：開始簡化格式解析: "漢堡3333" [1a8ed4d9] [Code: DEBUG] [Location: LBK_parseInputFormat]
+[2025-12-24T03:15:04.088Z] [INFO] [DL] 階段三：簡化解析結果: 科目="漢堡", 金額=3333, 支付方式="未指定" [1a8ed4d9] [Code: INFO] [Location: LBK_parseInputFormat]
+[2025-12-24T03:15:04.089Z] [INFO] [DL] 階段二：信任第一階段解析結果: "未檢測到" [1a8ed4d9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_parsePaymentMethod]
+[2025-12-24T03:15:04.091Z] [DEBUG] [DL] 階段二：用戶未提供支付方式，動態查詢0302預設配置 [1a8ed4d9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_parsePaymentMethod]
+[2025-12-24T03:15:04.093Z] [DEBUG] [DL] 階段二：動態讀取0302預設支付方式配置 [1a8ed4d9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getDefaultPaymentMethod]
+[2025-12-24T03:15:04.096Z] [INFO] [DL] 階段二：從0302配置讀取到預設錢包: "信用卡" [1a8ed4d9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_getDefaultPaymentMethod]
+[2025-12-24T03:15:04.118Z] [INFO] [DL] 階段二：使用0302預設配置: "信用卡" [1a8ed4d9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_parsePaymentMethod]
+[2025-12-24T03:15:04.120Z] [DEBUG] [DL] 階段二：嚴格驗證錢包存在: walletId="credit", walletName="信用卡" [1a8ed4d9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_validateWalletExists]
+[2025-12-24T03:15:04.131Z] [DEBUG] [DL] 階段二：使用 walletId 查詢: credit [1a8ed4d9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_validateWalletExists]
+成功寫入 76 條日誌到 Firestore
+成功寫入 0 條日誌到 Firestore
+成功寫入 0 條日誌到 Firestore
+成功寫入 0 條日誌到 Firestore
+成功寫入 0 條日誌到 Firestore
+成功寫入 0 條日誌到 Firestore
+成功寫入 0 條日誌到 Firestore
+成功寫入 0 條日誌到 Firestore
+成功寫入 0 條日誌到 Firestore
+[2025-12-24T03:15:04.510Z] [INFO] [DL] 階段二：透過 walletId 驗證成功: credit → 信用卡 [1a8ed4d9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_validateWalletExists]
+[2025-12-24T03:15:04.510Z] [DEBUG] [DL] 執行記帳操作 [1a8ed4d9] (嘗試 1/3) [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_executeBookkeeping]
+[2025-12-24T03:15:04.511Z] [DEBUG] [DL] 查詢科目代碼: "漢堡" [1a8ed4d9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:04.511Z] [DEBUG] [DL] 開始同義詞匹配，輸入: "漢堡" [1a8ed4d9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+成功寫入 4 條日誌到 Firestore
+成功寫入 0 條日誌到 Firestore
+成功寫入 0 條日誌到 Firestore
+[2025-12-24T03:15:04.659Z] [DEBUG] [DL] 查詢categories集合結果: 11 筆資料 [1a8ed4d9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:04.660Z] [DEBUG] [DL] 處理同義詞匹配: "漢堡"，科目: "生鮮雜貨"，同義詞數量: 0，同義詞內容: [] [1a8ed4d9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:04.660Z] [DEBUG] [DL] 處理同義詞匹配: "漢堡"，科目: "生活家用"，同義詞數量: 0，同義詞內容: [] [1a8ed4d9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:04.660Z] [DEBUG] [DL] 處理同義詞匹配: "漢堡"，科目: "交通費用"，同義詞數量: 1，同義詞內容: [洗車] [1a8ed4d9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:04.660Z] [DEBUG] [DL] 比較同義詞: "洗車" vs "漢堡" [1a8ed4d9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:04.660Z] [DEBUG] [DL] 處理同義詞匹配: "漢堡"，科目: "餐飲費用"，同義詞數量: 7，同義詞內容: [雞塊, 豆腐, 豆漿, 豆花, 滷味, 鮮乳, 漢堡] [1a8ed4d9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:04.660Z] [DEBUG] [DL] 比較同義詞: "雞塊" vs "漢堡" [1a8ed4d9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:04.660Z] [DEBUG] [DL] 比較同義詞: "豆腐" vs "漢堡" [1a8ed4d9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:04.660Z] [DEBUG] [DL] 比較同義詞: "豆漿" vs "漢堡" [1a8ed4d9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:04.660Z] [DEBUG] [DL] 比較同義詞: "豆花" vs "漢堡" [1a8ed4d9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:04.660Z] [DEBUG] [DL] 比較同義詞: "滷味" vs "漢堡" [1a8ed4d9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:04.660Z] [DEBUG] [DL] 比較同義詞: "鮮乳" vs "漢堡" [1a8ed4d9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:04.660Z] [DEBUG] [DL] 比較同義詞: "漢堡" vs "漢堡" [1a8ed4d9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:04.661Z] [INFO] [DL] 找到精確同義詞匹配: "漢堡" → 同義詞:"漢堡" → 科目:"餐飲費用" [1a8ed4d9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:04.661Z] [DEBUG] [DL] 處理同義詞匹配: "漢堡"，科目: "娛樂消遣"，同義詞數量: 0，同義詞內容: [] [1a8ed4d9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:04.661Z] [DEBUG] [DL] 處理同義詞匹配: "漢堡"，科目: "運動嗜好"，同義詞數量: 1，同義詞內容: [呼拉圈] [1a8ed4d9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:04.661Z] [DEBUG] [DL] 比較同義詞: "呼拉圈" vs "漢堡" [1a8ed4d9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:04.661Z] [DEBUG] [DL] 處理同義詞匹配: "漢堡"，科目: "寵物生活"，同義詞數量: 0，同義詞內容: [] [1a8ed4d9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:04.661Z] [DEBUG] [DL] 處理同義詞匹配: "漢堡"，科目: "醫療費用"，同義詞數量: 0，同義詞內容: [] [1a8ed4d9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:04.661Z] [DEBUG] [DL] 處理同義詞匹配: "漢堡"，科目: "財務收入"，同義詞數量: 0，同義詞內容: [] [1a8ed4d9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:04.661Z] [DEBUG] [DL] 處理同義詞匹配: "漢堡"，科目: "財務支出"，同義詞數量: 0，同義詞內容: [] [1a8ed4d9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:04.661Z] [DEBUG] [DL] 處理同義詞匹配: "漢堡"，科目: "其他"，同義詞數量: 0，同義詞內容: [] [1a8ed4d9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+成功寫入 22 條日誌到 Firestore
+成功寫入 0 條日誌到 Firestore
+成功寫入 0 條日誌到 Firestore
+成功寫入 0 條日誌到 Firestore
+成功寫入 0 條日誌到 Firestore
+成功寫入 0 條日誌到 Firestore
+成功寫入 0 條日誌到 Firestore
+[2025-12-24T03:15:04.819Z] [INFO] [DL] 記帳ID生成成功（純毫秒時間戳）: 1766546104661 [1a8ed4d9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_generateBookkeepingId]
+[2025-12-24T03:15:04.819Z] [INFO] [DL] 使用1301標準路徑儲存: ledgers/user_Uae47d9d496e4596d70ed724a7d6e2948/transactions [1a8ed4d9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_saveToFirestore]
+成功寫入 2 條日誌到 Firestore
+成功寫入 0 條日誌到 Firestore
+成功寫入 0 條日誌到 Firestore
+成功寫入 0 條日誌到 Firestore
+成功寫入 0 條日誌到 Firestore
+成功寫入 0 條日誌到 Firestore
+成功寫入 0 條日誌到 Firestore
+成功寫入 0 條日誌到 Firestore
+✅ 記帳成功: 1766546104661
+[2025-12-24T03:15:05.216Z] [DEBUG] [DL] 階段二：開始處理備註文字: "漢堡", 金額: 3333, 支付方式: "信用卡" [undefined] [Code: DEBUG] [Location: LBK_removeAmountFromText]
+[2025-12-24T03:15:05.217Z] [INFO] [DL] 階段二：備註處理完成: "漢堡" → "漢堡" [undefined] [Code: INFO] [Location: LBK_removeAmountFromText]
+[2025-12-24T03:15:05.217Z] [INFO] [DL] 快速記帳完成 [1a8ed4d9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_processQuickBookkeeping]
+WH_replyMessage: 收到類型 object 的訊息對象
+WH_replyMessage: 訊息對象結構: ["success","message","responseMessage","moduleCode","module","data","processingTime","moduleVersion"]
+WH_replyMessage: 訊息對象預覽: {"success":true,"message":"記帳成功！\n金額：3333元 (支出)\n支付方式：信用卡\n時間：2025/12/24 上午11:15\n科目：餐飲費用\n備註：漢堡\n收支ID：1766546104661","responseMessage":"記帳成功！\n金額：3333元 (支出)\n支付方式：信用卡\n時間：2025/12/24 上午11:15\n科目：餐飲費用\...
+WH_replyMessage: 發現responseMessage屬性 (string), 長度=83
+WH_replyMessage: 發現message屬性 (string)
+WH_replyMessage: 使用responseMessage屬性 (記帳成功！
+金額：3333元 (支出)
+支付方式：信用卡
+時...)
+WH_replyMessage: 開始回覆訊息: 記帳成功！
+金額：3333元 (支出)
+支付方式：信用卡
+時間：2025/12/24 上午11:15...
+[WH 2.0.16 LOG] WH 2.0.3: 開始回覆訊息: 記帳成功！
+金額：3333元 (支出)
+支付方式：信用卡
+時間：2025/12/24 上午11:15... (INFO)
+[WH 2.0.16 LOG] WH 2.0.3: 發送API請求到LINE平台 (INFO)
+LINE API 回覆結果: 200
+回覆訊息成功
+[WH 2.0.16 LOG] WH 2.0.3: 回覆訊息成功發送 (INFO)
+[WH 2.0.16 LOG] WH 階段一: LBK處理完成，已回覆用戶 [1a8ed4d9] (INFO)
+DD_distributeData處理完成，結果預覽: {"success":true,"hasResponseMessage":true,"responseMsgLength":83,"errorType":"無","moduleCode":"LBK","hasPartialData":false} [1a8ed4d9]
+WH v2.5.0: 完全信任LBK處理結果，準備轉發回覆 [1a8ed4d9]
+[WH 2.0.16 LOG] WH 2.5.1: DCN-0024 階段二 - 正確傳遞Quick Reply參數 [1a8ed4d9] (INFO)
+訊息處理結果: {"success":true,"message":"記帳成功！\n金額：3333元 (支出)\n支付方式：信用卡\n時間：2025/12/24 上午11:15\n科目：餐飲費用\n備註：漢堡\n收支ID：1766546104661","responseMessage":"記帳成功！\n金額：3333元 (支出)\n支付方式：信用卡\n時間：2025/12/24 上午11:15\n科目：餐飲費用\n備註：漢堡\n收支ID：1766546104661","moduleCode":"LBK","module":"LBK","data":{"id":"1766546104661","transactionId":"1766546104661","amount":3333,"type":"expense","category":"104","subject":"餐飲費用","categoryName":"餐飲費用","description":"漢堡","paymentMethod":"信用卡","date":"2025-12-24","timestamp":"2025-12-24T03:15:05.216Z","ledgerId":"user_Uae47d9d496e4596d70ed724a7d6e2948","remark":"漢堡"},"processingTime":1766100537,"moduleVersion":"1.1.1"} [1a8ed4d9]
+非同步處理完成，已清理數據 [1a8ed4d9]
+[WH 2.0.16 LOG] WH 2.0.7: 非同步處理完成 [1a8ed4d9] (INFO)
+[WH 2.0.16 LOG] WH 2.0.7: 收到LINE Webhook請求 [91ed2e7c] (INFO)
+檢測到需要回覆的訊息，啟用同步處理 [91ed2e7c]
+[WH 2.0.16 LOG] WH 2.0.16: 檢測到需要回覆的訊息，啟用同步處理 [91ed2e7c] (INFO)
+開始非同步處理請求 [91ed2e7c]
+[WH 2.0.16 LOG] WH 2.0.7: 開始非同步處理請求 [91ed2e7c] (INFO)
+[WH 2.0.16 LOG] WH 2.0.3: 開始處理事件: message [91ed2e7c] (INFO)
+處理消息事件: text [91ed2e7c]
+收到文本消息: "輪胎1111" [91ed2e7c]
+[WH 2.0.16 LOG] WH 2.0.3: 收到文本消息: "輪胎1111" [91ed2e7c] (INFO)
+開始AM用戶驗證流程 [91ed2e7c]
+[WH 2.0.16 LOG] WH 階段一: 開始AM用戶驗證流程 [91ed2e7c] (INFO)
+[2025-12-24T03:15:23.872Z] [INFO] [DL] AM [User: 帳號存在性驗證: Uae47d9d496e4596d70ed724a7d6e2948 (LINE)] [Location: Object.DL_info]
+用戶帳本驗證流程完成: Uae47d9d496e4596d70ed724a7d6e2948 [91ed2e7c]
+🔍 AM_getUserDefaultLedger: 查詢用戶 Uae47d9d496e4596d70ed724a7d6e2948 預設帳本...
+✅ AM_getUserDefaultLedger: 找到用戶預設帳本: user_Uae47d9d496e4596d70ed724a7d6e2948
+用戶帳本驗證通過: user_Uae47d9d496e4596d70ed724a7d6e2948 [91ed2e7c]
+[WH 2.0.16 LOG] WH 階段一: AM驗證完成，轉發至LBK處理記帳 [91ed2e7c] (INFO)
+WH v2.5.0: 純粹轉發至LBK處理 - 輪胎1111
+[2025-12-24T03:15:24.095Z] [INFO] [DL] 開始處理LINE OA請求 [91ed2e7c] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_processQuickBookkeeping]
+[2025-12-24T03:15:24.095Z] [DEBUG] [DL] 檢查統計查詢關鍵字: "輪胎1111" [91ed2e7c] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_checkStatisticsKeyword]
+[2025-12-24T03:15:24.095Z] [DEBUG] [DL] 用戶訊息解析: "輪胎1111" [91ed2e7c] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_parseUserMessage]
+[2025-12-24T03:15:24.095Z] [DEBUG] [DL] 階段三：開始簡化格式解析: "輪胎1111" [91ed2e7c] [Code: DEBUG] [Location: LBK_parseInputFormat]
+[2025-12-24T03:15:24.095Z] [INFO] [DL] 階段三：簡化解析結果: 科目="輪胎", 金額=1111, 支付方式="未指定" [91ed2e7c] [Code: INFO] [Location: LBK_parseInputFormat]
+[2025-12-24T03:15:24.095Z] [DEBUG] [DL] 提取金額: "輪胎1111" [91ed2e7c] [Code: DEBUG] [Location: LBK_extractAmount]
+[2025-12-24T03:15:24.095Z] [DEBUG] [DL] 查詢科目代碼: "輪胎" [91ed2e7c] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:24.095Z] [DEBUG] [DL] 開始同義詞匹配，輸入: "輪胎" [91ed2e7c] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:24.210Z] [DEBUG] [DL] 查詢categories集合結果: 11 筆資料 [91ed2e7c] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:24.211Z] [DEBUG] [DL] 處理同義詞匹配: "輪胎"，科目: "生鮮雜貨"，同義詞數量: 0，同義詞內容: [] [91ed2e7c] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:24.211Z] [DEBUG] [DL] 處理同義詞匹配: "輪胎"，科目: "生活家用"，同義詞數量: 0，同義詞內容: [] [91ed2e7c] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:24.211Z] [DEBUG] [DL] 處理同義詞匹配: "輪胎"，科目: "交通費用"，同義詞數量: 1，同義詞內容: [洗車] [91ed2e7c] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:24.211Z] [DEBUG] [DL] 比較同義詞: "洗車" vs "輪胎" [91ed2e7c] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:24.211Z] [DEBUG] [DL] 處理同義詞匹配: "輪胎"，科目: "餐飲費用"，同義詞數量: 7，同義詞內容: [雞塊, 豆腐, 豆漿, 豆花, 滷味, 鮮乳, 漢堡] [91ed2e7c] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:24.211Z] [DEBUG] [DL] 比較同義詞: "雞塊" vs "輪胎" [91ed2e7c] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:24.211Z] [DEBUG] [DL] 比較同義詞: "豆腐" vs "輪胎" [91ed2e7c] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:24.211Z] [DEBUG] [DL] 比較同義詞: "豆漿" vs "輪胎" [91ed2e7c] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:24.211Z] [DEBUG] [DL] 比較同義詞: "豆花" vs "輪胎" [91ed2e7c] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:24.211Z] [DEBUG] [DL] 比較同義詞: "滷味" vs "輪胎" [91ed2e7c] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:24.211Z] [DEBUG] [DL] 比較同義詞: "鮮乳" vs "輪胎" [91ed2e7c] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:24.211Z] [DEBUG] [DL] 比較同義詞: "漢堡" vs "輪胎" [91ed2e7c] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:24.211Z] [DEBUG] [DL] 處理同義詞匹配: "輪胎"，科目: "娛樂消遣"，同義詞數量: 0，同義詞內容: [] [91ed2e7c] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:24.212Z] [DEBUG] [DL] 處理同義詞匹配: "輪胎"，科目: "運動嗜好"，同義詞數量: 1，同義詞內容: [呼拉圈] [91ed2e7c] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:24.212Z] [DEBUG] [DL] 比較同義詞: "呼拉圈" vs "輪胎" [91ed2e7c] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:24.212Z] [DEBUG] [DL] 處理同義詞匹配: "輪胎"，科目: "寵物生活"，同義詞數量: 0，同義詞內容: [] [91ed2e7c] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:24.212Z] [DEBUG] [DL] 處理同義詞匹配: "輪胎"，科目: "醫療費用"，同義詞數量: 0，同義詞內容: [] [91ed2e7c] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:24.212Z] [DEBUG] [DL] 處理同義詞匹配: "輪胎"，科目: "財務收入"，同義詞數量: 0，同義詞內容: [] [91ed2e7c] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:24.212Z] [DEBUG] [DL] 處理同義詞匹配: "輪胎"，科目: "財務支出"，同義詞數量: 0，同義詞內容: [] [91ed2e7c] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:24.212Z] [DEBUG] [DL] 處理同義詞匹配: "輪胎"，科目: "其他"，同義詞數量: 0，同義詞內容: [] [91ed2e7c] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:24.212Z] [INFO] [DL] 需要新科目歸類: 輪胎 [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_parseUserMessage]
+[2025-12-24T03:15:24.212Z] [INFO] [DL] 觸發新科目歸類流程: 輪胎 [91ed2e7c] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_processQuickBookkeeping]
+[2025-12-24T03:15:24.212Z] [INFO] [DL] 觸發新科目歧義消除流程: 輪胎 [91ed2e7c] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_processQuickBookkeeping]
+[2025-12-24T03:15:24.333Z] [INFO] [DL] Pending Record 創建成功: 1766546124212 [91ed2e7c] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_createPendingRecord]
+[2025-12-24T03:15:24.333Z] [INFO] [DL] 處理新科目歸類: 輪胎 [91ed2e7c] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_handleNewSubjectClassification]
+[2025-12-24T03:15:24.333Z] [DEBUG] [DL] 成功載入0099.json，共11筆科目資料 [Code: DEBUG] [Location: LBK_load0099SubjectConfig]
+[2025-12-24T03:15:24.333Z] [INFO] [DL] v1.4.3 生成科目歸類選單和Quick Reply，共11個動態選項 (來源:0099.json) [Code: INFO] [Location: LBK_buildClassificationMessage]
+已儲存pending記帳資料到快取: WH_PENDING_Uae47d9d496e4596d70ed724a7d6e2948 [91ed2e7c]
+[WH 2.0.16 LOG] WH 2.5.1: 已儲存pending記帳資料，等待用戶選擇科目 [91ed2e7c] (INFO)
+WH_replyMessage: 收到類型 object 的訊息對象
+WH_replyMessage: 訊息對象結構: ["success","message","responseMessage","quickReply","moduleCode","module","processingTime","moduleVersion","requiresUserSelection","pendingData"]
+WH_replyMessage: 訊息對象預覽: {"success":true,"message":"您的科目庫無此科目，請問「輪胎」屬於什麼科目？\n\n101 生鮮雜貨\n102 生活家用\n103 交通費用\n104 餐飲費用\n105 娛樂消遣\n106 運動嗜好\n107 寵物生活\n108 醫療費用\n201 財務收入\n301 財務支出\n999 其他","responseMessage":"您的科目庫無此科目，請問「輪胎」屬於什...
+WH_replyMessage: 發現responseMessage屬性 (string), 長度=121
+WH_replyMessage: 發現message屬性 (string)
+WH_replyMessage: 使用responseMessage屬性 (您的科目庫無此科目，請問「輪胎」屬於什麼科目？
+
+101 生...)
+WH_replyMessage: 開始回覆訊息: 您的科目庫無此科目，請問「輪胎」屬於什麼科目？
+
+101 生鮮雜貨
+102 生活家用
+103 交通費...
+[WH 2.0.16 LOG] WH 2.0.3: 開始回覆訊息: 您的科目庫無此科目，請問「輪胎」屬於什麼科目？
+
+101 生鮮雜貨
+102 生活家用
+103 交通費... (INFO)
+[WH 2.0.16 LOG] WH 2.0.3: 發送API請求到LINE平台 (INFO)
+LINE API 回覆結果: 200
+回覆訊息成功
+[WH 2.0.16 LOG] WH 2.0.3: 回覆訊息成功發送 (INFO)
+[WH 2.0.16 LOG] WH 階段一: LBK處理完成，已回覆用戶 [91ed2e7c] (INFO)
+DD_distributeData處理完成，結果預覽: {"success":true,"hasResponseMessage":true,"responseMsgLength":121,"errorType":"無","moduleCode":"LBK","hasPartialData":false} [91ed2e7c]
+WH v2.5.0: 完全信任LBK處理結果，準備轉發回覆 [91ed2e7c]
+[WH 2.0.16 LOG] WH 2.5.1: DCN-0024 階段二 - 正確傳遞Quick Reply參數 [91ed2e7c] (INFO)
+訊息處理結果: {"success":true,"message":"您的科目庫無此科目，請問「輪胎」屬於什麼科目？\n\n101 生鮮雜貨\n102 生活家用\n103 交通費用\n104 餐飲費用\n105 娛樂消遣\n106 運動嗜好\n107 寵物生活\n108 醫療費用\n201 財務收入\n301 財務支出\n999 其他","responseMessage":"您的科目庫無此科目，請問「輪胎」屬於什麼科目？\n\n101 生鮮雜貨\n102 生活家用\n103 交通費用\n104 餐飲費用\n105 娛樂消遣\n106 運動嗜好\n107 寵物生活\n108 醫療費用\n201 財務收入\n301 財務支出\n999 其他","quickReply":{"items":[{"type":"action","action":{"type":"postback","label":"101 生鮮雜貨","data":"classify_101_{\"subject\":\"輪胎\",\"amount\":1111,\"rawAmount\":\"1111\",\"paymentMethod\":null,\"userId\":\"Uae47d9d496e4596d70ed724a7d6e2948\",\"pendingId\":\"1766546124212\"}","displayText":"101 生鮮雜貨"}},{"type":"action","action":{"type":"postback","label":"102 生活家用","data":"classify_102_{\"subject\":\"輪胎\",\"amount\":1111,\"rawAmount\":\"1111\",\"paymentMethod\":null,\"userId\":\"Uae47d9d496e4596d70ed724a7d6e2948\",\"pendingId\":\"1766546124212\"}","displayText":"102 生活家用"}},{"type":"action","action":{"type":"postback","label":"103 交通費用","data":"classify_103_{\"subject\":\"輪胎\",\"amount\":1111,\"rawAmount\":\"1111\",\"paymentMethod\":null,\"userId\":\"Uae47d9d496e4596d70ed724a7d6e2948\",\"pendingId\":\"1766546124212\"}","displayText":"103 交通費用"}},{"type":"action","action":{"type":"postback","label":"104 餐飲費用","data":"classify_104_{\"subject\":\"輪胎\",\"amount\":1111,\"rawAmount\":\"1111\",\"paymentMethod\":null,\"userId\":\"Uae47d9d496e4596d70ed724a7d6e2948\",\"pendingId\":\"1766546124212\"}","displayText":"104 餐飲費用"}},{"type":"action","action":{"type":"postback","label":"105 娛樂消遣","data":"classify_105_{\"subject\":\"輪胎\",\"amount\":1111,\"rawAmount\":\"1111\",\"paymentMethod\":null,\"userId\":\"Uae47d9d496e4596d70ed724a7d6e2948\",\"pendingId\":\"1766546124212\"}","displayText":"105 娛樂消遣"}},{"type":"action","action":{"type":"postback","label":"106 運動嗜好","data":"classify_106_{\"subject\":\"輪胎\",\"amount\":1111,\"rawAmount\":\"1111\",\"paymentMethod\":null,\"userId\":\"Uae47d9d496e4596d70ed724a7d6e2948\",\"pendingId\":\"1766546124212\"}","displayText":"106 運動嗜好"}},{"type":"action","action":{"type":"postback","label":"107 寵物生活","data":"classify_107_{\"subject\":\"輪胎\",\"amount\":1111,\"rawAmount\":\"1111\",\"paymentMethod\":null,\"userId\":\"Uae47d9d496e4596d70ed724a7d6e2948\",\"pendingId\":\"1766546124212\"}","displayText":"107 寵物生活"}},{"type":"action","action":{"type":"postback","label":"108 醫療費用","data":"classify_108_{\"subject\":\"輪胎\",\"amount\":1111,\"rawAmount\":\"1111\",\"paymentMethod\":null,\"userId\":\"Uae47d9d496e4596d70ed724a7d6e2948\",\"pendingId\":\"1766546124212\"}","displayText":"108 醫療費用"}},{"type":"action","action":{"type":"postback","label":"201 財務收入","data":"classify_201_{\"subject\":\"輪胎\",\"amount\":1111,\"rawAmount\":\"1111\",\"paymentMethod\":null,\"userId\":\"Uae47d9d496e4596d70ed724a7d6e2948\",\"pendingId\":\"1766546124212\"}","displayText":"201 財務收入"}},{"type":"action","action":{"type":"postback","label":"301 財務支出","data":"classify_301_{\"subject\":\"輪胎\",\"amount\":1111,\"rawAmount\":\"1111\",\"paymentMethod\":null,\"userId\":\"Uae47d9d496e4596d70ed724a7d6e2948\",\"pendingId\":\"1766546124212\"}","displayText":"301 財務支出"}},{"type":"action","action":{"type":"postback","label":"999 其他","data":"classify_999_{\"subject\":\"輪胎\",\"amount\":1111,\"rawAmount\":\"1111\",\"paymentMethod\":null,\"userId\":\"Uae47d9d496e4596d70ed724a7d6e2948\",\"pendingId\":\"1766546124212\"}","displayText":"999 其他"}}]},"moduleCode":"LBK","module":"LBK","processingTime":1764097884.082,"moduleVersion":"1.4.3","requiresUserSelection":true,"pendingData":{"subject":"輪胎","amount":1111,"rawAmount":"1111","paymentMethod":null,"userId":"Uae47d9d496e4596d70ed724a7d6e2948","timestamp":"2025-12-24T03:15:24.334Z","processId":"91ed2e7c","originalInput":"輪胎1111","stageData":{"electedCategory":{},"categorySelected":true}}} [91ed2e7c]
+非同步處理完成，已清理數據 [91ed2e7c]
+[WH 2.0.16 LOG] WH 2.0.7: 非同步處理完成 [91ed2e7c] (INFO)
+[WH 2.0.16 LOG] WH 2.0.7: 收到LINE Webhook請求 [e7735294] (INFO)
+非回覆事件，使用非同步處理 [e7735294]
+開始非同步處理請求 [e7735294]
+[WH 2.0.16 LOG] WH 2.0.7: 開始非同步處理請求 [e7735294] (INFO)
+WH v2.5.3: 收到postback事件: classify_103_{"subject":"輪胎","amount":1111,"rawAmount":"1111","paymentMethod":null,"userId":"Uae47d9d496e4596d70ed724a7d6e2948","pendingId":"1766546124212"}
+[WH 2.0.16 LOG] WH 2.5.3: 階段一修復 - 識別postback事件類型: classify_103_{"subject":"輪胎","amount":1111,"rawAmount":"1111","paymentMethod":null,"userId":"Uae47d9d496e4596d70ed724a7d6e2948","pendingId":"1766546124212"} [e7735294] (INFO)
+WH v2.5.0: 純粹轉發至LBK處理 - classify_103_{"subject":"輪胎","amount":1111,"rawAmount":"1111","paymentMethod":null,"userId":"Uae47d9d496e4596d70ed724a7d6e2948","pendingId":"1766546124212"}
+[2025-12-24T03:15:29.597Z] [INFO] [DL] 開始處理LINE OA請求 [e7735294] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_processQuickBookkeeping]
+[2025-12-24T03:15:29.597Z] [INFO] [DL] 檢測到科目歸類postback格式訊息 [e7735294] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_processQuickBookkeeping]
+[2025-12-24T03:15:29.597Z] [INFO] [DL] 科目選擇完成，開始執行記帳: categoryId=103 [e7735294] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_processQuickBookkeeping]
+[2025-12-24T03:15:29.597Z] [INFO] [DL] 處理科目歸類postback: categoryId=103 [e7735294] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_handleClassificationPostback]
+[2025-12-24T03:15:29.598Z] [DEBUG] [DL] 成功載入0099.json，共11筆科目資料 [Code: DEBUG] [Location: LBK_load0099SubjectConfig]
+[2025-12-24T03:15:29.598Z] [DEBUG] [DL] 成功載入0099.json，共11筆科目資料 [Code: DEBUG] [Location: LBK_load0099SubjectConfig]
+[2025-12-24T03:15:29.598Z] [DEBUG] [DL] 建立科目映射表，共11個選項 (來源:0099.json) [Code: DEBUG] [Location: LBK_buildCategoryMapping]
+[2025-12-24T03:15:29.598Z] [INFO] [DL] 科目歸類選擇: 交通費用 [e7735294] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_handleClassificationPostback]
+[2025-12-24T03:15:29.598Z] [INFO] [DL] 階段一修復：添加科目同義詞: 輪胎 → 交通費用 (ID: 103) [e7735294] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_addSubjectSynonym]
+[2025-12-24T03:15:29.703Z] [INFO] [DL] 階段一修復：現有同義詞: [洗車] [e7735294] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_addSubjectSynonym]
+[2025-12-24T03:15:29.718Z] [DEBUG] [DL] 延遲刪除 Pending Record 成功: 1766546060152 [6198d7b9] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_completePendingRecord]
+成功寫入 51 條日誌到 Firestore
+成功寫入 0 條日誌到 Firestore
+[2025-12-24T03:15:29.928Z] [INFO] [DL] 階段一修復：科目同義詞事務更新成功: "洗車,輪胎" [e7735294] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_addSubjectSynonym]
+[2025-12-24T03:15:29.928Z] [INFO] [DL] 成功建立同義詞關聯: 輪胎 → 交通費用 [e7735294] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_handleClassificationPostback]
+[2025-12-24T03:15:30.033Z] [INFO] [DL] 階段一修復：更新 Pending Record 詳細資訊 - pendingId: 1766546124212, categorySelected: true, electedCategory: {"categoryId":"103","categoryName":"交通費用"} [e7735294] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_updatePendingRecord]
+[2025-12-24T03:15:30.146Z] [INFO] [DL] Pending Record 更新成功: 1766546124212 → PENDING_CATEGORY [e7735294] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_updatePendingRecord]
+[2025-12-24T03:15:30.146Z] [INFO] [DL] 階段一修復：Pending Record 科目資訊更新成功: 交通費用 [e7735294] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_handleClassificationPostback]
+[2025-12-24T03:15:30.146Z] [DEBUG] [DL] 階段三：開始簡化格式解析: "classify_103_{"subject":"輪胎","amount":1111,"rawAmount":"1111","paymentMethod":null,"userId":"Uae47d9d496e4596d70ed724a7d6e2948","pendingId":"1766546124212"}" [e7735294] [Code: DEBUG] [Location: LBK_parseInputFormat]
+[2025-12-24T03:15:30.146Z] [DEBUG] [DL] 檢測到系統內部postback格式，跳過解析: "classify_103_{"subject":"輪胎","amount":1111,"rawAmount":"1111","paymentMethod":null,"userId":"Uae47d9d496e4596d70ed724a7d6e2948","pendingId":"1766546124212"}" [e7735294] [Code: DEBUG] [Location: LBK_parseInputFormat]
+[2025-12-24T03:15:30.146Z] [INFO] [DL] 階段二修復：科目選擇完成，檢查支付方式: 刷卡 [e7735294] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_handleClassificationPostback]
+[2025-12-24T03:15:30.146Z] [DEBUG] [DL] 階段二：嚴格驗證錢包存在: walletId="null", walletName="刷卡" [e7735294] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_validateWalletExists]
+[2025-12-24T03:15:30.146Z] [DEBUG] [DL] 階段二：使用 walletName 嚴格查詢: "刷卡" [e7735294] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_validateWalletExists]
+[2025-12-24T03:15:30.146Z] [DEBUG] [DL] 階段二：嚴格查詢錢包: "刷卡" [e7735294] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getWalletByName]
+[2025-12-24T03:15:30.146Z] [DEBUG] [DL] 階段二：開始嚴格匹配，輸入: "刷卡" [e7735294] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getWalletByName]
+[2025-12-24T03:15:30.257Z] [DEBUG] [DL] 階段二：查詢 wallets 集合結果: 3 筆 active 資料 [e7735294] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getWalletByName]
+[2025-12-24T03:15:30.257Z] [DEBUG] [DL] 階段二：檢查同義詞: "刷卡"，錢包: "現金"，同義詞: [現金] [e7735294] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getWalletByName]
+[2025-12-24T03:15:30.257Z] [DEBUG] [DL] 階段二：檢查同義詞: "刷卡"，錢包: "信用卡"，同義詞: [信用卡, 星展] [e7735294] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getWalletByName]
+[2025-12-24T03:15:30.257Z] [DEBUG] [DL] 階段二：檢查同義詞: "刷卡"，錢包: "銀行轉帳"，同義詞: [銀行轉帳] [e7735294] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getWalletByName]
+[2025-12-24T03:15:30.257Z] [INFO] [DL] 階段二：未在 wallets 子集合中找到精確匹配: "刷卡" [e7735294] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_getWalletByName]
+[2025-12-24T03:15:30.257Z] [INFO] [DL] 階段二：錢包未在 wallets 子集合中找到，觸發用戶確認: 刷卡 [e7735294] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_validateWalletExists]
+[2025-12-24T03:15:30.257Z] [INFO] [DL] 支付方式需要歧義消除: undefined，轉入PENDING_WALLET狀態 [e7735294] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_handleClassificationPostback]
+[2025-12-24T03:15:30.364Z] [INFO] [DL] 階段一修復：更新 Pending Record 詳細資訊 - pendingId: 1766546124212, categorySelected: true, electedCategory: {"categoryId":"103","categoryName":"交通費用"} [e7735294] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_updatePendingRecord]
+[2025-12-24T03:15:30.479Z] [INFO] [DL] Pending Record 更新成功: 1766546124212 → PENDING_WALLET [e7735294] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_updatePendingRecord]
+WH_replyMessage: 收到類型 object 的訊息對象
+WH_replyMessage: 訊息對象結構: ["success","message","responseMessage","quickReply","moduleCode","module","processingTime","moduleVersion","requiresUserSelection","classificationCompleted","nextStage"]
+WH_replyMessage: 訊息對象預覽: {"success":true,"message":"科目歸類完成！已選擇「交通費用」\n\n檢測到未知支付方式「刷卡」，請問這屬於何種支付方式：","responseMessage":"科目歸類完成！已選擇「交通費用」\n\n檢測到未知支付方式「刷卡」，請問這屬於何種支付方式：","quickReply":{"items":[{"type":"action","action":{"type":"...
+WH_replyMessage: 發現responseMessage屬性 (string), 長度=44
+WH_replyMessage: 發現message屬性 (string)
+WH_replyMessage: 使用responseMessage屬性 (科目歸類完成！已選擇「交通費用」
+
+檢測到未知支付方式「刷卡...)
+WH_replyMessage: 開始回覆訊息: 科目歸類完成！已選擇「交通費用」
+
+檢測到未知支付方式「刷卡」，請問這屬於何種支付方式：
+[WH 2.0.16 LOG] WH 2.0.3: 開始回覆訊息: 科目歸類完成！已選擇「交通費用」
+
+檢測到未知支付方式「刷卡」，請問這屬於何種支付方式： (INFO)
+[WH 2.0.16 LOG] WH 2.0.3: 發送API請求到LINE平台 (INFO)
+LINE API 回覆結果: 200
+回覆訊息成功
+[WH 2.0.16 LOG] WH 2.0.3: 回覆訊息成功發送 (INFO)
+[WH 2.0.16 LOG] WH 2.5.3: postback處理完成並回覆用戶 [e7735294] (INFO)
+非同步處理完成，已清理數據 [e7735294]
+[WH 2.0.16 LOG] WH 2.0.7: 非同步處理完成 [e7735294] (INFO)
+[WH 2.0.16 LOG] WH 2.0.7: 收到LINE Webhook請求 [4f8c8943] (INFO)
+非回覆事件，使用非同步處理 [4f8c8943]
+開始非同步處理請求 [4f8c8943]
+[WH 2.0.16 LOG] WH 2.0.7: 開始非同步處理請求 [4f8c8943] (INFO)
+WH v2.5.3: 收到postback事件: wallet_type_cash_1766546124212
+[WH 2.0.16 LOG] WH 2.5.3: 階段一修復 - 識別postback事件類型: wallet_type_cash_1766546124212 [4f8c8943] (INFO)
+WH v2.5.0: 純粹轉發至LBK處理 - wallet_type_cash_1766546124212
+[2025-12-24T03:15:37.329Z] [INFO] [DL] 開始處理LINE OA請求 [4f8c8943] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_processQuickBookkeeping]
+[2025-12-24T03:15:37.329Z] [INFO] [DL] 檢測到wallet類型選擇postback事件: wallet_type_cash_1766546124212 [4f8c8943] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_processQuickBookkeeping]
+[2025-12-24T03:15:37.329Z] [INFO] [DL] 處理錢包確認postback: wallet_type_cash_1766546124212 [4f8c8943] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_handleWalletConfirmationPostback]
+[2025-12-24T03:15:37.329Z] [INFO] [DL] 處理支付方式類型選擇: type=cash, pendingId=1766546124212 [4f8c8943] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_handleWalletConfirmationPostback]
+[2025-12-24T03:15:37.329Z] [INFO] [DL] 階段四：處理支付方式類型選擇: type=cash, pendingId=1766546124212 [4f8c8943] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_handleWalletTypeSelection]
+[2025-12-24T03:15:37.436Z] [DEBUG] [DL] 階段二：嚴格查詢錢包: "現金" [4f8c8943] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getWalletByName]
+[2025-12-24T03:15:37.436Z] [DEBUG] [DL] 階段二：開始嚴格匹配，輸入: "現金" [4f8c8943] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getWalletByName]
+[2025-12-24T03:15:37.553Z] [DEBUG] [DL] 階段二：查詢 wallets 集合結果: 3 筆 active 資料 [4f8c8943] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getWalletByName]
+[2025-12-24T03:15:37.553Z] [INFO] [DL] 階段二：找到精確錢包名稱匹配: "現金" → "現金" [4f8c8943] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_getWalletByName]
+[2025-12-24T03:15:37.553Z] [INFO] [DL] 階段二：返回錢包名稱精確匹配結果: 現金 [4f8c8943] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_getWalletByName]
+[2025-12-24T03:15:37.553Z] [INFO] [DL] 階段五：動態查詢成功匹配錢包: 現金 → 現金 [4f8c8943] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_handleWalletTypeSelection]
+[2025-12-24T03:15:37.660Z] [INFO] [DL] 階段一修復：更新 Pending Record 詳細資訊 - pendingId: 1766546124212, categorySelected: true, electedCategory: {"categoryName":"交通費用","categoryId":"103"} [4f8c8943] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_updatePendingRecord]
+[2025-12-24T03:15:37.772Z] [INFO] [DL] Pending Record 更新成功: 1766546124212 → PENDING_WALLET [4f8c8943] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_updatePendingRecord]
+[2025-12-24T03:15:37.772Z] [DEBUG] [DL] 階段三：開始簡化格式解析: "輪胎1111" [4f8c8943] [Code: DEBUG] [Location: LBK_parseInputFormat]
+[2025-12-24T03:15:37.773Z] [INFO] [DL] 階段三：簡化解析結果: 科目="輪胎", 金額=1111, 支付方式="未指定" [4f8c8943] [Code: INFO] [Location: LBK_parseInputFormat]
+[2025-12-24T03:15:37.880Z] [INFO] [DL] 階段四：開始完成Pending Record，科目已選: true, 錢包已選: true [4f8c8943] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_completePendingRecord]
+[2025-12-24T03:15:37.881Z] [INFO] [DL] 階段一修復：開始驗證科目資訊 - stageData: {"categorySelected":true,"selectedWallet":{"walletName":"現金","type":"cash","walletId":"cash"},"walletSelected":true,"electedCategory":{"categoryId":"103","categoryName":"交通費用"}} [4f8c8943] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_completePendingRecord]
+[2025-12-24T03:15:37.881Z] [INFO] [DL] 階段一修復：科目欄位提取結果 - subjectCode: 103, categoryName: 交通費用 [4f8c8943] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_completePendingRecord]
+[2025-12-24T03:15:37.881Z] [INFO] [DL] 階段一修復：科目資料驗證完成: 交通費用 (代碼: 103) [4f8c8943] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_completePendingRecord]
+[2025-12-24T03:15:37.881Z] [INFO] [DL] 階段五：錢包資料驗證完成: 現金 (ID: cash) [4f8c8943] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_completePendingRecord]
+[2025-12-24T03:15:37.881Z] [INFO] [DL] 階段三：最終記帳資料驗證 - 金額: 1111, 科目: 交通費用, 支付方式: 現金 [4f8c8943] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_completePendingRecord]
+[2025-12-24T03:15:37.881Z] [INFO] [DL] 階段三：Firestore記帳資料最終驗證 - ID: 1766546137881, 金額: 1111, 類型: expense, 科目: 交通費用, categoryId: 103 [4f8c8943] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_completePendingRecord]
+[2025-12-24T03:15:37.881Z] [INFO] [DL] 階段四：直接執行記帳儲存，跳過重複科目查詢 [4f8c8943] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_completePendingRecord]
+[2025-12-24T03:15:37.881Z] [INFO] [DL] 使用1301標準路徑儲存: ledgers/user_Uae47d9d496e4596d70ed724a7d6e2948/transactions [4f8c8943] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_saveToFirestore]
+[2025-12-24T03:15:38.099Z] [INFO] [DL] 階段三：記帳結果資料構建完成 - 所有欄位已驗證無undefined值 [4f8c8943] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_completePendingRecord]
+[2025-12-24T03:15:38.205Z] [INFO] [DL] 階段一修復：更新 Pending Record 詳細資訊 - pendingId: 1766546124212, categorySelected: true, electedCategory: {"categoryId":"103","categoryName":"交通費用"} [4f8c8943] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_updatePendingRecord]
+[2025-12-24T03:15:38.320Z] [INFO] [DL] Pending Record 更新成功: 1766546124212 → COMPLETED [4f8c8943] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_updatePendingRecord]
+[2025-12-24T03:15:38.320Z] [INFO] [DL] 階段四：Pending Record 記帳完成: 1766546124212 → 1766546137881 [4f8c8943] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_completePendingRecord]
+[2025-12-24T03:15:38.321Z] [DEBUG] [DL] 階段二：開始處理備註文字: "輪胎1111", 金額: 1111, 支付方式: "現金" [undefined] [Code: DEBUG] [Location: LBK_removeAmountFromText]
+[2025-12-24T03:15:38.323Z] [INFO] [DL] 階段二：備註處理完成: "輪胎1111" → "輪胎" [undefined] [Code: INFO] [Location: LBK_removeAmountFromText]
+[2025-12-24T03:15:38.324Z] [DEBUG] [DL] 階段二：開始處理備註文字: "輪胎1111", 金額: 1111, 支付方式: "現金" [undefined] [Code: DEBUG] [Location: LBK_removeAmountFromText]
+[2025-12-24T03:15:38.325Z] [INFO] [DL] 階段二：備註處理完成: "輪胎1111" → "輪胎" [undefined] [Code: INFO] [Location: LBK_removeAmountFromText]
+WH_replyMessage: 收到類型 object 的訊息對象
+WH_replyMessage: 訊息對象結構: ["success","action","transactionId","bookkeepingData","message","responseMessage","moduleCode","module"]
+WH_replyMessage: 訊息對象預覽: {"success":true,"action":"transaction_completed","transactionId":"1766546137881","bookkeepingData":{"id":"1766546137881","transactionId":"1766546137881","amount":1111,"type":"expense","category":"103"...
+WH_replyMessage: 發現responseMessage屬性 (string), 長度=82
+WH_replyMessage: 發現message屬性 (string)
+WH_replyMessage: 使用responseMessage屬性 (記帳成功！
+金額：1111元 (支出)
+支付方式：現金
+時間...)
+WH_replyMessage: 開始回覆訊息: 記帳成功！
+金額：1111元 (支出)
+支付方式：現金
+時間：2025/12/24 上午11:15
+...
+[WH 2.0.16 LOG] WH 2.0.3: 開始回覆訊息: 記帳成功！
+金額：1111元 (支出)
+支付方式：現金
+時間：2025/12/24 上午11:15
+... (INFO)
+[WH 2.0.16 LOG] WH 2.0.3: 發送API請求到LINE平台 (INFO)
+成功寫入 53 條日誌到 Firestore
+成功寫入 0 條日誌到 Firestore
+成功寫入 0 條日誌到 Firestore
+成功寫入 0 條日誌到 Firestore
+LINE API 回覆結果: 200
+回覆訊息成功
+[WH 2.0.16 LOG] WH 2.0.3: 回覆訊息成功發送 (INFO)
+[WH 2.0.16 LOG] WH 2.5.3: postback處理完成並回覆用戶 [4f8c8943] (INFO)
+非同步處理完成，已清理數據 [4f8c8943]
+[WH 2.0.16 LOG] WH 2.0.7: 非同步處理完成 [4f8c8943] (INFO)
+[WH 2.0.16 LOG] WH 2.0.7: 收到LINE Webhook請求 [65c3e0b6] (INFO)
+檢測到需要回覆的訊息，啟用同步處理 [65c3e0b6]
+[WH 2.0.16 LOG] WH 2.0.16: 檢測到需要回覆的訊息，啟用同步處理 [65c3e0b6] (INFO)
+開始非同步處理請求 [65c3e0b6]
+[WH 2.0.16 LOG] WH 2.0.7: 開始非同步處理請求 [65c3e0b6] (INFO)
+[WH 2.0.16 LOG] WH 2.0.3: 開始處理事件: message [65c3e0b6] (INFO)
+處理消息事件: text [65c3e0b6]
+收到文本消息: "輪胎8888" [65c3e0b6]
+[WH 2.0.16 LOG] WH 2.0.3: 收到文本消息: "輪胎8888" [65c3e0b6] (INFO)
+開始AM用戶驗證流程 [65c3e0b6]
+[WH 2.0.16 LOG] WH 階段一: 開始AM用戶驗證流程 [65c3e0b6] (INFO)
+[2025-12-24T03:15:52.241Z] [INFO] [DL] AM [User: 帳號存在性驗證: Uae47d9d496e4596d70ed724a7d6e2948 (LINE)] [Location: Object.DL_info]
+用戶帳本驗證流程完成: Uae47d9d496e4596d70ed724a7d6e2948 [65c3e0b6]
+🔍 AM_getUserDefaultLedger: 查詢用戶 Uae47d9d496e4596d70ed724a7d6e2948 預設帳本...
+✅ AM_getUserDefaultLedger: 找到用戶預設帳本: user_Uae47d9d496e4596d70ed724a7d6e2948
+用戶帳本驗證通過: user_Uae47d9d496e4596d70ed724a7d6e2948 [65c3e0b6]
+[WH 2.0.16 LOG] WH 階段一: AM驗證完成，轉發至LBK處理記帳 [65c3e0b6] (INFO)
+WH v2.5.0: 純粹轉發至LBK處理 - 輪胎8888
+[2025-12-24T03:15:52.454Z] [INFO] [DL] 開始處理LINE OA請求 [65c3e0b6] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_processQuickBookkeeping]
+[2025-12-24T03:15:52.455Z] [DEBUG] [DL] 檢查統計查詢關鍵字: "輪胎8888" [65c3e0b6] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_checkStatisticsKeyword]
+[2025-12-24T03:15:52.455Z] [DEBUG] [DL] 用戶訊息解析: "輪胎8888" [65c3e0b6] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_parseUserMessage]
+[2025-12-24T03:15:52.455Z] [DEBUG] [DL] 階段三：開始簡化格式解析: "輪胎8888" [65c3e0b6] [Code: DEBUG] [Location: LBK_parseInputFormat]
+[2025-12-24T03:15:52.455Z] [INFO] [DL] 階段三：簡化解析結果: 科目="輪胎", 金額=8888, 支付方式="未指定" [65c3e0b6] [Code: INFO] [Location: LBK_parseInputFormat]
+[2025-12-24T03:15:52.456Z] [DEBUG] [DL] 提取金額: "輪胎8888" [65c3e0b6] [Code: DEBUG] [Location: LBK_extractAmount]
+[2025-12-24T03:15:52.456Z] [DEBUG] [DL] 查詢科目代碼: "輪胎" [65c3e0b6] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:52.456Z] [DEBUG] [DL] 開始同義詞匹配，輸入: "輪胎" [65c3e0b6] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:52.586Z] [DEBUG] [DL] 查詢categories集合結果: 11 筆資料 [65c3e0b6] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:52.586Z] [DEBUG] [DL] 處理同義詞匹配: "輪胎"，科目: "生鮮雜貨"，同義詞數量: 0，同義詞內容: [] [65c3e0b6] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:52.586Z] [DEBUG] [DL] 處理同義詞匹配: "輪胎"，科目: "生活家用"，同義詞數量: 0，同義詞內容: [] [65c3e0b6] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:52.587Z] [DEBUG] [DL] 處理同義詞匹配: "輪胎"，科目: "交通費用"，同義詞數量: 2，同義詞內容: [洗車, 輪胎] [65c3e0b6] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:52.587Z] [DEBUG] [DL] 比較同義詞: "洗車" vs "輪胎" [65c3e0b6] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:52.587Z] [DEBUG] [DL] 比較同義詞: "輪胎" vs "輪胎" [65c3e0b6] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:52.587Z] [INFO] [DL] 找到精確同義詞匹配: "輪胎" → 同義詞:"輪胎" → 科目:"交通費用" [65c3e0b6] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:52.587Z] [DEBUG] [DL] 處理同義詞匹配: "輪胎"，科目: "餐飲費用"，同義詞數量: 7，同義詞內容: [雞塊, 豆腐, 豆漿, 豆花, 滷味, 鮮乳, 漢堡] [65c3e0b6] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:52.587Z] [DEBUG] [DL] 比較同義詞: "雞塊" vs "輪胎" [65c3e0b6] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:52.587Z] [DEBUG] [DL] 比較同義詞: "豆腐" vs "輪胎" [65c3e0b6] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:52.587Z] [DEBUG] [DL] 比較同義詞: "豆漿" vs "輪胎" [65c3e0b6] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:52.587Z] [DEBUG] [DL] 比較同義詞: "豆花" vs "輪胎" [65c3e0b6] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:52.587Z] [DEBUG] [DL] 比較同義詞: "滷味" vs "輪胎" [65c3e0b6] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:52.587Z] [DEBUG] [DL] 比較同義詞: "鮮乳" vs "輪胎" [65c3e0b6] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:52.587Z] [DEBUG] [DL] 比較同義詞: "漢堡" vs "輪胎" [65c3e0b6] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:52.587Z] [DEBUG] [DL] 處理同義詞匹配: "輪胎"，科目: "娛樂消遣"，同義詞數量: 0，同義詞內容: [] [65c3e0b6] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:52.587Z] [DEBUG] [DL] 處理同義詞匹配: "輪胎"，科目: "運動嗜好"，同義詞數量: 1，同義詞內容: [呼拉圈] [65c3e0b6] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:52.587Z] [DEBUG] [DL] 比較同義詞: "呼拉圈" vs "輪胎" [65c3e0b6] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:52.587Z] [DEBUG] [DL] 處理同義詞匹配: "輪胎"，科目: "寵物生活"，同義詞數量: 0，同義詞內容: [] [65c3e0b6] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:52.587Z] [DEBUG] [DL] 處理同義詞匹配: "輪胎"，科目: "醫療費用"，同義詞數量: 0，同義詞內容: [] [65c3e0b6] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:52.587Z] [DEBUG] [DL] 處理同義詞匹配: "輪胎"，科目: "財務收入"，同義詞數量: 0，同義詞內容: [] [65c3e0b6] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:52.588Z] [DEBUG] [DL] 處理同義詞匹配: "輪胎"，科目: "財務支出"，同義詞數量: 0，同義詞內容: [] [65c3e0b6] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:52.588Z] [DEBUG] [DL] 處理同義詞匹配: "輪胎"，科目: "其他"，同義詞數量: 0，同義詞內容: [] [65c3e0b6] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:52.588Z] [DEBUG] [DL] 階段二：開始支付方式專項處理: "輪胎8888" [65c3e0b6] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_parsePaymentMethod]
+[2025-12-24T03:15:52.588Z] [DEBUG] [DL] 階段三：開始簡化格式解析: "輪胎8888" [65c3e0b6] [Code: DEBUG] [Location: LBK_parseInputFormat]
+[2025-12-24T03:15:52.588Z] [INFO] [DL] 階段三：簡化解析結果: 科目="輪胎", 金額=8888, 支付方式="未指定" [65c3e0b6] [Code: INFO] [Location: LBK_parseInputFormat]
+[2025-12-24T03:15:52.588Z] [INFO] [DL] 階段二：信任第一階段解析結果: "未檢測到" [65c3e0b6] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_parsePaymentMethod]
+[2025-12-24T03:15:52.588Z] [DEBUG] [DL] 階段二：用戶未提供支付方式，動態查詢0302預設配置 [65c3e0b6] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_parsePaymentMethod]
+[2025-12-24T03:15:52.588Z] [DEBUG] [DL] 階段二：動態讀取0302預設支付方式配置 [65c3e0b6] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getDefaultPaymentMethod]
+[2025-12-24T03:15:52.592Z] [INFO] [DL] 階段二：從0302配置讀取到預設錢包: "信用卡" [65c3e0b6] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_getDefaultPaymentMethod]
+[2025-12-24T03:15:52.592Z] [INFO] [DL] 階段二：使用0302預設配置: "信用卡" [65c3e0b6] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_parsePaymentMethod]
+[2025-12-24T03:15:52.592Z] [DEBUG] [DL] 階段二：嚴格驗證錢包存在: walletId="credit", walletName="信用卡" [65c3e0b6] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_validateWalletExists]
+[2025-12-24T03:15:52.592Z] [DEBUG] [DL] 階段二：使用 walletId 查詢: credit [65c3e0b6] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_validateWalletExists]
+[2025-12-24T03:15:52.697Z] [INFO] [DL] 階段二：透過 walletId 驗證成功: credit → 信用卡 [65c3e0b6] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_validateWalletExists]
+[2025-12-24T03:15:52.697Z] [DEBUG] [DL] 執行記帳操作 [65c3e0b6] (嘗試 1/3) [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_executeBookkeeping]
+[2025-12-24T03:15:52.697Z] [DEBUG] [DL] 查詢科目代碼: "輪胎" [65c3e0b6] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:52.697Z] [DEBUG] [DL] 開始同義詞匹配，輸入: "輪胎" [65c3e0b6] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:52.812Z] [DEBUG] [DL] 查詢categories集合結果: 11 筆資料 [65c3e0b6] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:52.813Z] [DEBUG] [DL] 處理同義詞匹配: "輪胎"，科目: "生鮮雜貨"，同義詞數量: 0，同義詞內容: [] [65c3e0b6] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:52.813Z] [DEBUG] [DL] 處理同義詞匹配: "輪胎"，科目: "生活家用"，同義詞數量: 0，同義詞內容: [] [65c3e0b6] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:52.813Z] [DEBUG] [DL] 處理同義詞匹配: "輪胎"，科目: "交通費用"，同義詞數量: 2，同義詞內容: [洗車, 輪胎] [65c3e0b6] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:52.815Z] [DEBUG] [DL] 比較同義詞: "洗車" vs "輪胎" [65c3e0b6] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:52.817Z] [DEBUG] [DL] 比較同義詞: "輪胎" vs "輪胎" [65c3e0b6] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:52.818Z] [INFO] [DL] 找到精確同義詞匹配: "輪胎" → 同義詞:"輪胎" → 科目:"交通費用" [65c3e0b6] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:52.819Z] [DEBUG] [DL] 處理同義詞匹配: "輪胎"，科目: "餐飲費用"，同義詞數量: 7，同義詞內容: [雞塊, 豆腐, 豆漿, 豆花, 滷味, 鮮乳, 漢堡] [65c3e0b6] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:52.820Z] [DEBUG] [DL] 比較同義詞: "雞塊" vs "輪胎" [65c3e0b6] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:52.822Z] [DEBUG] [DL] 比較同義詞: "豆腐" vs "輪胎" [65c3e0b6] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:52.824Z] [DEBUG] [DL] 比較同義詞: "豆漿" vs "輪胎" [65c3e0b6] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:52.826Z] [DEBUG] [DL] 比較同義詞: "豆花" vs "輪胎" [65c3e0b6] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:52.827Z] [DEBUG] [DL] 比較同義詞: "滷味" vs "輪胎" [65c3e0b6] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:52.829Z] [DEBUG] [DL] 比較同義詞: "鮮乳" vs "輪胎" [65c3e0b6] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:52.830Z] [DEBUG] [DL] 比較同義詞: "漢堡" vs "輪胎" [65c3e0b6] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:52.832Z] [DEBUG] [DL] 處理同義詞匹配: "輪胎"，科目: "娛樂消遣"，同義詞數量: 0，同義詞內容: [] [65c3e0b6] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:52.833Z] [DEBUG] [DL] 處理同義詞匹配: "輪胎"，科目: "運動嗜好"，同義詞數量: 1，同義詞內容: [呼拉圈] [65c3e0b6] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:52.835Z] [DEBUG] [DL] 比較同義詞: "呼拉圈" vs "輪胎" [65c3e0b6] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:52.838Z] [DEBUG] [DL] 處理同義詞匹配: "輪胎"，科目: "寵物生活"，同義詞數量: 0，同義詞內容: [] [65c3e0b6] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:52.841Z] [DEBUG] [DL] 處理同義詞匹配: "輪胎"，科目: "醫療費用"，同義詞數量: 0，同義詞內容: [] [65c3e0b6] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:52.843Z] [DEBUG] [DL] 處理同義詞匹配: "輪胎"，科目: "財務收入"，同義詞數量: 0，同義詞內容: [] [65c3e0b6] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:52.845Z] [DEBUG] [DL] 處理同義詞匹配: "輪胎"，科目: "財務支出"，同義詞數量: 0，同義詞內容: [] [65c3e0b6] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:52.846Z] [DEBUG] [DL] 處理同義詞匹配: "輪胎"，科目: "其他"，同義詞數量: 0，同義詞內容: [] [65c3e0b6] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:15:53.057Z] [INFO] [DL] 記帳ID生成成功（純毫秒時間戳）: 1766546152854 [65c3e0b6] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_generateBookkeepingId]
+[2025-12-24T03:15:53.060Z] [INFO] [DL] 使用1301標準路徑儲存: ledgers/user_Uae47d9d496e4596d70ed724a7d6e2948/transactions [65c3e0b6] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_saveToFirestore]
+成功寫入 71 條日誌到 Firestore
+成功寫入 0 條日誌到 Firestore
+成功寫入 0 條日誌到 Firestore
+成功寫入 0 條日誌到 Firestore
+成功寫入 0 條日誌到 Firestore
+成功寫入 0 條日誌到 Firestore
+成功寫入 0 條日誌到 Firestore
+成功寫入 0 條日誌到 Firestore
+成功寫入 0 條日誌到 Firestore
+成功寫入 0 條日誌到 Firestore
+✅ 記帳成功: 1766546152854
+[2025-12-24T03:15:53.358Z] [DEBUG] [DL] 階段二：開始處理備註文字: "輪胎", 金額: 8888, 支付方式: "信用卡" [undefined] [Code: DEBUG] [Location: LBK_removeAmountFromText]
+[2025-12-24T03:15:53.358Z] [INFO] [DL] 階段二：備註處理完成: "輪胎" → "輪胎" [undefined] [Code: INFO] [Location: LBK_removeAmountFromText]
+[2025-12-24T03:15:53.358Z] [INFO] [DL] 快速記帳完成 [65c3e0b6] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_processQuickBookkeeping]
+WH_replyMessage: 收到類型 object 的訊息對象
+WH_replyMessage: 訊息對象結構: ["success","message","responseMessage","moduleCode","module","data","processingTime","moduleVersion"]
+WH_replyMessage: 訊息對象預覽: {"success":true,"message":"記帳成功！\n金額：8888元 (支出)\n支付方式：信用卡\n時間：2025/12/24 上午11:15\n科目：交通費用\n備註：輪胎\n收支ID：1766546152854","responseMessage":"記帳成功！\n金額：8888元 (支出)\n支付方式：信用卡\n時間：2025/12/24 上午11:15\n科目：交通費用\...
+WH_replyMessage: 發現responseMessage屬性 (string), 長度=83
+WH_replyMessage: 發現message屬性 (string)
+WH_replyMessage: 使用responseMessage屬性 (記帳成功！
+金額：8888元 (支出)
+支付方式：信用卡
+時...)
+WH_replyMessage: 開始回覆訊息: 記帳成功！
+金額：8888元 (支出)
+支付方式：信用卡
+時間：2025/12/24 上午11:15...
+[WH 2.0.16 LOG] WH 2.0.3: 開始回覆訊息: 記帳成功！
+金額：8888元 (支出)
+支付方式：信用卡
+時間：2025/12/24 上午11:15... (INFO)
+[WH 2.0.16 LOG] WH 2.0.3: 發送API請求到LINE平台 (INFO)
+成功寫入 3 條日誌到 Firestore
+成功寫入 0 條日誌到 Firestore
+成功寫入 0 條日誌到 Firestore
+成功寫入 0 條日誌到 Firestore
+成功寫入 0 條日誌到 Firestore
+成功寫入 0 條日誌到 Firestore
+成功寫入 0 條日誌到 Firestore
+成功寫入 0 條日誌到 Firestore
+成功寫入 0 條日誌到 Firestore
+成功寫入 0 條日誌到 Firestore
+成功寫入 0 條日誌到 Firestore
+成功寫入 0 條日誌到 Firestore
+LINE API 回覆結果: 200
+回覆訊息成功
+[WH 2.0.16 LOG] WH 2.0.3: 回覆訊息成功發送 (INFO)
+[WH 2.0.16 LOG] WH 階段一: LBK處理完成，已回覆用戶 [65c3e0b6] (INFO)
+DD_distributeData處理完成，結果預覽: {"success":true,"hasResponseMessage":true,"responseMsgLength":83,"errorType":"無","moduleCode":"LBK","hasPartialData":false} [65c3e0b6]
+WH v2.5.0: 完全信任LBK處理結果，準備轉發回覆 [65c3e0b6]
+[WH 2.0.16 LOG] WH 2.5.1: DCN-0024 階段二 - 正確傳遞Quick Reply參數 [65c3e0b6] (INFO)
+訊息處理結果: {"success":true,"message":"記帳成功！\n金額：8888元 (支出)\n支付方式：信用卡\n時間：2025/12/24 上午11:15\n科目：交通費用\n備註：輪胎\n收支ID：1766546152854","responseMessage":"記帳成功！\n金額：8888元 (支出)\n支付方式：信用卡\n時間：2025/12/24 上午11:15\n科目：交通費用\n備註：輪胎\n收支ID：1766546152854","moduleCode":"LBK","module":"LBK","data":{"id":"1766546152854","transactionId":"1766546152854","amount":8888,"type":"expense","category":"103","subject":"交通費用","categoryName":"交通費用","description":"輪胎","paymentMethod":"信用卡","date":"2025-12-24","timestamp":"2025-12-24T03:15:53.358Z","ledgerId":"user_Uae47d9d496e4596d70ed724a7d6e2948","remark":"輪胎"},"processingTime":1764838817.496,"moduleVersion":"1.1.1"} [65c3e0b6]
+非同步處理完成，已清理數據 [65c3e0b6]
+[WH 2.0.16 LOG] WH 2.0.7: 非同步處理完成 [65c3e0b6] (INFO)
+[2025-12-24T03:16:08.451Z] [DEBUG] [DL] 延遲刪除 Pending Record 成功: 1766546124212 [4f8c8943] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_completePendingRecord]
+[WH 2.0.16 LOG] WH 2.0.7: 收到LINE Webhook請求 [9ff58c42] (INFO)
+檢測到需要回覆的訊息，啟用同步處理 [9ff58c42]
+[WH 2.0.16 LOG] WH 2.0.16: 檢測到需要回覆的訊息，啟用同步處理 [9ff58c42] (INFO)
+開始非同步處理請求 [9ff58c42]
+[WH 2.0.16 LOG] WH 2.0.7: 開始非同步處理請求 [9ff58c42] (INFO)
+[WH 2.0.16 LOG] WH 2.0.3: 開始處理事件: message [9ff58c42] (INFO)
+處理消息事件: text [9ff58c42]
+收到文本消息: "工具箱7777" [9ff58c42]
+[WH 2.0.16 LOG] WH 2.0.3: 收到文本消息: "工具箱7777" [9ff58c42] (INFO)
+開始AM用戶驗證流程 [9ff58c42]
+[WH 2.0.16 LOG] WH 階段一: 開始AM用戶驗證流程 [9ff58c42] (INFO)
+[2025-12-24T03:16:38.880Z] [INFO] [DL] AM [User: 帳號存在性驗證: Uae47d9d496e4596d70ed724a7d6e2948 (LINE)] [Location: Object.DL_info]
+用戶帳本驗證流程完成: Uae47d9d496e4596d70ed724a7d6e2948 [9ff58c42]
+🔍 AM_getUserDefaultLedger: 查詢用戶 Uae47d9d496e4596d70ed724a7d6e2948 預設帳本...
+✅ AM_getUserDefaultLedger: 找到用戶預設帳本: user_Uae47d9d496e4596d70ed724a7d6e2948
+用戶帳本驗證通過: user_Uae47d9d496e4596d70ed724a7d6e2948 [9ff58c42]
+[WH 2.0.16 LOG] WH 階段一: AM驗證完成，轉發至LBK處理記帳 [9ff58c42] (INFO)
+WH v2.5.0: 純粹轉發至LBK處理 - 工具箱7777
+[2025-12-24T03:16:39.094Z] [INFO] [DL] 開始處理LINE OA請求 [9ff58c42] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_processQuickBookkeeping]
+[2025-12-24T03:16:39.094Z] [DEBUG] [DL] 檢查統計查詢關鍵字: "工具箱7777" [9ff58c42] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_checkStatisticsKeyword]
+[2025-12-24T03:16:39.095Z] [DEBUG] [DL] 用戶訊息解析: "工具箱7777" [9ff58c42] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_parseUserMessage]
+[2025-12-24T03:16:39.095Z] [DEBUG] [DL] 階段三：開始簡化格式解析: "工具箱7777" [9ff58c42] [Code: DEBUG] [Location: LBK_parseInputFormat]
+[2025-12-24T03:16:39.095Z] [INFO] [DL] 階段三：簡化解析結果: 科目="工具箱", 金額=7777, 支付方式="未指定" [9ff58c42] [Code: INFO] [Location: LBK_parseInputFormat]
+[2025-12-24T03:16:39.095Z] [DEBUG] [DL] 提取金額: "工具箱7777" [9ff58c42] [Code: DEBUG] [Location: LBK_extractAmount]
+[2025-12-24T03:16:39.095Z] [DEBUG] [DL] 查詢科目代碼: "工具箱" [9ff58c42] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:16:39.095Z] [DEBUG] [DL] 開始同義詞匹配，輸入: "工具箱" [9ff58c42] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:16:39.220Z] [DEBUG] [DL] 查詢categories集合結果: 11 筆資料 [9ff58c42] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:16:39.220Z] [DEBUG] [DL] 處理同義詞匹配: "工具箱"，科目: "生鮮雜貨"，同義詞數量: 0，同義詞內容: [] [9ff58c42] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:16:39.220Z] [DEBUG] [DL] 處理同義詞匹配: "工具箱"，科目: "生活家用"，同義詞數量: 0，同義詞內容: [] [9ff58c42] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:16:39.220Z] [DEBUG] [DL] 處理同義詞匹配: "工具箱"，科目: "交通費用"，同義詞數量: 2，同義詞內容: [洗車, 輪胎] [9ff58c42] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:16:39.220Z] [DEBUG] [DL] 比較同義詞: "洗車" vs "工具箱" [9ff58c42] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:16:39.220Z] [DEBUG] [DL] 比較同義詞: "輪胎" vs "工具箱" [9ff58c42] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:16:39.221Z] [DEBUG] [DL] 處理同義詞匹配: "工具箱"，科目: "餐飲費用"，同義詞數量: 7，同義詞內容: [雞塊, 豆腐, 豆漿, 豆花, 滷味, 鮮乳, 漢堡] [9ff58c42] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:16:39.221Z] [DEBUG] [DL] 比較同義詞: "雞塊" vs "工具箱" [9ff58c42] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:16:39.221Z] [DEBUG] [DL] 比較同義詞: "豆腐" vs "工具箱" [9ff58c42] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:16:39.221Z] [DEBUG] [DL] 比較同義詞: "豆漿" vs "工具箱" [9ff58c42] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:16:39.221Z] [DEBUG] [DL] 比較同義詞: "豆花" vs "工具箱" [9ff58c42] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:16:39.221Z] [DEBUG] [DL] 比較同義詞: "滷味" vs "工具箱" [9ff58c42] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:16:39.221Z] [DEBUG] [DL] 比較同義詞: "鮮乳" vs "工具箱" [9ff58c42] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:16:39.221Z] [DEBUG] [DL] 比較同義詞: "漢堡" vs "工具箱" [9ff58c42] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:16:39.221Z] [DEBUG] [DL] 處理同義詞匹配: "工具箱"，科目: "娛樂消遣"，同義詞數量: 0，同義詞內容: [] [9ff58c42] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:16:39.221Z] [DEBUG] [DL] 處理同義詞匹配: "工具箱"，科目: "運動嗜好"，同義詞數量: 1，同義詞內容: [呼拉圈] [9ff58c42] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:16:39.221Z] [DEBUG] [DL] 比較同義詞: "呼拉圈" vs "工具箱" [9ff58c42] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:16:39.221Z] [DEBUG] [DL] 處理同義詞匹配: "工具箱"，科目: "寵物生活"，同義詞數量: 0，同義詞內容: [] [9ff58c42] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:16:39.221Z] [DEBUG] [DL] 處理同義詞匹配: "工具箱"，科目: "醫療費用"，同義詞數量: 0，同義詞內容: [] [9ff58c42] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:16:39.222Z] [DEBUG] [DL] 處理同義詞匹配: "工具箱"，科目: "財務收入"，同義詞數量: 0，同義詞內容: [] [9ff58c42] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:16:39.222Z] [DEBUG] [DL] 處理同義詞匹配: "工具箱"，科目: "財務支出"，同義詞數量: 0，同義詞內容: [] [9ff58c42] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:16:39.222Z] [DEBUG] [DL] 處理同義詞匹配: "工具箱"，科目: "其他"，同義詞數量: 0，同義詞內容: [] [9ff58c42] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getSubjectCode]
+[2025-12-24T03:16:39.222Z] [INFO] [DL] 需要新科目歸類: 工具箱 [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_parseUserMessage]
+[2025-12-24T03:16:39.222Z] [INFO] [DL] 觸發新科目歸類流程: 工具箱 [9ff58c42] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_processQuickBookkeeping]
+[2025-12-24T03:16:39.222Z] [INFO] [DL] 觸發新科目歧義消除流程: 工具箱 [9ff58c42] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_processQuickBookkeeping]
+[2025-12-24T03:16:39.343Z] [INFO] [DL] Pending Record 創建成功: 1766546199222 [9ff58c42] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_createPendingRecord]
+[2025-12-24T03:16:39.343Z] [INFO] [DL] 處理新科目歸類: 工具箱 [9ff58c42] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_handleNewSubjectClassification]
+[2025-12-24T03:16:39.343Z] [DEBUG] [DL] 成功載入0099.json，共11筆科目資料 [Code: DEBUG] [Location: LBK_load0099SubjectConfig]
+[2025-12-24T03:16:39.343Z] [INFO] [DL] v1.4.3 生成科目歸類選單和Quick Reply，共11個動態選項 (來源:0099.json) [Code: INFO] [Location: LBK_buildClassificationMessage]
+已儲存pending記帳資料到快取: WH_PENDING_Uae47d9d496e4596d70ed724a7d6e2948 [9ff58c42]
+[WH 2.0.16 LOG] WH 2.5.1: 已儲存pending記帳資料，等待用戶選擇科目 [9ff58c42] (INFO)
+WH_replyMessage: 收到類型 object 的訊息對象
+WH_replyMessage: 訊息對象結構: ["success","message","responseMessage","quickReply","moduleCode","module","processingTime","moduleVersion","requiresUserSelection","pendingData"]
+WH_replyMessage: 訊息對象預覽: {"success":true,"message":"您的科目庫無此科目，請問「工具箱」屬於什麼科目？\n\n101 生鮮雜貨\n102 生活家用\n103 交通費用\n104 餐飲費用\n105 娛樂消遣\n106 運動嗜好\n107 寵物生活\n108 醫療費用\n201 財務收入\n301 財務支出\n999 其他","responseMessage":"您的科目庫無此科目，請問「工具箱」屬...
+WH_replyMessage: 發現responseMessage屬性 (string), 長度=122
+WH_replyMessage: 發現message屬性 (string)
+WH_replyMessage: 使用responseMessage屬性 (您的科目庫無此科目，請問「工具箱」屬於什麼科目？
+
+101 ...)
+WH_replyMessage: 開始回覆訊息: 您的科目庫無此科目，請問「工具箱」屬於什麼科目？
+
+101 生鮮雜貨
+102 生活家用
+103 交通...
+[WH 2.0.16 LOG] WH 2.0.3: 開始回覆訊息: 您的科目庫無此科目，請問「工具箱」屬於什麼科目？
+
+101 生鮮雜貨
+102 生活家用
+103 交通... (INFO)
+[WH 2.0.16 LOG] WH 2.0.3: 發送API請求到LINE平台 (INFO)
+LINE API 回覆結果: 200
+回覆訊息成功
+[WH 2.0.16 LOG] WH 2.0.3: 回覆訊息成功發送 (INFO)
+[WH 2.0.16 LOG] WH 階段一: LBK處理完成，已回覆用戶 [9ff58c42] (INFO)
+DD_distributeData處理完成，結果預覽: {"success":true,"hasResponseMessage":true,"responseMsgLength":122,"errorType":"無","moduleCode":"LBK","hasPartialData":false} [9ff58c42]
+WH v2.5.0: 完全信任LBK處理結果，準備轉發回覆 [9ff58c42]
+[WH 2.0.16 LOG] WH 2.5.1: DCN-0024 階段二 - 正確傳遞Quick Reply參數 [9ff58c42] (INFO)
+訊息處理結果: {"success":true,"message":"您的科目庫無此科目，請問「工具箱」屬於什麼科目？\n\n101 生鮮雜貨\n102 生活家用\n103 交通費用\n104 餐飲費用\n105 娛樂消遣\n106 運動嗜好\n107 寵物生活\n108 醫療費用\n201 財務收入\n301 財務支出\n999 其他","responseMessage":"您的科目庫無此科目，請問「工具箱」屬於什麼科目？\n\n101 生鮮雜貨\n102 生活家用\n103 交通費用\n104 餐飲費用\n105 娛樂消遣\n106 運動嗜好\n107 寵物生活\n108 醫療費用\n201 財務收入\n301 財務支出\n999 其他","quickReply":{"items":[{"type":"action","action":{"type":"postback","label":"101 生鮮雜貨","data":"classify_101_{\"subject\":\"工具箱\",\"amount\":7777,\"rawAmount\":\"7777\",\"paymentMethod\":null,\"userId\":\"Uae47d9d496e4596d70ed724a7d6e2948\",\"pendingId\":\"1766546199222\"}","displayText":"101 生鮮雜貨"}},{"type":"action","action":{"type":"postback","label":"102 生活家用","data":"classify_102_{\"subject\":\"工具箱\",\"amount\":7777,\"rawAmount\":\"7777\",\"paymentMethod\":null,\"userId\":\"Uae47d9d496e4596d70ed724a7d6e2948\",\"pendingId\":\"1766546199222\"}","displayText":"102 生活家用"}},{"type":"action","action":{"type":"postback","label":"103 交通費用","data":"classify_103_{\"subject\":\"工具箱\",\"amount\":7777,\"rawAmount\":\"7777\",\"paymentMethod\":null,\"userId\":\"Uae47d9d496e4596d70ed724a7d6e2948\",\"pendingId\":\"1766546199222\"}","displayText":"103 交通費用"}},{"type":"action","action":{"type":"postback","label":"104 餐飲費用","data":"classify_104_{\"subject\":\"工具箱\",\"amount\":7777,\"rawAmount\":\"7777\",\"paymentMethod\":null,\"userId\":\"Uae47d9d496e4596d70ed724a7d6e2948\",\"pendingId\":\"1766546199222\"}","displayText":"104 餐飲費用"}},{"type":"action","action":{"type":"postback","label":"105 娛樂消遣","data":"classify_105_{\"subject\":\"工具箱\",\"amount\":7777,\"rawAmount\":\"7777\",\"paymentMethod\":null,\"userId\":\"Uae47d9d496e4596d70ed724a7d6e2948\",\"pendingId\":\"1766546199222\"}","displayText":"105 娛樂消遣"}},{"type":"action","action":{"type":"postback","label":"106 運動嗜好","data":"classify_106_{\"subject\":\"工具箱\",\"amount\":7777,\"rawAmount\":\"7777\",\"paymentMethod\":null,\"userId\":\"Uae47d9d496e4596d70ed724a7d6e2948\",\"pendingId\":\"1766546199222\"}","displayText":"106 運動嗜好"}},{"type":"action","action":{"type":"postback","label":"107 寵物生活","data":"classify_107_{\"subject\":\"工具箱\",\"amount\":7777,\"rawAmount\":\"7777\",\"paymentMethod\":null,\"userId\":\"Uae47d9d496e4596d70ed724a7d6e2948\",\"pendingId\":\"1766546199222\"}","displayText":"107 寵物生活"}},{"type":"action","action":{"type":"postback","label":"108 醫療費用","data":"classify_108_{\"subject\":\"工具箱\",\"amount\":7777,\"rawAmount\":\"7777\",\"paymentMethod\":null,\"userId\":\"Uae47d9d496e4596d70ed724a7d6e2948\",\"pendingId\":\"1766546199222\"}","displayText":"108 醫療費用"}},{"type":"action","action":{"type":"postback","label":"201 財務收入","data":"classify_201_{\"subject\":\"工具箱\",\"amount\":7777,\"rawAmount\":\"7777\",\"paymentMethod\":null,\"userId\":\"Uae47d9d496e4596d70ed724a7d6e2948\",\"pendingId\":\"1766546199222\"}","displayText":"201 財務收入"}},{"type":"action","action":{"type":"postback","label":"301 財務支出","data":"classify_301_{\"subject\":\"工具箱\",\"amount\":7777,\"rawAmount\":\"7777\",\"paymentMethod\":null,\"userId\":\"Uae47d9d496e4596d70ed724a7d6e2948\",\"pendingId\":\"1766546199222\"}","displayText":"301 財務支出"}},{"type":"action","action":{"type":"postback","label":"999 其他","data":"classify_999_{\"subject\":\"工具箱\",\"amount\":7777,\"rawAmount\":\"7777\",\"paymentMethod\":null,\"userId\":\"Uae47d9d496e4596d70ed724a7d6e2948\",\"pendingId\":\"1766546199222\"}","displayText":"999 其他"}}]},"moduleCode":"LBK","module":"LBK","processingTime":1763862529.774,"moduleVersion":"1.4.3","requiresUserSelection":true,"pendingData":{"subject":"工具箱","amount":7777,"rawAmount":"7777","paymentMethod":null,"userId":"Uae47d9d496e4596d70ed724a7d6e2948","timestamp":"2025-12-24T03:16:39.344Z","processId":"9ff58c42","originalInput":"工具箱7777","stageData":{"electedCategory":{},"categorySelected":true}}} [9ff58c42]
+非同步處理完成，已清理數據 [9ff58c42]
+[WH 2.0.16 LOG] WH 2.0.7: 非同步處理完成 [9ff58c42] (INFO)
+[WH 2.0.16 LOG] WH 2.0.7: 收到LINE Webhook請求 [8f841cae] (INFO)
+非回覆事件，使用非同步處理 [8f841cae]
+開始非同步處理請求 [8f841cae]
+[WH 2.0.16 LOG] WH 2.0.7: 開始非同步處理請求 [8f841cae] (INFO)
+WH v2.5.3: 收到postback事件: classify_102_{"subject":"工具箱","amount":7777,"rawAmount":"7777","paymentMethod":null,"userId":"Uae47d9d496e4596d70ed724a7d6e2948","pendingId":"1766546199222"}
+[WH 2.0.16 LOG] WH 2.5.3: 階段一修復 - 識別postback事件類型: classify_102_{"subject":"工具箱","amount":7777,"rawAmount":"7777","paymentMethod":null,"userId":"Uae47d9d496e4596d70ed724a7d6e2948","pendingId":"1766546199222"} [8f841cae] (INFO)
+WH v2.5.0: 純粹轉發至LBK處理 - classify_102_{"subject":"工具箱","amount":7777,"rawAmount":"7777","paymentMethod":null,"userId":"Uae47d9d496e4596d70ed724a7d6e2948","pendingId":"1766546199222"}
+[2025-12-24T03:16:42.469Z] [INFO] [DL] 開始處理LINE OA請求 [8f841cae] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_processQuickBookkeeping]
+[2025-12-24T03:16:42.470Z] [INFO] [DL] 檢測到科目歸類postback格式訊息 [8f841cae] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_processQuickBookkeeping]
+[2025-12-24T03:16:42.470Z] [INFO] [DL] 科目選擇完成，開始執行記帳: categoryId=102 [8f841cae] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_processQuickBookkeeping]
+[2025-12-24T03:16:42.470Z] [INFO] [DL] 處理科目歸類postback: categoryId=102 [8f841cae] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_handleClassificationPostback]
+[2025-12-24T03:16:42.470Z] [DEBUG] [DL] 成功載入0099.json，共11筆科目資料 [Code: DEBUG] [Location: LBK_load0099SubjectConfig]
+[2025-12-24T03:16:42.470Z] [DEBUG] [DL] 成功載入0099.json，共11筆科目資料 [Code: DEBUG] [Location: LBK_load0099SubjectConfig]
+[2025-12-24T03:16:42.470Z] [DEBUG] [DL] 建立科目映射表，共11個選項 (來源:0099.json) [Code: DEBUG] [Location: LBK_buildCategoryMapping]
+[2025-12-24T03:16:42.470Z] [INFO] [DL] 科目歸類選擇: 生活家用 [8f841cae] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_handleClassificationPostback]
+[2025-12-24T03:16:42.470Z] [INFO] [DL] 階段一修復：添加科目同義詞: 工具箱 → 生活家用 (ID: 102) [8f841cae] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_addSubjectSynonym]
+[2025-12-24T03:16:42.576Z] [INFO] [DL] 階段一修復：現有同義詞: [] [8f841cae] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_addSubjectSynonym]
+[2025-12-24T03:16:42.810Z] [INFO] [DL] 階段一修復：科目同義詞事務更新成功: "工具箱" [8f841cae] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_addSubjectSynonym]
+[2025-12-24T03:16:42.815Z] [INFO] [DL] 成功建立同義詞關聯: 工具箱 → 生活家用 [8f841cae] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_handleClassificationPostback]
+[2025-12-24T03:16:42.932Z] [INFO] [DL] 階段一修復：更新 Pending Record 詳細資訊 - pendingId: 1766546199222, categorySelected: true, electedCategory: {"categoryId":"102","categoryName":"生活家用"} [8f841cae] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_updatePendingRecord]
+成功寫入 52 條日誌到 Firestore
+成功寫入 0 條日誌到 Firestore
+[2025-12-24T03:16:43.054Z] [INFO] [DL] Pending Record 更新成功: 1766546199222 → PENDING_CATEGORY [8f841cae] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_updatePendingRecord]
+[2025-12-24T03:16:43.054Z] [INFO] [DL] 階段一修復：Pending Record 科目資訊更新成功: 生活家用 [8f841cae] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_handleClassificationPostback]
+[2025-12-24T03:16:43.054Z] [DEBUG] [DL] 階段三：開始簡化格式解析: "classify_102_{"subject":"工具箱","amount":7777,"rawAmount":"7777","paymentMethod":null,"userId":"Uae47d9d496e4596d70ed724a7d6e2948","pendingId":"1766546199222"}" [8f841cae] [Code: DEBUG] [Location: LBK_parseInputFormat]
+[2025-12-24T03:16:43.054Z] [DEBUG] [DL] 檢測到系統內部postback格式，跳過解析: "classify_102_{"subject":"工具箱","amount":7777,"rawAmount":"7777","paymentMethod":null,"userId":"Uae47d9d496e4596d70ed724a7d6e2948","pendingId":"1766546199222"}" [8f841cae] [Code: DEBUG] [Location: LBK_parseInputFormat]
+[2025-12-24T03:16:43.054Z] [INFO] [DL] 階段二修復：科目選擇完成，檢查支付方式: 刷卡 [8f841cae] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_handleClassificationPostback]
+[2025-12-24T03:16:43.054Z] [DEBUG] [DL] 階段二：嚴格驗證錢包存在: walletId="null", walletName="刷卡" [8f841cae] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_validateWalletExists]
+[2025-12-24T03:16:43.054Z] [DEBUG] [DL] 階段二：使用 walletName 嚴格查詢: "刷卡" [8f841cae] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_validateWalletExists]
+[2025-12-24T03:16:43.054Z] [DEBUG] [DL] 階段二：嚴格查詢錢包: "刷卡" [8f841cae] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getWalletByName]
+[2025-12-24T03:16:43.054Z] [DEBUG] [DL] 階段二：開始嚴格匹配，輸入: "刷卡" [8f841cae] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getWalletByName]
+[2025-12-24T03:16:43.166Z] [DEBUG] [DL] 階段二：查詢 wallets 集合結果: 3 筆 active 資料 [8f841cae] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getWalletByName]
+[2025-12-24T03:16:43.166Z] [DEBUG] [DL] 階段二：檢查同義詞: "刷卡"，錢包: "現金"，同義詞: [現金] [8f841cae] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getWalletByName]
+[2025-12-24T03:16:43.166Z] [DEBUG] [DL] 階段二：檢查同義詞: "刷卡"，錢包: "信用卡"，同義詞: [信用卡, 星展] [8f841cae] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getWalletByName]
+[2025-12-24T03:16:43.167Z] [DEBUG] [DL] 階段二：檢查同義詞: "刷卡"，錢包: "銀行轉帳"，同義詞: [銀行轉帳] [8f841cae] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getWalletByName]
+[2025-12-24T03:16:43.167Z] [INFO] [DL] 階段二：未在 wallets 子集合中找到精確匹配: "刷卡" [8f841cae] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_getWalletByName]
+[2025-12-24T03:16:43.167Z] [INFO] [DL] 階段二：錢包未在 wallets 子集合中找到，觸發用戶確認: 刷卡 [8f841cae] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_validateWalletExists]
+[2025-12-24T03:16:43.167Z] [INFO] [DL] 支付方式需要歧義消除: undefined，轉入PENDING_WALLET狀態 [8f841cae] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_handleClassificationPostback]
+成功寫入 16 條日誌到 Firestore
+[2025-12-24T03:16:43.273Z] [INFO] [DL] 階段一修復：更新 Pending Record 詳細資訊 - pendingId: 1766546199222, categorySelected: true, electedCategory: {"categoryId":"102","categoryName":"生活家用"} [8f841cae] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_updatePendingRecord]
+[2025-12-24T03:16:43.400Z] [INFO] [DL] Pending Record 更新成功: 1766546199222 → PENDING_WALLET [8f841cae] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_updatePendingRecord]
+WH_replyMessage: 收到類型 object 的訊息對象
+WH_replyMessage: 訊息對象結構: ["success","message","responseMessage","quickReply","moduleCode","module","processingTime","moduleVersion","requiresUserSelection","classificationCompleted","nextStage"]
+WH_replyMessage: 訊息對象預覽: {"success":true,"message":"科目歸類完成！已選擇「生活家用」\n\n檢測到未知支付方式「刷卡」，請問這屬於何種支付方式：","responseMessage":"科目歸類完成！已選擇「生活家用」\n\n檢測到未知支付方式「刷卡」，請問這屬於何種支付方式：","quickReply":{"items":[{"type":"action","action":{"type":"...
+WH_replyMessage: 發現responseMessage屬性 (string), 長度=44
+WH_replyMessage: 發現message屬性 (string)
+WH_replyMessage: 使用responseMessage屬性 (科目歸類完成！已選擇「生活家用」
+
+檢測到未知支付方式「刷卡...)
+WH_replyMessage: 開始回覆訊息: 科目歸類完成！已選擇「生活家用」
+
+檢測到未知支付方式「刷卡」，請問這屬於何種支付方式：
+[WH 2.0.16 LOG] WH 2.0.3: 開始回覆訊息: 科目歸類完成！已選擇「生活家用」
+
+檢測到未知支付方式「刷卡」，請問這屬於何種支付方式： (INFO)
+[WH 2.0.16 LOG] WH 2.0.3: 發送API請求到LINE平台 (INFO)
+LINE API 回覆結果: 200
+回覆訊息成功
+[WH 2.0.16 LOG] WH 2.0.3: 回覆訊息成功發送 (INFO)
+[WH 2.0.16 LOG] WH 2.5.3: postback處理完成並回覆用戶 [8f841cae] (INFO)
+非同步處理完成，已清理數據 [8f841cae]
+[WH 2.0.16 LOG] WH 2.0.7: 非同步處理完成 [8f841cae] (INFO)
+[WH 2.0.16 LOG] WH 2.0.7: 收到LINE Webhook請求 [51112b31] (INFO)
+非回覆事件，使用非同步處理 [51112b31]
+開始非同步處理請求 [51112b31]
+[WH 2.0.16 LOG] WH 2.0.7: 開始非同步處理請求 [51112b31] (INFO)
+WH v2.5.3: 收到postback事件: wallet_type_bank_1766546199222
+[WH 2.0.16 LOG] WH 2.5.3: 階段一修復 - 識別postback事件類型: wallet_type_bank_1766546199222 [51112b31] (INFO)
+WH v2.5.0: 純粹轉發至LBK處理 - wallet_type_bank_1766546199222
+[2025-12-24T03:16:47.080Z] [INFO] [DL] 開始處理LINE OA請求 [51112b31] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_processQuickBookkeeping]
+[2025-12-24T03:16:47.080Z] [INFO] [DL] 檢測到wallet類型選擇postback事件: wallet_type_bank_1766546199222 [51112b31] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_processQuickBookkeeping]
+[2025-12-24T03:16:47.080Z] [INFO] [DL] 處理錢包確認postback: wallet_type_bank_1766546199222 [51112b31] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_handleWalletConfirmationPostback]
+[2025-12-24T03:16:47.080Z] [INFO] [DL] 處理支付方式類型選擇: type=bank, pendingId=1766546199222 [51112b31] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_handleWalletConfirmationPostback]
+[2025-12-24T03:16:47.080Z] [INFO] [DL] 階段四：處理支付方式類型選擇: type=bank, pendingId=1766546199222 [51112b31] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_handleWalletTypeSelection]
+[2025-12-24T03:16:47.186Z] [DEBUG] [DL] 階段二：嚴格查詢錢包: "銀行帳戶" [51112b31] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getWalletByName]
+[2025-12-24T03:16:47.186Z] [DEBUG] [DL] 階段二：開始嚴格匹配，輸入: "銀行帳戶" [51112b31] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getWalletByName]
+[2025-12-24T03:16:47.297Z] [DEBUG] [DL] 階段二：查詢 wallets 集合結果: 3 筆 active 資料 [51112b31] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getWalletByName]
+[2025-12-24T03:16:47.297Z] [DEBUG] [DL] 階段二：檢查同義詞: "銀行帳戶"，錢包: "現金"，同義詞: [現金] [51112b31] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getWalletByName]
+[2025-12-24T03:16:47.297Z] [DEBUG] [DL] 階段二：檢查同義詞: "銀行帳戶"，錢包: "信用卡"，同義詞: [信用卡, 星展] [51112b31] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getWalletByName]
+[2025-12-24T03:16:47.298Z] [DEBUG] [DL] 階段二：檢查同義詞: "銀行帳戶"，錢包: "銀行轉帳"，同義詞: [銀行轉帳] [51112b31] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getWalletByName]
+[2025-12-24T03:16:47.298Z] [INFO] [DL] 階段二：未在 wallets 子集合中找到精確匹配: "銀行帳戶" [51112b31] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_getWalletByName]
+[2025-12-24T03:16:47.298Z] [DEBUG] [DL] 階段二：嚴格查詢錢包: "銀行" [51112b31] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getWalletByName]
+[2025-12-24T03:16:47.298Z] [DEBUG] [DL] 階段二：開始嚴格匹配，輸入: "銀行" [51112b31] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getWalletByName]
+[2025-12-24T03:16:47.410Z] [DEBUG] [DL] 階段二：查詢 wallets 集合結果: 3 筆 active 資料 [51112b31] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getWalletByName]
+[2025-12-24T03:16:47.410Z] [DEBUG] [DL] 階段二：檢查同義詞: "銀行"，錢包: "現金"，同義詞: [現金] [51112b31] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getWalletByName]
+[2025-12-24T03:16:47.410Z] [DEBUG] [DL] 階段二：檢查同義詞: "銀行"，錢包: "信用卡"，同義詞: [信用卡, 星展] [51112b31] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getWalletByName]
+[2025-12-24T03:16:47.410Z] [DEBUG] [DL] 階段二：檢查同義詞: "銀行"，錢包: "銀行轉帳"，同義詞: [銀行轉帳] [51112b31] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getWalletByName]
+[2025-12-24T03:16:47.410Z] [INFO] [DL] 階段二：未在 wallets 子集合中找到精確匹配: "銀行" [51112b31] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_getWalletByName]
+[2025-12-24T03:16:47.411Z] [DEBUG] [DL] 階段二：嚴格查詢錢包: "bank" [51112b31] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getWalletByName]
+[2025-12-24T03:16:47.411Z] [DEBUG] [DL] 階段二：開始嚴格匹配，輸入: "bank" [51112b31] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getWalletByName]
+[2025-12-24T03:16:47.524Z] [DEBUG] [DL] 階段二：查詢 wallets 集合結果: 3 筆 active 資料 [51112b31] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getWalletByName]
+[2025-12-24T03:16:47.524Z] [DEBUG] [DL] 階段二：檢查同義詞: "bank"，錢包: "現金"，同義詞: [現金] [51112b31] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getWalletByName]
+[2025-12-24T03:16:47.524Z] [DEBUG] [DL] 階段二：檢查同義詞: "bank"，錢包: "信用卡"，同義詞: [信用卡, 星展] [51112b31] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getWalletByName]
+[2025-12-24T03:16:47.524Z] [DEBUG] [DL] 階段二：檢查同義詞: "bank"，錢包: "銀行轉帳"，同義詞: [銀行轉帳] [51112b31] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getWalletByName]
+[2025-12-24T03:16:47.524Z] [INFO] [DL] 階段二：未在 wallets 子集合中找到精確匹配: "bank" [51112b31] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_getWalletByName]
+[2025-12-24T03:16:47.527Z] [ERROR] [DL] 階段四：處理支付方式類型選擇失敗: Error: 階段五：動態查詢未找到類型為 bank 的錢包 [51112b31] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: WALLET_TYPE_SELECTION_ERROR] [Location: LBK_handleWalletTypeSelection]
+WH_replyMessage: 收到類型 object 的訊息對象
+WH_replyMessage: 訊息對象結構: ["success","error","moduleCode","module"]
+WH_replyMessage: 訊息對象預覽: {"success":false,"error":"Error: 階段五：動態查詢未找到類型為 bank 的錢包","moduleCode":"LBK","module":"LBK"}...
+WH_replyMessage: 將對象轉換為字符串: {"success":false,"error":"Error: 階段五：動態查詢未找到類型為 ba...
+WH_replyMessage: 開始回覆訊息: {"success":false,"error":"Error: 階段五：動態查詢未找到類型為 ba...
+[WH 2.0.16 LOG] WH 2.0.3: 開始回覆訊息: {"success":false,"error":"Error: 階段五：動態查詢未找到類型為 ba... (INFO)
+[WH 2.0.16 LOG] WH 2.0.3: 發送API請求到LINE平台 (INFO)
+LINE API 回覆結果: 200
+回覆訊息成功
+[WH 2.0.16 LOG] WH 2.0.3: 回覆訊息成功發送 (INFO)
+[WH 2.0.16 LOG] WH 2.5.3: postback處理完成並回覆用戶 [51112b31] (INFO)
+非同步處理完成，已清理數據 [51112b31]
+[WH 2.0.16 LOG] WH 2.0.7: 非同步處理完成 [51112b31] (INFO)

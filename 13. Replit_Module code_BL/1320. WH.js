@@ -1,8 +1,8 @@
 /**
- * WH_Webhook處理模組_2.5.1
- * @module Webhook模組  
- * @description LINE Webhook處理模組 - 階段二完成：確保Quick Reply參數正確傳遞
- * @update 2025-12-16: 升級至v2.5.1，修正WH_replyMessage調用，正確傳遞quickReply參數
+ * WH_Webhook處理模組_2.5.3
+ * @module Webhook模組
+ * @description LINE Webhook處理模組 - 階段三完成：支援連續性Quick Reply處理，識別Pending Record相關事件
+ * @update 2025-12-19: 升級至v2.5.3，新增Pending Record postback識別和路由邏輯，支援多階段處理流程
  */
 
 // 首先引入其他模組 - 增強安全載入
@@ -108,7 +108,8 @@ const WH_QUICK_REPLY_CONFIG = {
   MAX_ITEMS: 4,
   STATISTICS_KEYWORDS: ['本日統計', '本週統計', '本月統計'],
   PREMIUM_KEYWORDS: ['upgrade_premium', '試用', '功能介紹'],
-  REMINDER_KEYWORDS: ['setup_daily_reminder', 'setup_weekly_reminder', 'setup_monthly_reminder']
+  REMINDER_KEYWORDS: ['setup_daily_reminder', 'setup_weekly_reminder', 'setup_monthly_reminder'],
+  WALLET_KEYWORDS: ['wallet_confirm_yes', 'wallet_confirm_no']
 };
 
 /**
@@ -119,7 +120,7 @@ const WH_QUICK_REPLY_CONFIG = {
 function WH_checkEnvironmentVariables() {
   const requiredEnvVars = [
     'LINE_CHANNEL_SECRET',
-    'LINE_CHANNEL_ACCESS_TOKEN', 
+    'LINE_CHANNEL_ACCESS_TOKEN',
     'Webhook_URL'
   ];
 
@@ -166,7 +167,7 @@ function WH_checkEnvironmentVariables() {
 }
 
 // 初始化檢查 - 在全局執行一次
-console.log("WH模組初始化，版本: 2.5.1 (2025-12-16) - 階段二完成：確保Quick Reply參數正確傳遞");
+console.log("WH模組初始化，版本: 2.5.3 (2025-12-19) - 階段三完成：支援連續性Quick Reply處理，識別Pending Record相關事件");
 
 // 執行環境變數完整性檢查
 const envCheckResult = WH_checkEnvironmentVariables();
@@ -213,8 +214,6 @@ const WH_PROPS = {
 function getScriptProperty(key) {
   return process.env[key];
 }
-
-
 
 // 日期時間格式化
 function WH_formatDateTime(date) {
@@ -414,7 +413,7 @@ async function processWebhookAsync(e) {
               0,
               "processWebhookAsync",
               "WARNING",
-            ]);
+            ], userId);
             continue; // 跳過此事件的處理
           }
 
@@ -499,13 +498,44 @@ async function processWebhookAsync(e) {
               ]);
             }
           } else if (event.type === 'postback') {
-              const postbackData = event.postback.data;
-              console.log(`WH v2.5.1: 收到postback事件: ${postbackData}`);
+            const postbackData = event.postback.data;
+            console.log(`WH v2.5.3: 收到postback事件: ${postbackData}`);
+
+            // 階段一修復：明確標記postback事件類型並正確路由
+            WH_directLogWrite([
+              WH_formatDateTime(new Date()),
+              `WH 2.5.3: 階段一修復 - 識別postback事件類型: ${postbackData} [${requestId}]`,
+              "Postback路由",
+              userId,
+              "",
+              "WH",
+              "",
+              0,
+              "WH_processEventAsync",
+              "INFO",
+            ]);
+
+            const postbackInputData = {
+              userId: userId,
+              messageText: postbackData,
+              replyToken: event.replyToken,
+              timestamp: event.timestamp,
+              processId: requestId,
+              eventType: 'postback', // 階段一修復：明確標記為postback事件
+              postbackData: postbackData
+            };
+
+            // 階段一修復：統一路由到LBK處理
+            const postbackResult = await WH_callLBKSafely(postbackInputData);
+
+            // 確保正確傳遞quickReply和回覆結果
+            if (postbackResult && event.replyToken) {
+              await WH_replyMessage(event.replyToken, postbackResult, postbackResult.quickReply);
 
               WH_directLogWrite([
                 WH_formatDateTime(new Date()),
-                `WH 2.5.1: 處理postback事件: ${postbackData} [${requestId}]`,
-                "Postback處理",
+                `WH 2.5.3: postback處理完成並回覆用戶 [${requestId}]`,
+                "Postback完成",
                 userId,
                 "",
                 "WH",
@@ -514,23 +544,7 @@ async function processWebhookAsync(e) {
                 "WH_processEventAsync",
                 "INFO",
               ]);
-
-              // 統一處理所有postback事件，由LBK決定如何處理
-              const postbackInputData = {
-                userId: userId,
-                messageText: postbackData,
-                replyToken: event.replyToken,
-                timestamp: event.timestamp,
-                processId: requestId,
-                eventType: 'postback',
-                postbackData: postbackData
-              };
-
-              const postbackResult = await WH_callLBKSafely(postbackInputData);
-
-              if (postbackResult && event.replyToken) {
-                await WH_replyMessage(event.replyToken, postbackResult, postbackResult.quickReply);
-              }
+            }
           } else {
             // 處理非消息事件 (follow, unfollow, join 等)
             console.log(`收到非消息事件: ${event.type} [${requestId}]`);
@@ -850,9 +864,9 @@ async function WH_directLogWrite(logData, userId = null) {
         };
 
         await db.collection(WH_CONFIG.FIRESTORE.COLLECTION)
-                .doc(userId)
-                .collection(WH_CONFIG.FIRESTORE.LOG_SUBCOLLECTION)
-                .add(logDoc);
+          .doc(userId)
+          .collection(WH_CONFIG.FIRESTORE.LOG_SUBCOLLECTION)
+          .add(logDoc);
 
       } catch (firestoreError) {
         console.log(`Firestore寫入失敗，已保存至本地: ${firestoreError.toString()}`);
@@ -1024,8 +1038,8 @@ async function WH_replyMessage(replyToken, message, quickReply = null) {
       // 檢查是否為有效的格式化物件
       if (message.responseMessage || message.message) {
         isValidFormat = true;
-      } else if (message.moduleCode === 'BK' || message.module === 'BK' || 
-                message.moduleCode === 'LBK' || message.module === 'LBK') {
+      } else if (message.moduleCode === 'BK' || message.module === 'BK' ||
+        message.moduleCode === 'LBK' || message.module === 'LBK') {
         isValidFormat = true;
       }
     }
@@ -1044,7 +1058,10 @@ async function WH_replyMessage(replyToken, message, quickReply = null) {
         "WH_replyMessage",
         "ERROR",
       ]);
-      return { success: false, error: "訊息格式不符合規範" };
+      return {
+        success: false,
+        error: "訊息格式不符合規範"
+      };
     }
 
     // 1. 智慧訊息提取 - 檢查輸入類型並從對象中提取訊息
@@ -1205,7 +1222,8 @@ async function WH_replyMessage(replyToken, message, quickReply = null) {
       `WH 2.0.3: 開始回覆訊息: ${textMessage.substring(0, 50)}${textMessage.length > 50 ? "..." : ""}`,
       "訊息回覆",
       "",
-      "",      "WH",
+      "",
+      "WH",
       "",
       0,
       "WH_replyMessage",
@@ -1229,7 +1247,10 @@ async function WH_replyMessage(replyToken, message, quickReply = null) {
         "ERROR",
       ]);
 
-      return { success: false, error: "無效的回覆令牌" };
+      return {
+        success: false,
+        error: "無效的回覆令牌"
+      };
     }
 
     // LINE Messaging API URL
@@ -1254,7 +1275,10 @@ async function WH_replyMessage(replyToken, message, quickReply = null) {
         "ERROR",
       ]);
 
-      return { success: false, error: "找不到 CHANNEL_ACCESS_TOKEN" };
+      return {
+        success: false,
+        error: "找不到 CHANNEL_ACCESS_TOKEN"
+      };
     }
 
     // 建立基本訊息
@@ -1305,14 +1329,17 @@ async function WH_replyMessage(replyToken, message, quickReply = null) {
       "INFO",
     ]);
 
+    // 設定請求標頭
     const headers = {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${CHANNEL_ACCESS_TOKEN}`
     };
 
-    // 使用 axios 發送 HTTP 請求 
+    // 使用 axios 發送 HTTP 請求
     return axios
-      .post(url, replyData, { headers: headers })
+      .post(url, replyData, {
+        headers: headers
+      })
       .then((response) => {
         // 記錄回覆結果
         console.log(`LINE API 回覆結果: ${response.status}`);
@@ -1335,7 +1362,9 @@ async function WH_replyMessage(replyToken, message, quickReply = null) {
             "INFO",
           ]);
 
-          return { success: true };
+          return {
+            success: true
+          };
         } else {
           console.log(`回覆訊息失敗: ${JSON.stringify(response.data)}`);
 
@@ -1353,7 +1382,10 @@ async function WH_replyMessage(replyToken, message, quickReply = null) {
             "ERROR",
           ]);
 
-          return { success: false, error: JSON.stringify(response.data) };
+          return {
+            success: false,
+            error: JSON.stringify(response.data)
+          };
         }
       })
       .catch((error) => {
@@ -1376,7 +1408,10 @@ async function WH_replyMessage(replyToken, message, quickReply = null) {
           "ERROR",
         ]);
 
-        return { success: false, error: error.toString() };
+        return {
+          success: false,
+          error: error.toString()
+        };
       });
   } catch (error) {
     console.log(`WH_replyMessage 錯誤: ${error}`);
@@ -1396,7 +1431,10 @@ async function WH_replyMessage(replyToken, message, quickReply = null) {
       "ERROR",
     ]);
 
-    return { success: false, error: error.toString() };
+    return {
+      success: false,
+      error: error.toString()
+    };
   }
 }
 
@@ -1620,7 +1658,10 @@ async function WH_processEventAsync(event, requestId, userId) {
           } catch (amError) {
             console.error(`AM模組調用失敗: ${amError.message}`);
             // 降級處理：假設用戶存在，繼續處理
-            accountValidation = { exists: true, UID: userId };
+            accountValidation = {
+              exists: true,
+              UID: userId
+            };
           }
 
           if (!accountValidation.exists) {
@@ -1693,7 +1734,7 @@ async function WH_processEventAsync(event, requestId, userId) {
             }
           }
 
-          console.log(`用戶驗證流程完成: ${userId} [${requestId}]`);
+          console.log(`用戶帳本驗證流程完成: ${userId} [${requestId}]`);
 
           // 步驟2：確保帳本正確初始化，安全調用 AM.AM_getUserDefaultLedger
           let ledgerResult;
@@ -1708,10 +1749,10 @@ async function WH_processEventAsync(event, requestId, userId) {
           } catch (amError) {
             console.error(`AM模組調用失敗: ${amError.message}`);
             // 降級處理：生成預設帳本ID
-            ledgerResult = { 
-              success: true, 
+            ledgerResult = {
+              success: true,
               ledgerId: `user_${userId}`,
-              initialized: false 
+              initialized: false
             };
           }
 
@@ -1850,12 +1891,9 @@ async function WH_processEventAsync(event, requestId, userId) {
             "INFO",
           ]);
 
-          // v2.5.1: 階段二修改 - 正確傳遞quickReply參數
-          const replyResult = WH_replyMessage(event.replyToken, lbkResult, lbkResult.quickReply);
-
-          // 記錄回覆結果
+          // 記錄處理結果
           console.log(
-            `訊息回覆結果: ${JSON.stringify(replyResult)} [${requestId}]`,
+            `訊息處理結果: ${JSON.stringify(lbkResult)} [${requestId}]`,
           );
         } catch (ddError) {
           // 異常捕獲處理 - 保留所有可用資訊
@@ -1952,27 +1990,27 @@ async function WH_processEventAsync(event, requestId, userId) {
         });
       }
     } else if (event.type === 'postback') {
-        const postbackData = event.postback.data;
-        console.log(`WH v2.5.0: 收到postback事件，純粹轉發: ${postbackData}`);
+      const postbackData = event.postback.data;
+      console.log(`WH v2.5.0: 收到postback事件，純粹轉發: ${postbackData}`);
 
-        // v2.5.0: 所有postback事件都轉發給LBK處理（包含科目歸類選擇）
-        const postbackInputData = {
-          userId: userId,
-          messageText: postbackData,
-          replyToken: event.replyToken,
-          timestamp: event.timestamp,
-          processId: generateProcessId(),
-          eventType: 'postback', // 標記為postback事件
-          postbackData: postbackData
-        };
+      // v2.5.0: 所有postback事件都轉發給LBK處理（包含科目歸類選擇）
+      const postbackInputData = {
+        userId: userId,
+        messageText: postbackData,
+        replyToken: event.replyToken,
+        timestamp: event.timestamp,
+        processId: generateProcessId(),
+        eventType: 'postback', // 標記為postback事件
+        postbackData: postbackData
+      };
 
-        // v2.5.1: 階段二 - 確保postback事件也正確處理quickReply
-        const postbackResult = await WH_callLBKSafely(postbackInputData);
+      // v2.5.1: 階段二 - 確保postback事件也正確處理quickReply
+      const postbackResult = await WH_callLBKSafely(postbackInputData);
 
-        // 如果有回應結果，確保正確傳遞quickReply
-        if (postbackResult && event.replyToken) {
-          await WH_replyMessage(event.replyToken, postbackResult, postbackResult.quickReply);
-        }
+      // 如果有回應結果，確保正確傳遞quickReply
+      if (postbackResult && event.replyToken) {
+        await WH_replyMessage(event.replyToken, postbackResult, postbackResult.quickReply);
+      }
     } else {
       // 處理非消息事件 (follow, unfollow, join 等)
       console.log(`收到非消息事件: ${event.type} [${requestId}]`);
@@ -2114,6 +2152,7 @@ async function WH_processEventAsync(event, requestId, userId) {
     }
   }
 }
+
 /**
  * 15. 處理Quick Reply事件
  * @version 2025-07-21-V1.0.0
@@ -2166,7 +2205,7 @@ async function WH_handleQuickReplyEvent(event) {
  * @date 2025-07-21 10:30:00
  * @description 將Quick Reply事件路由到SR模組處理
  */
-async function WH_routeToSRModule(userId, postbackData, eventContext) {
+async function WH_routeToSRModule(userId, postbackData, event) {
   const functionName = "WH_routeToSRModule";
   try {
     WH_logInfo(`路由到SR模組: ${postbackData}`, "模組路由", userId, "WH_routeToSRModule");
@@ -2176,7 +2215,7 @@ async function WH_routeToSRModule(userId, postbackData, eventContext) {
     }
 
     // 調用SR模組處理Quick Reply
-    const result = await SR.SR_handleQuickReplyInteraction(userId, postbackData, eventContext);
+    const result = await SR.SR_handleQuickReplyInteraction(userId, postbackData, event);
 
     return result;
 
@@ -2304,7 +2343,7 @@ function generateProcessId() {
 // ⚠️ 所有Express路由和服務器啟動邏輯已移除
 // WH模組v2.2.0現在專注於業務邏輯處理，由index.js統一管理服務器
 
-// 更新模組導出，添加 setDependencies 函數 
+// 更新模組導出，添加 setDependencies 函數
 module.exports = {
   // 已有的導出
   WH_processEvent,
@@ -2325,6 +2364,14 @@ module.exports = {
   WH_directLogWrite,
   WH_ReceiveDDdata,
 
+  // Wallet處理函數 (階段三新增)
+  WH_isWalletConfirmationPostback,
+  WH_handleWalletConfirmationPostback,
+
+  // 階段三新增：Pending Record處理函數
+  WH_handlePendingRecordPostback,
+  WH_identifyPostbackType,
+
   // 新增依賴注入函數
   setDependencies,
 
@@ -2333,6 +2380,7 @@ module.exports = {
 
   // 配置導出
   WH_CONFIG,
+  WH_QUICK_REPLY_CONFIG,
 };
 
 /**
@@ -2376,7 +2424,10 @@ function WH_ReceiveDDdata(data, action) {
         } else {
           const error = "回覆操作缺少replyToken或消息內容";
           console.log(error);
-          return { success: false, error: error };
+          return {
+            success: false,
+            error: error
+          };
         }
 
       case "push":
@@ -2413,7 +2464,10 @@ function WH_ReceiveDDdata(data, action) {
           "ERROR",
         ]);
 
-        return { success: false, error: errorMsg };
+        return {
+          success: false,
+          error: errorMsg
+        };
     }
   } catch (error) {
     // 捕獲處理錯誤
@@ -2433,7 +2487,10 @@ function WH_ReceiveDDdata(data, action) {
       "ERROR",
     ]);
 
-    return { success: false, error: error.toString() };
+    return {
+      success: false,
+      error: error.toString()
+    };
   }
 }
 /**
@@ -2758,8 +2815,10 @@ async function WH_handleWebhook(event, reqId) {
   }
 }
 
+// Wallet確認postback處理已移至LBK模組統一管理
+
 /**
- * 20. 檢查是否為Quick Reply相關的postback
+ * 21. 檢查是否為Quick Reply相關的postback
  * @version 2025-07-21-V1.0.0
  * @date 2025-07-21 10:30:00
  * @description 判斷postback資料是否屬於Quick Reply系統
@@ -2845,6 +2904,16 @@ function WH_isSubjectClassificationPostback(postbackData) {
   return postbackData && postbackData.startsWith("classify_");
 }
 
+// 階段三新增函數：wallet確認 Postback 識別
+/**
+ * 識別wallet確認 postback 事件
+ * @param {string} postbackData - postback 事件的 data 欄位
+ * @returns {boolean} - 如果是wallet確認 postback，則返回 true
+ */
+function WH_isWalletConfirmationPostback(postbackData) {
+  return postbackData && (postbackData.startsWith("confirm_wallet_") || postbackData.startsWith("cancel_wallet_"));
+}
+
 // 階段三新增函數：解析科目歸類 postback 數據
 /**
  * 解析科目歸類 postback 數據
@@ -2863,7 +2932,7 @@ function WH_parseClassificationPostback(postbackData) {
     if (parts.length >= 3 && parts[0] === "classify") {
       const subjectId = parts[1]; // 科目 ID
       const jsonPart = parts.slice(2).join("_"); // 重新組合 JSON 部分
-      
+
       let pendingData = null;
       try {
         pendingData = JSON.parse(jsonPart);
@@ -2886,6 +2955,538 @@ function WH_parseClassificationPostback(postbackData) {
       success: false,
       error: error.message
     };
+  }
+}
+
+// 階段三新增函數：解析wallet確認 postback 數據
+/**
+ * 解析wallet確認 postback 數據
+ * @param {string} postbackData - postback 事件的 data 欄位
+ * @returns {object} - 包含 success 狀態、action、wallet資訊等的物件
+ */
+function WH_parseWalletConfirmationPostback(postbackData) {
+  try {
+    let action, jsonPart;
+
+    if (postbackData.startsWith("confirm_wallet_")) {
+      action = "confirm";
+      jsonPart = postbackData.substring("confirm_wallet_".length);
+    } else if (postbackData.startsWith("cancel_wallet_")) {
+      action = "cancel";
+      jsonPart = postbackData.substring("cancel_wallet_".length);
+    } else {
+      throw new Error("Postback data 格式不正確，不是wallet確認事件");
+    }
+
+    let walletData = null;
+    try {
+      walletData = JSON.parse(jsonPart);
+    } catch (jsonError) {
+      console.log(`Wallet postback JSON 解析失敗: ${jsonError.message}`);
+      throw new Error("無法解析wallet確認資料");
+    }
+
+    return {
+      success: true,
+      action: action,
+      walletName: walletData.walletName,
+      originalData: walletData.originalData,
+      userId: walletData.userId,
+      originalInput: walletData.originalInput
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+}
+
+/**
+ * 階段三新增：處理wallet確認postback事件
+ * @version 2025-12-17-V2.5.2
+ * @description 處理用戶對新wallet的確認回應，支援Quick Reply按鈕互動
+ * @param {string} postbackData - postback事件的data欄位
+ * @param {string} userId - 用戶ID
+ * @param {string} replyToken - LINE回覆Token
+ * @param {string} requestId - 請求ID
+ * @returns {Promise<Object>} 處理結果
+ */
+async function WH_handleWalletConfirmationPostback(postbackData, userId, replyToken, requestId) {
+  const functionName = "WH_handleWalletConfirmationPostback";
+
+  try {
+    WH_directLogWrite([
+      WH_formatDateTime(new Date()),
+      `WH 2.5.2: 開始處理wallet確認postback: ${postbackData} [${requestId}]`,
+      "Wallet確認",
+      userId,
+      "",
+      "WH",
+      "",
+      0,
+      functionName,
+      "INFO",
+    ]);
+
+    // 解析postback資料
+    const walletConfirmation = WH_parseWalletConfirmationPostback(postbackData);
+    if (!walletConfirmation.success) {
+      WH_directLogWrite([
+        WH_formatDateTime(new Date()),
+        `WH 2.5.2: wallet postback解析失敗: ${walletConfirmation.error} [${requestId}]`,
+        "Wallet確認",
+        userId,
+        "PARSE_ERROR",
+        "WH",
+        walletConfirmation.error,
+        0,
+        functionName,
+        "ERROR",
+      ]);
+
+      return {
+        success: false,
+        message: "處理wallet確認時發生錯誤",
+        responseMessage: "處理wallet確認時發生錯誤",
+        moduleCode: "WH",
+        module: "WH"
+      };
+    }
+
+    const { action, walletName, originalData, originalInput } = walletConfirmation;
+
+    if (action === "confirm") {
+      // 用戶選擇「確認新增」wallet
+      WH_directLogWrite([
+        WH_formatDateTime(new Date()),
+        `WH 2.5.2: 用戶確認新增wallet: ${walletName} [${requestId}]`,
+        "Wallet確認",
+        userId,
+        "",
+        "WH",
+        "",
+        0,
+        functionName,
+        "INFO",
+      ]);
+
+      try {
+        // 調用WCM模組新增wallet到wallets子集合
+        const WCM = require('./1350. WCM.js');
+        const ledgerId = `user_${userId}`;
+
+        const walletData = {
+          name: walletName,
+          type: WH_determineWalletType(walletName),
+          currency: 'TWD',
+          balance: 0,
+          userId: userId,
+          description: `用戶自訂錢包：${walletName}`
+        };
+
+        const createWalletResult = await WCM.WCM_createWallet(ledgerId, walletData);
+
+        if (createWalletResult.success) {
+          // wallet創建成功，繼續執行原始記帳
+          WH_directLogWrite([
+            WH_formatDateTime(new Date()),
+            `WH 2.5.2: wallet創建成功，繼續執行記帳 [${requestId}]`,
+            "Wallet確認",
+            userId,
+            "",
+            "WH",
+            "",
+            0,
+            functionName,
+            "INFO",
+          ]);
+
+          // 使用LBK執行記帳，更新支付方式為新創建的wallet
+          if (originalData) {
+            originalData.paymentMethod = walletName;
+            originalData.walletId = createWalletResult.data.walletId;
+          }
+
+          const lbkInputData = {
+            userId: userId,
+            messageText: originalInput,
+            replyToken: replyToken,
+            timestamp: Date.now(),
+            processId: requestId,
+            eventType: 'wallet_confirmed_bookkeeping',
+            confirmedWalletData: originalData
+          };
+
+          const bookkeepingResult = await WH_callLBKSafely(lbkInputData);
+
+          if (bookkeepingResult && bookkeepingResult.success) {
+            const successMessage = `✅ 已新增支付方式「${walletName}」並完成記帳！\n\n${bookkeepingResult.responseMessage || bookkeepingResult.message}`;
+
+            return {
+              success: true,
+              message: successMessage,
+              responseMessage: successMessage,
+              moduleCode: "WH",
+              module: "WH",
+              walletCreated: true,
+              bookkeepingCompleted: true
+            };
+          } else {
+            const partialSuccessMessage = `✅ 已新增支付方式「${walletName}」\n❌ 但記帳失敗：${bookkeepingResult?.error || '未知錯誤'}\n\n請重新輸入記帳資訊`;
+
+            return {
+              success: true,
+              message: partialSuccessMessage,
+              responseMessage: partialSuccessMessage,
+              moduleCode: "WH",
+              module: "WH",
+              walletCreated: true,
+              bookkeepingCompleted: false
+            };
+          }
+        } else {
+          // wallet創建失敗
+          const errorMessage = `❌ 新增支付方式失敗：${createWalletResult.message}\n\n請重新嘗試或使用現有的支付方式`;
+          WH_directLogWrite([
+            WH_formatDateTime(new Date()),
+            `WH 2.5.2: wallet創建失敗: ${createWalletResult.message} [${requestId}]`,
+            "Wallet確認",
+            userId,
+            "WALLET_CREATE_FAILED",
+            "WH",
+            createWalletResult.message,
+            0,
+            functionName,
+            "ERROR",
+          ]);
+
+          return {
+            success: false,
+            message: errorMessage,
+            responseMessage: errorMessage,
+            moduleCode: "WH",
+            module: "WH",
+            walletCreated: false,
+          };
+        }
+      } catch (error) {
+        WH_directLogWrite([
+          WH_formatDateTime(new Date()),
+          `WH 2.5.2: wallet創建過程發生錯誤: ${error.toString()} [${requestId}]`,
+          "Wallet確認",
+          userId,
+          "WALLET_CREATE_ERROR",
+          "WH",
+          error.toString(),
+          0,
+          functionName,
+          "ERROR",
+        ]);
+
+        const errorMessage = `❌ 新增支付方式時發生系統錯誤\n\n請稍後再試或使用現有的支付方式`;
+
+        return {
+          success: false,
+          message: errorMessage,
+          responseMessage: errorMessage,
+          moduleCode: "WH",
+          module: "WH",
+          walletCreated: false,
+        };
+      }
+    } else if (action === "cancel") {
+      // 用戶選擇「取消記帳」
+      WH_directLogWrite([
+        WH_formatDateTime(new Date()),
+        `WH 2.5.2: 用戶取消wallet新增和記帳 [${requestId}]`,
+        "Wallet確認",
+        userId,
+        "",
+        "WH",
+        "",
+        0,
+        functionName,
+        "INFO",
+      ]);
+
+      // 清理pending資料
+      const pendingDataKey = `WH_PENDING_${userId}`;
+      cache.del(pendingDataKey);
+
+      // 格式化失敗訊息，符合LBK模組的標準格式
+      const currentDateTime = new Date().toLocaleString("zh-TW", {
+        timeZone: "Asia/Taipei",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit"
+      });
+
+      const cancelMessage = `記帳失敗！\n金額：未知\n支付方式：${walletName}\n時間：${currentDateTime}\n科目：未知科目\n備註：\n錯誤原因：非指定支付方式，請使用系統認可的支付方式`;
+
+      return {
+        success: false,
+        message: cancelMessage,
+        responseMessage: cancelMessage,
+        moduleCode: "WH",
+        module: "WH",
+        userCancelled: true,
+        errorType: "USER_CANCELLED_NON_STANDARD_WALLET"
+      };
+    }
+
+  } catch (error) {
+    WH_directLogWrite([
+      WH_formatDateTime(new Date()),
+      `WH 2.5.2: wallet確認postback處理失敗: ${error.toString()} [${requestId}]`,
+      "Wallet確認",
+      userId,
+      "WALLET_POSTBACK_ERROR",
+      "WH",
+      error.toString(),
+      0,
+      functionName,
+      "ERROR",
+    ]);
+
+    return {
+      success: false,
+      message: "處理wallet確認時發生錯誤",
+      responseMessage: "處理wallet確認時發生錯誤",
+      moduleCode: "WH",
+      module: "WH"
+    };
+  }
+}
+
+/**
+ * 階段三輔助函數：根據wallet名稱判斷wallet類型
+ * @param {string} walletName - wallet名稱
+ * @returns {string} wallet類型
+ */
+function WH_determineWalletType(walletName) {
+  const nameKey = walletName.toLowerCase();
+
+  if (nameKey.includes('現金') || nameKey.includes('cash')) {
+    return 'cash';
+  } else if (nameKey.includes('信用卡') || nameKey.includes('credit') || nameKey.includes('刷卡')) {
+    return 'credit_card';
+  } else if (nameKey.includes('銀行') || nameKey.includes('bank') || nameKey.includes('轉帳')) {
+    return 'bank';
+  } else if (nameKey.includes('行動支付') || nameKey.includes('mobile') || nameKey.includes('支付')) {
+    return 'mobile_payment';
+  } else {
+    return 'other';
+  }
+}
+
+/**
+ * 階段三新增：處理Pending Record相關的postback事件
+ * @version 2025-12-19-V2.5.3
+ * @description 識別和處理科目歧義、支付方式歧義等Pending Record相關的postback事件
+ * @param {string} postbackData - postback事件的data欄位
+ * @param {string} userId - 用戶ID
+ * @param {string} replyToken - LINE回覆Token
+ * @param {string} requestId - 請求ID
+ * @returns {Promise<Object>} 處理結果，包含handled標記和result
+ */
+async function WH_handlePendingRecordPostback(postbackData, userId, replyToken, requestId) {
+  const functionName = "WH_handlePendingRecordPostback";
+
+  try {
+    WH_directLogWrite([
+      WH_formatDateTime(new Date()),
+      `WH 2.5.3: 開始識別Pending Record postback: ${postbackData} [${requestId}]`,
+      "Pending Record",
+      userId,
+      "",
+      "WH",
+      "",
+      0,
+      functionName,
+      "INFO",
+    ]);
+
+    // 階段三核心邏輯：識別不同類型的Pending Record postback
+    let postbackType = WH_identifyPostbackType(postbackData);
+    let handled = false;
+    let result = null;
+
+    switch (postbackType) {
+      case 'SUBJECT_CLASSIFICATION':
+        // 科目歧義消除的postback (格式: classify_XXX_...)
+        WH_directLogWrite([
+          WH_formatDateTime(new Date()),
+          `WH 2.5.3: 識別為科目歧義消除postback [${requestId}]`,
+          "科目歧義",
+          userId,
+          "",
+          "WH",
+          "",
+          0,
+          functionName,
+          "INFO",
+        ]);
+
+        const classificationInputData = {
+          userId: userId,
+          messageText: postbackData,
+          replyToken: replyToken,
+          timestamp: Date.now(),
+          processId: requestId,
+          eventType: 'classification_postback',
+          postbackData: postbackData
+        };
+
+        result = await WH_callLBKSafely(classificationInputData);
+        handled = true;
+        break;
+
+      case 'WALLET_CONFIRMATION':
+        // 支付方式確認的postback (格式: wallet_type_XXX_... 或 confirm_wallet_... 等)
+        WH_directLogWrite([
+          WH_formatDateTime(new Date()),
+          `WH 2.5.3: 識別為支付方式確認postback [${requestId}]`,
+          "支付方式確認",
+          userId,
+          "",
+          "WH",
+          "",
+          0,
+          functionName,
+          "INFO",
+        ]);
+
+        const walletInputData = {
+          userId: userId,
+          messageText: postbackData,
+          replyToken: replyToken,
+          timestamp: Date.now(),
+          processId: requestId,
+          eventType: 'wallet_confirmation_postback',
+          postbackData: postbackData
+        };
+
+        result = await WH_callLBKSafely(walletInputData);
+        handled = true;
+        break;
+
+      case 'STATISTICS_REQUEST':
+        // 統計查詢的postback (格式: 本日統計, 本週統計, 本月統計)
+        WH_directLogWrite([
+          WH_formatDateTime(new Date()),
+          `WH 2.5.3: 識別為統計查詢postback [${requestId}]`,
+          "統計查詢",
+          userId,
+          "",
+          "WH",
+          "",
+          0,
+          functionName,
+          "INFO",
+        ]);
+
+        const statisticsInputData = {
+          userId: userId,
+          messageText: postbackData,
+          replyToken: replyToken,
+          timestamp: Date.now(),
+          processId: requestId,
+          eventType: 'statistics_postback',
+          postbackData: postbackData
+        };
+
+        result = await WH_callLBKSafely(statisticsInputData);
+        handled = true;
+        break;
+
+      case 'UNKNOWN':
+      default:
+        // 非Pending Record相關的postback，交由原有邏輯處理
+        WH_directLogWrite([
+          WH_formatDateTime(new Date()),
+          `WH 2.5.3: 未識別為Pending Record postback，交由原有邏輯: ${postbackData} [${requestId}]`,
+          "Postback路由",
+          userId,
+          "",
+          "WH",
+          "",
+          0,
+          functionName,
+          "INFO",
+        ]);
+        handled = false;
+        break;
+    }
+
+    return {
+      handled: handled,
+      result: result,
+      postbackType: postbackType
+    };
+
+  } catch (error) {
+    WH_directLogWrite([
+      WH_formatDateTime(new Date()),
+      `WH 2.5.3: Pending Record postback處理失敗: ${error.toString()} [${requestId}]`,
+      "Pending Record",
+      userId,
+      "PENDING_POSTBACK_ERROR",
+      "WH",
+      error.toString(),
+      0,
+      functionName,
+      "ERROR",
+    ]);
+
+    return {
+      handled: false,
+      result: null,
+      error: error.toString()
+    };
+  }
+}
+
+/**
+ * 階段三輔助函數：識別postback類型
+ * @version 2025-12-19-V2.5.3
+ * @description 根據postback data格式識別事件類型
+ * @param {string} postbackData - postback事件的data欄位
+ * @returns {string} postback類型
+ */
+function WH_identifyPostbackType(postbackData) {
+  try {
+    if (!postbackData || typeof postbackData !== 'string') {
+      return 'UNKNOWN';
+    }
+
+    // 科目歧義消除：classify_XXX_...格式
+    if (postbackData.startsWith('classify_')) {
+      return 'SUBJECT_CLASSIFICATION';
+    }
+
+    // 支付方式確認：多種格式
+    if (postbackData.startsWith('wallet_type_') ||
+      postbackData.startsWith('confirm_wallet_') ||
+      postbackData.startsWith('cancel_wallet_') ||
+      postbackData.startsWith('wallet_yes_') ||
+      postbackData.startsWith('wallet_no_')) {
+      return 'WALLET_CONFIRMATION';
+    }
+
+    // 統計查詢：特定關鍵字
+    const statisticsKeywords = ['本日統計', '本週統計', '本月統計'];
+    if (statisticsKeywords.includes(postbackData)) {
+      return 'STATISTICS_REQUEST';
+    }
+
+    return 'UNKNOWN';
+
+  } catch (error) {
+    console.log(`識別postback類型失敗: ${error.toString()}`);
+    return 'UNKNOWN';
   }
 }
 

@@ -1,48 +1,39 @@
-/**
-* 0302.Default_wallet.json_1.0.0
-* @description 預設帳戶
-* @update 2025-11-18: 初版
-*/
-
 {
-  "version": "1.0.0",
-  "last_updated": "2025-11-18",
+  "version": "1.0.1",
+  "last_updated": "2025-12-17",
   "default_wallets": [
     {
-      "walletId": "default_cash",
-      "name": "現金",
-      "type": "cash",
+      "walletId": "cash",
+      "walletName": "現金",
+      "subWalletId": null,
+      "subWalletName": null,
+      "currency": "{{default_currency}}",
+      "balance": 0,
+      "isDefault": false,
+      "isActive": true,
+      "synonyms": "現金"
+    },
+    {
+      "walletId": "debit",
+      "walletName": "銀行轉帳",
+      "subWalletId": null,
+      "subWalletName": null,
+      "currency": "{{default_currency}}",
+      "balance": 0,
+      "isDefault": false,
+      "isActive": true,
+      "synonyms": "銀行轉帳"
+    },
+    {
+      "walletId": "credit",
+      "walletName": "信用卡",
+      "subWalletId": null,
+      "subWalletName": null,
       "currency": "{{default_currency}}",
       "balance": 0,
       "isDefault": true,
       "isActive": true,
-      "icon": "💵",
-      "color": "#4CAF50",
-      "description": "現金帳戶"
-    },
-    {
-      "walletId": "default_bank",
-      "name": "銀行帳戶",
-      "type": "bank",
-      "currency": "{{default_currency}}",
-      "balance": 0,
-      "isDefault": false,
-      "isActive": true,
-      "icon": "🏦",
-      "color": "#2196F3",
-      "description": "銀行帳戶"
-    },
-    {
-      "walletId": "default_credit",
-      "name": "信用卡",
-      "type": "credit",
-      "currency": "{{default_currency}}",
-      "balance": 0,
-      "isDefault": false,
-      "isActive": true,
-      "icon": "💳",
-      "color": "#FF9800",
-      "description": "信用卡帳戶"
+      "synonyms": "信用卡"
     }
   ]
 }

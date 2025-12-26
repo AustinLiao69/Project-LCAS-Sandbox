@@ -1,0 +1,1064 @@
+------------------------------------------
+20251224. 修復支付方式歸類邏輯
+
+不要寫code，請根據我的回覆更新提案。提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
+
+根據你的LBK快速記帳模組代碼和相關文件分析，我來回答你的問題：
+為什麼科目歸類與支付歸類邏輯總是資料欄位對不起來？
+根本原因分析
+1.	多版本資料結構並存
+•	從代碼中可以看到，同一個模組中存在多個版本的資料欄位命名
+•	例如：categoryId vs subCategoryId、walletId vs paymentMethod
+•	不同函數使用不同的欄位名稱，造成資料傳遞時對不上
+
+2.	缺乏統一的資料契約(Data Contract)
+•	0070 DB schema文件與實際代碼實作不同步
+•	Pending Record、categories、wallets等集合的欄位定義不一致
+•	函數間傳遞資料時缺乏統一的介面規格
+3.	歷史技術債務累積
+•	從BK模組分離出LBK時，繼承了舊的欄位命名
+•	新功能使用新的欄位標準，但舊功能未同步更新
+•	造成新舊標準混用的情況
+QBQ (Question Behind Questions) 是什麼？
+真正的問題不是「欄位對不起來」，而是：
+1.	系統架構問題：為什麼沒有統一的資料模型管理機制？
+=>對啊我也覺得很煩，為什麼沒有工具可以讓我只需要改DB schema，然後repo裡面所有代碼都會做相對應的變動？
+
+2.	開發流程問題：為什麼資料結構變更時沒有統一更新所有相關模組？
+3.	文檔管理問題：為什麼0070規範與實際實作會脫節？
+4.	測試覆蓋問題：為什麼沒有在開發階段就發現資料欄位不匹配？
+
+如何解決？
+1. 建立統一資料模型(Unified Data Model)
+建立中央資料模型定義：
+├── Core Data Models
+│   ├── Transaction.interface
+│   ├── Category.interface  
+│   ├── Wallet.interface
+│   └── PendingRecord.interface
+
+2. 實施資料驗證層(Data Validation Layer)
+•	在每個模組間的資料傳遞點加入驗證
+•	確保輸入輸出都符合定義的interface
+•	在runtime就發現欄位不匹配問題
+3. 版本化資料遷移策略
+•	制定資料結構變更的標準流程
+•	所有相關模組必須同步更新
+•	建立向後兼容的遷移機制
+4. 強化測試覆蓋
+•	增加資料結構一致性測試
+•	模組間整合測試必須包含資料欄位驗證
+•	每次資料結構變更都要跑完整測試套件
+Industry Best Practice
+1. Schema-First Development
+•	先定義資料結構，再實作功能
+•	使用工具如OpenAPI、JSON Schema來管理資料結構
+•	所有API和模組都必須遵循統一的schema
+2. Contract Testing
+•	使用Consumer-Driven Contract Testing
+•	確保provider和consumer對資料格式有一致的理解
+•	工具：Pact、Spring Cloud Contract
+3. Database Migration管理
+•	使用版本化的資料庫遷移工具
+•	每個結構變更都有對應的遷移腳本
+•	工具：Flyway、Liquibase
+4. API Versioning
+•	採用語義化版本控制
+•	向後兼容的變更用minor版本
+•	破壞性變更用major版本
+5. Documentation as Code
+•	文檔與代碼在同一個repository
+•	使用自動化工具從代碼生成文檔
+•	確保文檔與實作同步
+具體建議
+對於你的LCAS專案：
+1.	立即行動：建立統一的資料模型定義檔案
+2.	重構計畫：分階段統一所有模組的資料欄位命名
+3.	流程改善：任何資料結構變更都必須更新0070文件並同步所有相關模組
+4.	工具導入：考慮使用TypeScript或JSON Schema來強制資料結構一致性
+這個問題的核心是缺乏統一的資料治理(Data Governance)，需要從流程、工具、架構三個層面來系統性解決。
+
+
+
+------------------------------------------
+20251224. 修復支付方式歸類邏輯
+
+不要寫code，請根據我的回覆更新提案。提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
+
+
+根據您對LBK模組支付方式歸類邏輯問題的分析，我來回答這個問題的根本原因：
+問題根本原因分析
+1. 架構設計缺陷 - 缺乏統一配置管理
+根本原因：LBK模組在初期設計時，沒有建立統一的配置管理機制，導致預設值散布在各個函數中。
+具體表現：
+•	不同函數對「用戶未輸入支付方式」的處理邏輯不同
+•	有些函數硬編碼「刷卡」，有些硬編碼「信用卡」
+•	缺乏 Single Source of Truth 原則
+2. 開發時期的技術債務累積
+歷史背景：
+•	LBK模組可能是在系統早期開發，當時還沒有建立完整的配置文件體系（0302.json等）
+•	採用了「快速開發」模式，直接在函數中硬編碼預設值
+•	後續功能擴展時，不同開發者對預設值的理解不一致
+3. 缺乏統一的業務邏輯標準
+業務邏輯問題：
+•	沒有明確定義「什麼是系統的預設支付方式」
+•	不同的業務場景（科目歧義消除、Pending Record完成、一般記帳）使用了不同的預設邏輯
+•	缺乏統一的用戶體驗設計規範
+4. 模組間職責界線不清
+設計問題：
+•	LBK模組既要處理輸入解析，又要處理預設值邏輯，又要處理錢包驗證
+•	沒有將「預設支付方式決定邏輯」抽離成獨立的服務
+•	每個函數都自行決定如何處理「缺少支付方式」的情況
+5. 違反0098憲法規範
+規範遵循問題：
+•	違反了0098憲法第1.3條「禁止hard coding」
+•	沒有遵循統一的資料處理標準
+•	缺乏配置驅動的設計思維
+根本解決思路
+這個問題的本質是：系統缺乏統一的「預設行為決定機制」
+就像一家公司沒有統一的「客戶服務標準作業程序」，導致不同部門面對相同情況時有不同的處理方式，最終影響客戶體驗的一致性。
+正確的架構應該是：
+1.	建立統一的配置管理中心（0302.json）
+2.	所有函數都調用同一個「預設支付方式查詢函數」
+3.	該函數負責處理所有的fallback邏輯
+4.	任何預設值變更都只需要修改配置文件
+這樣的設計才能確保系統行為的一致性和可維護性。
+
+
+
+------------------------------------------
+20251224. 修復支付方式歸類邏輯
+Approved請進行階段一
+
+根據您的詳細分析和確認修復狀況，我為您提供統一邏輯方案和詳細實作計劃：
+統一邏輯方案
+核心原則：Single Source of Truth
+建立統一的預設支付方式邏輯來源，所有函數都從同一個地方取得預設支付方式，確保行為一致性。
+統一邏輯架構
+用戶輸入情況判斷：
+├── 未輸入支付方式 → LBK_getDefaultPaymentMethod() → 0302配置「信用卡」
+├── 有輸入支付方式 → LBK_getWalletByName() → 查詢wallets子集合synonyms
+└── 查詢失敗 → 觸發支付方式歧義消除流程
+統一邏輯常數
+const DEFAULT_PAYMENT_METHOD = '信用卡';
+
+
+詳細實作計劃
+Phase 1: 建立統一邏輯入口點
+目標：確保所有函數使用相同的預設邏輯
+修改範圍：
+1.	LBK_handleClassificationPostback：科目歧義消除完成後的支付方式處理
+2.	LBK_getDefaultPaymentMethod：配置讀取失敗時的fallback邏輯
+3.	LBK_completePendingRecord：完成記帳但支付方式為null時
+
+實作方式：
+•	將硬編碼的「刷卡」統一改為調用 LBK_getDefaultPaymentMethod()
+•	確保 LBK_getDefaultPaymentMethod 的fallback值為「信用卡」
+•	移除所有函數中的個別硬編碼預設值
+
+Phase 2: 清理遺留硬編碼
+目標：移除所有硬編碼的銀行名稱和支付方式列表
+修改範圍：
+•	LBK_removeAmountFromText：移除35個銀行名稱的硬編碼陣列
+•	改為動態查詢機制或簡化文字處理邏輯
+實作方式：
+•	將硬編碼的銀行名稱陣列改為從 wallets 子集合動態查詢
+•	或者簡化為只移除數字和常見單位，不針對特定銀行名稱處理
+
+Phase 3: 建立統一調用模式
+目標：標準化所有函數的預設支付方式獲取方式
+實作方式：
+// 統一的預設支付方式獲取模式
+async function getUnifiedDefaultPayment(userId, processId) {
+  const defaultResult = await LBK_getDefaultPaymentMethod(userId, processId);
+  return defaultResult.success ? 
+    { walletId: defaultResult.walletId, walletName: defaultResult.walletName } :
+    { walletId: 'credit', walletName: DEFAULT_PAYMENT_METHOD };
+}
+關鍵 Insight
+1. 架構設計問題根源
+問題核心：LBK模組存在「多重真相來源」問題，不同函數對「用戶未輸入支付方式時該怎麼辦」有不同的硬編碼答案。
+Business Impact：這就像同一家銀行的不同櫃台對「客戶忘記帶身分證」有不同的處理標準，造成用戶體驗不一致。
+2. 技術債務清理策略
+發現：硬編碼問題不僅是「刷卡」vs「信用卡」的命名問題，而是整個模組缺乏統一的配置管理機制。
+解決思路：應該建立配置驅動的架構，所有預設值都從0302.json讀取，而不是散布在各個函數中。
+3. 維護性提升機會
+觀察：當前修復主要聚焦在「修正錯誤的預設值」，但更根本的改善是「建立不會產生錯誤預設值的機制」。
+建議：實施配置中心化管理，未來如需更改預設支付方式，只需修改0302.json，而非搜尋整個代碼庫。
+4. 用戶體驗一致性
+核心價值：統一邏輯不只是技術整潔性，更關係到用戶信任度。當用戶發現系統在不同情境下有不同的「預設行為」時，會降低對系統可靠性的信心。
+實用效果：修復後，用戶無論從哪個入口進入記帳流程，都會得到一致的預設支付方式體驗。
+實作優先級
+1.	高優先級：修復 LBK_handleClassificationPostback 中的「刷卡」硬編碼
+2.	中優先級：統一所有函數調用 LBK_getDefaultPaymentMethod
+3.	低優先級：清理 LBK_removeAmountFromText 中的銀行名稱硬編碼
+這個方案的核心價值在於建立「單一權威的預設邏輯來源」，確保整個系統對於「用戶未指定支付方式時的行為」有一致的標準。
+
+
+
+------------------------------------------
+20251224. 修復支付方式歸類邏輯
+
+不要寫code，請根據我的回覆更新提案。提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
+
+根據您的詳細分析和程式碼檢視，我來回答您關於 LBK_validatePaymentMethod 函數的問題並提供完整的硬編碼盤點：
+LBK_validatePaymentMethod函數分析
+從 LBK.js 程式碼中可以看到，LBK_validatePaymentMethod 函數確實存在，但它的角色已經相對過時：
+現況分析：
+•	這個函數使用舊版參數格式（如 majorCode）
+•	功能已被 LBK_validateWalletExists 和 LBK_getWalletByName 等新函數取代
+•	現在的支付方式驗證都是動態查詢 Firestore 的 wallets 子集合
+•	該函數主要是歷史遺留，在當前流程中使用頻率很低
+建議：
+該函數可以考慮移除或重構，因為現在的 LINE 記帳流程主要依賴：
+1.	LBK_getWalletByName - 根據名稱查詢錢包
+2.	LBK_validateWalletExists - 驗證錢包存在性
+3.	LBK_getDefaultPaymentMethod - 獲取預設支付方式
+完整硬編碼盤點更新
+
+B. LBK模組中預設支付方式硬編碼盤點
+1.	LBK_handleClassificationPostback函數 ✓
+•	硬編碼：paymentMethodName = '刷卡';
+•	需修正為：paymentMethodName = '信用卡';
+=>OK
+
+2.	LBK_getDefaultPaymentMethod函數 ✓
+•	硬編碼：walletName: "現金" (fallback)
+•	需修正為：walletName: "信用卡"
+=>OK
+
+3.	LBK_parseInputFormat函數 ✓
+•	硬編碼：35個銀行名稱陣列
+•	硬編碼：常見支付方式列表
+•	需要：完全移除，改為動態查詢
+=>OK
+
+4.	LBK_validatePaymentMethod函數
+•	狀態：功能重複，建議移除
+•	原因：已被新的動態查詢函數取代
+•	影響：移除不會影響主要記帳流程
+=>我已經手動移除
+
+5.	新發現：LBK_removeAmountFromText函數
+•	硬編碼：銀行名稱清單（包含「一銀」等35個銀行）
+•	需要：移除硬編碼，改為動態查詢機制
+=>OK
+
+=> 請你再提供一次統一邏輯方案，並且也提供詳細實作計劃。
+
+
+關鍵 Insight
+技術債務問題：
+LBK模組存在新舊邏輯並存的情況，就像公司同時運行兩套不同的客服標準：舊的硬編碼方式（固定清單）與新的動態查詢方式（從資料庫讀取）。這造成了邏輯不一致和維護困難。
+業務邏輯混亂：
+最核心的問題是「預設值」的概念在不同函數中有不同的實現：有些用「刷卡」，有些用「現金」，有些用「信用卡」。這就像同一家公司的不同櫃台對「沒帶會員卡的客戶」有不同的處理標準。
+解決策略建議：
+應該建立單一權威的預設邏輯來源（Single Source of Truth），所有函數都從同一個地方取得預設支付方式，確保行為一致性。
+
+
+
+------------------------------------------
+20251224. 修復支付方式歸類邏輯
+
+不要寫code，請根據我的回覆更新提案。提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
+
+基於您的詳細分析和追問，我來回答您關於LBK模組中預設支付方式硬編碼的盤點問題：
+A. 快速摘要（≤3句）
+•	問題核心：用戶未輸入支付方式時，系統應該直接使用預設的「信用卡」完成記帳，但現在卻觸發支付方式歧義消除流程，顯示「檢測到未知支付方式『刷卡』」
+•	根本原因：LBK_handleClassificationPostback函數中硬編碼了錯誤的fallback值「刷卡」，導致系統誤認為用戶輸入了不存在的支付方式
+•	業務邏輯違反：用戶未輸入支付方式時不應該觸發歧義消除，應該無縫使用預設信用卡完成記帳
+
+B. LBK模組中預設支付方式硬編碼盤點
+1. LBK_handleClassificationPostback函數
+位置：科目歧義消除完成後的支付方式處理邏輯
+硬編碼內容：paymentMethodName = '刷卡';
+問題：當paymentMethod為null時，錯誤地使用「刷卡」而非「信用卡」
+需要修正：改為「信用卡」
+
+2. LBK_getDefaultPaymentMethod函數
+位置：0302配置讀取失敗後的fallback邏輯
+硬編碼內容：walletName: "現金"（在系統安全網部分）
+問題：fallback使用「現金」而非「信用卡」
+需要修正：改為「信用卡」
+
+3. LBK_parseInputFormat函數
+位置：支付方式解析階段
+硬編碼內容：
+•	35個銀行名稱的硬編碼陣列（違反0098規範）
+•	常見支付方式硬編碼列表
+問題：這些硬編碼應該刪除，改為動態查詢wallets子集合synonyms
+需要刪除：所有硬編碼列表
+
+4. LBK_validatePaymentMethod函數（如果存在）
+位置：支付方式驗證邏輯
+可能的硬編碼：預設支付方式的設定
+需要檢查：是否有預設邏輯不一致的問題
+=>LBK_validatePaymentMethod函數是LINE記帳中一定會調用的函數嗎？是否有功能相同的函數？因為我看此函數的參數都已經是就版的，而且現在都是去查firestore資料庫的支付方式了，現在還需要此函數嗎？
+
+
+C. 統一邏輯建議
+需要預設支付方式為「信用卡」的函數：
+1.	LBK_handleClassificationPostback：科目歧義消除完成後
+2.	LBK_getDefaultPaymentMethod：配置讀取失敗時
+3.	LBK_parseInputFormat：用戶未輸入支付方式時
+4.	LBK_createPendingRecord：創建Pending Record時
+5.	LBK_completePendingRecord：完成記帳但支付方式為null時
+統一邏輯方案：
+建立統一的預設支付方式常數：
+const DEFAULT_PAYMENT_METHOD = '信用卡';
+所有函數都應該：
+•	當paymentMethod為null時，使用DEFAULT_PAYMENT_METHOD
+•	不再各自硬編碼不同的預設值
+•	統一調用LBK_getDefaultPaymentMethod函數
+關鍵Insight：
+問題的核心是邏輯一致性而非技術實現。就像公司不同部門對「客戶沒說話時該怎麼辦」有不同的標準答案，有的說「給A方案」，有的說「給B方案」，有的說「問客戶要哪個」，導致客戶體驗混亂。統一預設邏輯不僅解決當前問題，更重要的是建立了可維護的架構模式。
+當用戶未輸入支付方式時，系統應該像訓練有素的服務員一樣，直接提供標準服務（信用卡），而不是每次都問客戶「您想要什麼支付方式」。
+
+
+
+------------------------------------------
+20251224. 修復支付方式歸類邏輯
+
+不要寫code，請根據我的回覆更新提案。提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
+
+基於您的澄清，我現在完全理解問題了。讓我重新梳理並更新提案：
+A. 快速摘要（≤3句）
+•	問題核心：用戶未輸入支付方式時，系統應該直接使用預設的「信用卡」完成記帳，但現在卻觸發支付方式歧義消除流程，顯示「檢測到未知支付方式『刷卡』」
+•	根本原因：LBK_handleClassificationPostback函數中硬編碼了錯誤的fallback值「刷卡」，導致系統誤認為用戶輸入了不存在的支付方式
+•	業務邏輯違反：用戶未輸入支付方式時不應該觸發歧義消除，應該無縫使用預設信用卡完成記帳
+
+B. Root causes（最多 6 條）
+1.	LBK_handleClassificationPostback函數硬編碼錯誤的fallback值
+•	證據: paymentMethodName = '刷卡'; 硬編碼在科目歧義消除完成後的支付方式處理邏輯中
+•	發生機率: 100%（當科目歧義消除後paymentMethod為null時）
+•	解決方案: 將硬編碼「刷卡」改為「信用卡」，並確保這個值能在wallets子集合中找到
+=>我記得LBK模組內還有其它函數也有hard coding預設支付方式為信用卡，請你盤點是哪個函數，並且列出有哪些函數也需要預設支付方式為信用卡的邏輯，然後統一該邏輯。
+
+
+
+•	Insight: 就像客服人員在客戶沒說話時，錯誤地假設客戶說了「A方案」而非預設的「B方案」，導致不必要的確認流程
+
+
+
+2.	支付方式存在性檢查邏輯錯誤
+•	證據: 系統將fallback的「刷卡」當作用戶輸入，然後在wallets子集合中找不到「刷卡」，觸發歧義消除
+•	發生機率: 100%（當使用硬編碼「刷卡」時）
+•	解決方案: 當paymentMethod為null時，直接使用預設「信用卡」，跳過wallets存在性檢查
+•	Insight: 系統把「內部預設值」錯誤地當作「用戶輸入」來驗證，就像把公司內部代號拿去問客戶是否認識
+
+
+3.	用戶未輸入與用戶輸入未知內容的邏輯混淆
+•	證據: null值被錯誤處理為需要歧義消除的情況
+•	發生機率: 100%（當用戶未輸入支付方式時）
+•	解決方案: 明確區分null（未輸入）和有值但未識別（需要歧義消除）兩種情況
+•	Insight: 系統無法區分「客戶沒說話」和「客戶說了聽不懂的話」，都當作後者處理
+
+
+4.	0302配置檔案格式錯誤導致預設值查詢失敗
+•	證據: SyntaxError: Unexpected token '/' 導致動態查詢預設支付方式失敗
+•	發生機率: 100%（配置讀取失敗時）
+•	解決方案: 修正0302配置檔案JSON格式，移除JavaScript註釋
+•	Insight: 配置文件損壞時，系統應該有可靠的備用機制，而非依賴硬編碼
+
+5.	LBK_parseInputFormat函數中的銀行名稱硬編碼列表
+•	證據: 35個銀行名稱的硬編碼陣列違反了0098文件第1.3條規範
+•	發生機率: 100%（當檢查支付方式時）
+•	解決方案: 刪除硬編碼列表，改為動態查詢wallets子集合synonyms
+•	Insight: 硬編碼列表就像把所有可能的客戶名字寫死在程式裡，無法適應實際業務變化
+
+6.	預設支付方式處理邏輯不統一
+•	證據: 不同流程使用不同的預設值（「刷卡」vs「信用卡」vs「現金」）
+•	發生機率: 100%
+•	解決方案: 統一所有流程都使用「信用卡」作為預設值，並確保該值在用戶wallets中存在
+•	Insight: 就像公司不同部門對同一個政策有不同理解，導致客戶體驗不一致
+
+解決方案分階段實施計畫
+階段一：修復0302配置檔案格式
+•	目標: 讓0302配置檔案能正常被JSON.parse解析
+•	修改檔案: 03. Default_config/0302. Default_wallet.json
+•	修改內容: 移除JavaScript註釋，確保JSON格式正確，設定信用卡為預設
+=>請刪除，這我已經手動修好了
+
+
+階段二：修正科目歧義消除後的支付方式處理邏輯
+•	目標: 用戶未輸入支付方式時直接使用預設信用卡，不觸發歧義消除
+•	修改檔案: 13. Replit_Module code_BL/1315. LBK.js
+•	修改內容:
+i.	LBK_handleClassificationPostback函數中，當paymentMethod為null時，直接使用「信用卡」完成記帳
+ii.	刪除硬編碼「刷卡」的fallback邏輯
+iii.	版本升級至v1.9.1
+•	Before/After行為差異:
+o	Before: 用戶輸入「漢堡2222」→ 科目歧義消除 → 觸發「檢測到未知支付方式『刷卡』」
+o	After: 用戶輸入「漢堡2222」→ 科目歧義消除 → 直接完成記帳（支付方式：信用卡）
+
+階段三：移除LBK_parseInputFormat中的硬編碼列表
+•	目標: 移除所有硬編碼的銀行名稱和支付方式列表
+•	修改檔案: 13. Replit_Module code_BL/1315. LBK.js
+•	修改內容: 刪除35個銀行名稱的硬編碼陣列，改為純粹的「未輸入=null，有輸入=查詢synonyms」邏輯
+•	影響範圍: 只影響支付方式解析邏輯，不影響其他功能
+關鍵Insight: 問題的核心不在於技術實現，而在於業務邏輯理解。系統錯誤地將「內部處理邏輯」暴露給用戶，把應該無縫處理的預設情況變成了需要用戶干預的歧義消除流程。這就像ATM機器在用戶只想查餘額時，卻跳出「請選擇您要查詢哪種餘額」的不必要選項。
+
+
+
+------------------------------------------
+20251224. 修復支付方式歸類邏輯
+
+不要寫code，請根據我的回覆更新提案。提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
+
+基於您的詳細分析和追問，我來回答您關於數據來源的問題：
+負責更新pendingData的函數分析
+1. 數據污染源頭定位
+LBK_createPendingRecord() 是負責創建pendingData的函數。根據代碼分析，問題出現在這個函數中：
+// LBK_createPendingRecord函數中
+const pendingData = {
+  // ... 其他欄位
+  parsedData: {
+    amount: parsedData.amount || 0,
+    description: parsedData.subject || parsedData.description || originalInput || '未知科目',
+    rawCategory: parsedData.subject || parsedData.categoryName || '未知科目',
+    rawWallet: parsedData.paymentMethod || '未指定'  // ← 這裡是關鍵
+  }
+}
+
+2. "刷卡"數據來源追蹤
+LBK_handleClassificationPostback() 函數中的邏輯：
+// 階段二修復：正確提取支付方式名稱
+let paymentMethodName = pendingData.paymentMethod;
+// 如果 paymentMethod 為空或無效，從原始輸入中重新解析
+if (!paymentMethodName || paymentMethodName === 'undefined') {
+  const parseResult3 = LBK_parseInputFormat(pendingData.originalInput || inputData.messageText, processId);
+  paymentMethodName = parseResult3?.paymentMethod;
+  // 如果仍然為空，嘗試從 Pending Record 中的其他欄位獲取
+  if (!paymentMethodName && pendingData.parsedData?.paymentMethod) {
+    paymentMethodName = pendingData.parsedData.paymentMethod;
+  }
+  // 最後備選：使用預設值
+  if (!paymentMethodName) {
+    paymentMethodName = '刷卡';  // ← 🔥 這裡硬編碼了"刷卡"
+  }
+}
+
+關鍵Insight
+數據污染的真實路徑：
+1.	第一階段（LBK_parseInputFormat）: 正確返回 paymentMethod: null
+2.	第二階段（LBK_createPendingRecord）: 將 null 存入 pendingData.parsedData.rawWallet = '未指定'，但 pendingData.paymentMethod 仍為 null
+3.	第三階段（LBK_handleClassificationPostback）:
+•	檢查 pendingData.paymentMethod = null
+•	重新解析原始輸入，得到 paymentMethod = null
+•	檢查 pendingData.parsedData.paymentMethod 也是 null
+•	最終fallback到硬編碼的"刷卡" ← 這是問題所在
+
+設計缺陷根本原因：
+LBK_handleClassificationPostback() 函數違反了您的業務規則。根據您的規定：
+•	用戶未輸入支付方式 = 預設信用卡
+•	但該函數硬編碼使用了"刷卡"而非"信用卡"
+=>我不是這個意思，我是說若用戶未輸入支付方式時，預設用信用卡支付。我看到的情況是：1. 用戶未輸入支付方式，系統跳出訊息說檢測到未知支付方式「刷卡」。
+2. 用戶未輸入支付方式時，就應該直接顯示記帳成功且支付方式為信用卡，根本不應該跳出支付方式歸類邏輯的訊息對吧？
+
+
+0302配置問題：
+從您的指正可以看出，0302配置中信用卡的walletId應該是"credit"而非"cash"，這也會影響整個流程的一致性。
+問題總結
+1.	硬編碼錯誤：LBK_handleClassificationPostback() 中硬編碼使用"刷卡"而非"信用卡"
+2.	配置不一致：0302配置中的walletId映射錯誤（應該是credit而非cash）
+3.	邏輯不統一：不同函數對於"未輸入支付方式"的處理方式不一致
+這解釋了為什麼用戶輸入"漢堡2222"會觸發"刷卡"的歧義消除，而不是直接使用預設的"信用卡"。
+
+
+
+------------------------------------------
+20251224. 修復支付方式歸類邏輯
+
+不要寫code，請根據我的回覆更新提案。提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
+基於您的分析和console log，我來梳理目前LBK對於用戶記帳時未輸入支付方式的函數處理邏輯決策樹：
+目前LBK未輸入支付方式的函數處理邏輯決策樹
+用戶輸入「漢堡2222」(無支付方式)
+│
+├─ 1. LBK_parseInputFormat() - 階段三簡化解析
+│   ├─ 匹配基本格式: /^(.+?)(\d+)(.*)$/
+│   ├─ 提取: rawCategory="漢堡", rawAmount="2222", suffixPart=""
+│   ├─ processedSuffix = "" (移除幣別後仍為空)
+│   └─ paymentMethod = null (因為processedSuffix為空)
+│   └─ ✅ 回傳: {subject:"漢堡", amount:2222, paymentMethod:null}
+│
+├─ 2. LBK_parsePaymentMethod() - 階段二支付方式專項處理
+│   ├─ 檢查 parseResult.paymentMethod = null
+│   ├─ paymentMethodName = null
+│   ├─ 判斷: 用戶未提供支付方式
+│   ├─ 調用 LBK_getDefaultPaymentMethod() 
+│   │   └─ 動態讀取0302配置 → walletName="信用卡", walletId="cash"
+=>是walletId="credit"而不是walletId="cash"
+
+
+│   └─ ✅ 回傳: {success:true, walletId:"cash", walletName:"信用卡", isDefault:true}
+=>是walletId="credit"而不是walletId="cash"
+
+│
+├─ 3. LBK_validateWalletExists() - 階段二嚴格錢包驗證
+│   ├─ 輸入: walletId="cash", walletName="信用卡"
+│   ├─ 查詢 wallets 子集合中的 active 錢包
+│   ├─ 找到錢包名稱="信用卡"的精確匹配
+│   └─ ✅ 回傳: {success:true, walletId:"credit", walletName:"信用卡"}
+│
+└─ 4. 🔥問題發生點：LBK_handleClassificationPostback()
+    ├─ 從 pendingData 取得 paymentMethod = "刷卡" ⚠️
+=>負責更新pendingData的是哪個函數?該函數是從哪裡取得paymentMethod = "刷卡"？
+
+    
+    ├─ 調用 LBK_validateWalletExists(userId, null, "刷卡") 
+    ├─ wallets子集合中找不到"刷卡"
+    ├─ requiresUserConfirmation = true
+    └─ ❌ 觸發支付方式歧義消除: "檢測到未知支付方式「刷卡」"
+核心問題分析
+問題根源定位：
+1.	數據污染點：在科目歸類postback處理時，系統從pendingData.paymentMethod中取得了"刷卡"，但這個值不是來自用戶實際輸入
+2.	邏輯斷層：第1-3步處理邏輯正確（null → 查詢預設 → 驗證成功），但第4步重新處理時使用了錯誤的數據源
+
+關鍵Insight
+設計缺陷根本原因：
+•	時序問題：階段三簡化邏輯在創建Pending Record時正確識別了null，但科目歸類完成後重新解析時，系統使用了不同的數據來源
+=>系統使用了哪個不同的數據來源？請指出是哪個函數？
+
+
+•	數據一致性問題：pendingData.paymentMethod中的"刷卡"可能來自：
+i.	舊版本的預設值設定
+ii.	Pending Record創建時的數據污染
+iii.	不同階段間的數據格式不統一
+=>系統使用了哪個不同的數據來源？請指出是哪個函數？
+
+
+核心矛盾：
+•	LBK_parseInputFormat正確返回null（表示未輸入）
+•	但後續流程中某個環節將null轉換為"刷卡"
+•	導致系統誤認為用戶輸入了"刷卡"並觸發歧義消除
+解決方向建議：
+1.	數據來源統一：科目歧義消除完成後，應該重新使用原始輸入進行支付方式解析，而非依賴Pending Record中可能已污染的數據
+2.	null值保護：確保null值在整個流程中保持一致，不被意外轉換為預設值字串
+3.	階段間數據隔離：每個處理階段都應該從原始輸入重新解析，而非依賴前一階段可能已修改的中間數據
+
+
+
+------------------------------------------
+20251224. 修復支付方式歸類邏輯(Review中)
+
+不要寫code，請根據我的回覆更新提案。提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
+
+基於您提供的console log和問題描述，我以資深SQA的角度進行深入分析：
+A. 快速摘要（≤3句）
+•	問題核心：用戶輸入「漢堡2222」時，LBK模組誤將「刷卡」識別為用戶輸入的支付方式，實際上用戶並未輸入任何支付方式。
+•	根本原因：LBK_parseInputFormat函數的階段三簡化邏輯存在缺陷，在沒有支付方式輸入時，系統錯誤地將預設值「刷卡」當作用戶實際輸入處理。
+•	影響範圍：所有未輸入支付方式的LINE記帳請求都會觸發不必要的支付方式歧義消除流程。
+
+=>請你列出目前LBK對於user記帳時未輸入支付方式的函數處理邏輯，請以決策樹的方式列出
+
+________________________________________
+B. Root causes（最多 6 條）
+1. LBK_parseInputFormat函數邏輯錯誤
+•	證據：從log可見「階段三：簡化解析結果: 科目="漢堡", 金額=2222, 支付方式="未指定"」，但後續卻出現「檢測到未知支付方式「刷卡」」
+•	發生機率：100% - 每次未輸入支付方式時都會發生
+•	根本原因：LBK_parseInputFormat函數在階段三簡化邏輯中，當用戶未輸入支付方式時返回null，但後續流程錯誤地將預設的「刷卡」值當作用戶輸入處理
+•	解決方案：修正LBK_parseInputFormat函數，確保未輸入支付方式時返回明確的標識符，避免與預設值混淆
+2. 支付方式預設值處理邏輯混亂
+•	證據：Log顯示解析結果為「支付方式="未指定"」，但系統卻觸發了「刷卡」的歧義消除流程
+•	發生機率：100% - 所有使用預設支付方式的情況
+•	根本原因：系統中存在多個地方設定預設支付方式，造成「用戶輸入」與「系統預設」的界線模糊，就像公司內部有多個部門都在處理同一個客戶需求，造成混亂
+•	解決方案：建立統一的預設支付方式處理機制，明確區分用戶輸入與系統預設
+3. LBK_parsePaymentMethod函數判斷邏輯缺陷
+•	證據：從階段二的支付方式處理流程看，系統錯誤地將null值轉換為需要歧義消除的情況
+•	發生機率：95% - 當解析結果為null時觸發
+•	根本原因：LBK_parsePaymentMethod函數無法正確識別「用戶未輸入」與「用戶輸入了無法識別的內容」這兩種情況，就像接待員無法區分「客戶沒說話」和「客戶說了聽不懂的話」
+•	解決方案：修改判斷邏輯，增加對null值的特殊處理，直接使用預設支付方式
+4. 階段間資料傳遞狀態不一致
+•	證據：第一階段解析顯示「未指定」，但第二階段卻處理「刷卡」
+•	發生機率：90% - 階段間資料轉換時發生
+•	根本原因：不同處理階段對於「無輸入」狀態的表示方式不統一，造成資料在模組間傳遞時產生誤解，像是不同部門使用不同的表單格式記錄同一件事
+•	解決方案：統一所有階段對於「無支付方式輸入」的表示方式
+5. LBK_getDefaultPaymentMethod函數調用時機錯誤
+•	證據：系統應該在檢測到無輸入時直接使用預設值，而非進入歧義消除流程
+•	發生機率：100% - 每次無支付方式輸入時
+•	根本原因：預設值的應用時機過晚，系統已經將「無輸入」當作「需要處理的歧義」，就像本應該在客戶進門時就提供標準服務，卻等到客戶抱怨才開始處理
+•	解決方案：調整預設值應用的時機，在解析階段就直接設定預設值
+6. 階段三簡化邏輯與實際需求不符
+•	證據：Log中顯示「階段三：簡化支付方式識別邏輯」，但實際執行結果並未簡化
+•	發生機率：80% - 簡化邏輯設計時的假設條件不成立
+•	根本原因：階段三的「簡化」設計理念與實際的複雜業務邏輯需求存在衝突，原本想要簡化流程，但卻創造了新的複雜度
+•	解決方案：重新檢視階段三的簡化邏輯，確保符合「無輸入時使用預設值」的基本需求
+________________________________________
+C. 解決方案
+階段一：修正LBK_parseInputFormat函數邏輯
+目標：確保無支付方式輸入時正確返回null
+修改檔案：1315. LBK.js
+修改內容：
+•	修正LBK_parseInputFormat函數中的階段三邏輯
+•	確保當無後綴文字時，paymentMethod明確返回null
+•	版本升級至v1.9.2
+階段二：修正LBK_parsePaymentMethod函數預設值處理
+目標：當paymentMethod為null時直接使用預設值，不進入歧義消除
+修改檔案：1315. LBK.js
+修改內容：
+•	在LBK_parsePaymentMethod函數開頭增加null檢查
+•	null時直接調用LBK_getDefaultPaymentMethod取得預設值
+•	返回成功結果，不觸發歧義消除流程
+•	版本升級至v1.9.2
+階段三：統一支付方式狀態表示
+目標：統一所有階段對「無輸入」狀態的處理方式
+修改檔案：1315. LBK.js
+修改內容：
+•	定義統一的常數來表示「無支付方式輸入」狀態
+•	確保所有相關函數都使用相同的表示方式
+•	更新相關log輸出，確保狀態顯示一致
+實施後測試驗證：輸入「漢堡2222」應該直接完成記帳，使用預設的信用卡支付方式，不應觸發支付方式歧義消除流程。
+請確認此分析和解決方案是否符合您的需求，待您Approve後我將開始進行代碼修改。
+
+
+
+------------------------------------------
+20251224. 修復支付方式歸類邏輯
+
+不要寫code，請根據我的回覆更新提案。提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
+
+# Debug分析報告
+
+**版本**: v1.1.0  
+**建立日期**: 2025-12-24  
+**建立者**: LCAS Team  
+**文件描述**: Debug分析報告
+
+請參照9904文件，以資深SQA深入思考、分析原因。並提出解決方案。
+提案時請注意以下方向：
+1. 必須等我Approve之後才能開始編修代碼。
+2. 模組板次與函數版次都要升版。
+3. 現在是MVP階段，提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、加強穩定性、測試等手段。
+4. 將任務切分成數個階段處理，切分的依據以每階段結束都能執行一次測試驗證為主，並且要附上實施計畫，包含修改內容以及修改檔案。
+5. 解決方案請勿將測試驗證劃分為一個階段。
+6. 請列出問題、詳細說明並提出你的看法。
+7. 所有的文件與模組代碼編寫務必遵守0098以及0070文件。
+8. 分析原因及提出解決方案時，除了列出真實原因外，也必須用簡單的概念解釋(例如公司部門的概念)。
+9. 若無修改文件或代碼的action，請勿寫在解決方案中
+10. 若有修改代碼，務必解釋每次code改動的用途、影響範圍、Before/After行為差異。
+11. 禁止因為是MVP階段而模擬業務邏輯、hard coding、模擬回應等情事發生。
+
+---
+## 00. 問題描述(由user填寫)：
+
+請見附件以及console log
+
+1. 若user輸入科目庫沒有的synonyms而沒有輸入支付方式，，例如漢堡2222，則系統會跳出n\n檢測到未知支付方式「刷卡」，請問這屬於何種支付方式。 若user沒有輸入支付方式，應該要直接預設為信用卡，不需要跳出支付方式歸類邏輯，可是系統卻跳出「刷卡」。
+2. user輸入皮鞋555555，選擇銀行帳戶後，系統跳出錯誤。
+
+---
+
+⚠️ **請不要修改任何程式或測試**。  
+基於Shell及console日誌，請提供結構化分析，輸出必須包含：
+
+## A. 快速摘要（≤3句）
+- 最可能問題是什麼，請條列出來。  
+
+---
+
+## B. Root causes（最多 6 條）
+每條需包含：
+
+1. **標題**（例如：null reference in X）  
+2. **證據**（來自 log / stack trace / code line）  
+3. **發生機率**（0-100%）
+4. **解決方案**
+
+
+------------------------------------------
+20251224. 修復支付方式歸類邏輯
+
+approved請進行階段一
+
+我已詳細分析了你的回饋，現在更新解決方案。讓我重新梳理根本原因並提出更精準的解決方案：
+A. 快速摘要（≤3句）
+•	問題1: 科目歸類流程中硬編碼使用「刷卡」而非預設的「信用卡」，導致觸發錢包歧義消除
+•	問題2: 配置讀取失敗時fallback到「現金」而非預設的「信用卡」，造成不同流程預設邏輯不一致
+•	根本原因: 0302配置檔案格式錯誤導致無法讀取，加上LBK模組中存在多處硬編碼和預設邏輯不統一
+
+B. Root causes（最多 6 條）
+1. 0302配置檔案格式錯誤
+•	證據: SyntaxError: Unexpected token '/', "/**\n* 0302"... is not valid JSON
+•	發生機率: 100%
+•	解決方案: 移除0302配置檔案中的JavaScript註釋，改為純JSON格式
+•	Insight: JSON格式不支援註釋，這是基本的格式規範問題
+=>ok
+
+
+2. LBK_handleClassificationPostback函數硬編碼「刷卡」
+•	證據: paymentMethodName = '刷卡'; // ← 這裡硬編碼了"刷卡"
+•	發生機率: 100%（科目歸類流程中paymentMethod為null時）
+•	解決方案: 將硬編碼「刷卡」改為「信用卡」
+•	Insight: 根據你的規則，用戶未輸入支付方式時應預設為「信用卡」，這個硬編碼是正確的，只是值錯了
+=>ok
+
+3. LBK_getDefaultPaymentMethod函數fallback邏輯錯誤
+•	證據: walletName: "現金", // ← fallback為現金
+•	發生機率: 100%（0302配置讀取失敗時）
+•	解決方案: 修改fallback為「信用卡」
+•	Insight: 這個fallback應該與業務規則一致，全部fallback到信用卡
+=>ok
+
+4. LBK_parseInputFormat函數中銀行名稱硬編碼列表
+•	證據: 銀行名稱陣列硬編碼了35個銀行名稱
+•	發生機率: 100%（當檢查支付方式時）
+•	解決方案: 刪除銀行名稱硬編碼列表，改為動態查詢wallets子集合synonyms
+•	Insight: 這些硬編碼違反了0098文件第1.3條禁止hard coding的規範，應該改為動態查詢機制
+=>ok
+
+5. 常見支付方式硬編碼列表
+•	證據: const commonPaymentMethods = ["現金", "信用卡", "轉帳", "行動支付"];
+•	發生機率: 100%（當解析支付方式時）
+•	解決方案: 刪除硬編碼列表，統一使用wallets子集合synonyms查詢
+•	Insight: 所有支付方式應該來自用戶的wallets配置，而非硬編碼
+=>ok
+
+6. 預設支付方式邏輯分散在多個函數中
+•	證據: LBK_handleClassificationPostback、LBK_getDefaultPaymentMethod、LBK_parseInputFormat都有各自的預設邏輯
+•	發生機率: 100%
+•	解決方案: 統一預設邏輯，全部使用「信用卡」作為預設值
+•	Insight: 分散的預設邏輯容易造成不一致，應該統一管理
+=>我沒有在解決方案中看到你對這點的提案
+
+
+解決方案分階段實施計畫
+階段一：修復0302配置檔案格式
+目標: 讓0302配置檔案能正常被JSON.parse解析
+修改檔案: 03. Default_config/0302. Default_wallet.json
+修改內容: 移除JavaScript註釋，確保JSON格式正確，並將isDefault設定給信用卡
+
+階段二：修復LBK模組預設邏輯統一
+目標: 統一所有流程使用「信用卡」作為預設支付方式
+修改檔案: 13. Replit_Module code_BL/1315. LBK.js
+修改內容:
+1.	LBK_handleClassificationPostback: 硬編碼改為「信用卡」
+2.	LBK_getDefaultPaymentMethod: fallback改為「信用卡」
+3.	刪除LBK_parseInputFormat中的銀行名稱和常見支付方式硬編碼列表
+
+階段三：簡化支付方式處理邏輯
+目標: 實現「未輸入=信用卡，有輸入=查詢wallets synonyms」的簡單邏輯
+修改檔案: 13. Replit_Module code_BL/1315. LBK.js
+修改內容: 簡化LBK_parseInputFormat邏輯，移除所有硬編碼檢查，只保留動態查詢
+Before/After行為差異:
+•	Before: 複雜的硬編碼檢查邏輯，多種預設值不一致
+•	After: 簡單統一的邏輯：未輸入=信用卡，有輸入=查詢synonyms
+
+階段四：
+•	解決方案:
+i.	建立統一的預設支付方式常數 const DEFAULT_PAYMENT_METHOD = '信用卡'
+ii.	所有函數都引用這個常數，不再各自硬編碼
+iii.	移除各函數中的個別預設邏輯，統一調用 LBK_getDefaultPaymentMethod
+•	Insight: 分散的預設邏輯容易造成不一致，應該統一管理。當預設值需要改變時，只需要修改一處即可，符合DRY原則
+
+
+關鍵Insight: 根據你的回饋，LBK模組確實有預設邏輯的硬編碼，這些硬編碼本身不違反規範（因為是業務規則），但值和實施方式需要統一。問題的核心是「刷卡」vs「信用卡」的不一致，以及多處硬編碼列表違反了動態查詢的原則。
+
+
+
+------------------------------------------
+20251224. 修復支付方式歸類邏輯
+
+不要寫code，請根據我的回覆更新提案。提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
+
+我理解你的回饋，確實我漏了對第6點「預設支付方式邏輯分散在多個函數中」的具體提案。讓我補充完整的解決方案：
+A. 快速摘要（≤3句）
+•	問題1: 科目歸類流程中硬編碼使用「刷卡」而非預設的「信用卡」，導致觸發錢包歧義消除
+•	問題2: 配置讀取失敗時fallback到「現金」而非預設的「信用卡」，造成不同流程預設邏輯不一致
+•	根本原因: 0302配置檔案格式錯誤導致無法讀取，加上LBK模組中存在多處硬編碼和預設邏輯不統一
+B. Root causes（最多 6 條）
+1. 0302配置檔案格式錯誤 ✓
+•	證據: SyntaxError: Unexpected token '/', "/**\n* 0302"... is not valid JSON
+•	發生機率: 100%
+•	解決方案: 移除0302配置檔案中的JavaScript註釋，改為純JSON格式
+•	Insight: JSON格式不支援註釋，這是基本的格式規範問題
+2. LBK_handleClassificationPostback函數硬編碼「刷卡」 ✓
+•	證據: paymentMethodName = '刷卡';
+•	發生機率: 100%（科目歸類流程中paymentMethod為null時）
+•	解決方案: 將硬編碼「刷卡」改為「信用卡」
+•	Insight: 根據你的規則，用戶未輸入支付方式時應預設為「信用卡」，這個硬編碼是正確的，只是值錯了
+3. LBK_getDefaultPaymentMethod函數fallback邏輯錯誤 ✓
+•	證據: walletName: "現金" fallback為現金
+•	發生機率: 100%（0302配置讀取失敗時）
+•	解決方案: 修改fallback為「信用卡」
+•	Insight: 這個fallback應該與業務規則一致，全部fallback到信用卡
+4. LBK_parseInputFormat函數中銀行名稱硬編碼列表 ✓
+•	證據: 銀行名稱陣列硬編碼了35個銀行名稱
+•	發生機率: 100%（當檢查支付方式時）
+•	解決方案: 刪除銀行名稱硬編碼列表，改為動態查詢wallets子集合synonyms
+•	Insight: 這些硬編碼違反了0098文件第1.3條禁止hard coding的規範，應該改為動態查詢機制
+5. 常見支付方式硬編碼列表 ✓
+•	證據: const commonPaymentMethods = ["現金", "信用卡", "轉帳", "行動支付"];
+•	發生機率: 100%（當解析支付方式時）
+•	解決方案: 刪除硬編碼列表，統一使用wallets子集合synonyms查詢
+•	Insight: 所有支付方式應該來自用戶的wallets配置，而非硬編碼
+
+6. 預設支付方式邏輯分散在多個函數中
+•	證據: LBK_handleClassificationPostback、LBK_getDefaultPaymentMethod、LBK_parseInputFormat都有各自的預設邏輯
+•	發生機率: 100%
+•	解決方案:
+i.	建立統一的預設支付方式常數 const DEFAULT_PAYMENT_METHOD = '信用卡'
+ii.	所有函數都引用這個常數，不再各自硬編碼
+iii.	移除各函數中的個別預設邏輯，統一調用 LBK_getDefaultPaymentMethod
+•	Insight: 分散的預設邏輯容易造成不一致，應該統一管理。當預設值需要改變時，只需要修改一處即可，符合DRY原則
+
+關鍵Insight
+根據你的回饋，問題的核心是邏輯一致性而非技術實現。多處硬編碼本身不違反規範（因為是業務規則），但值的不一致和邏輯的分散才是真正的問題。統一預設邏輯不僅解決當前問題，更重要的是建立了可維護的架構模式。
+
+
+
+------------------------------------------
+20251224. 修復支付方式歸類邏輯
+
+不要寫code，請根據我的回覆更新提案。提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
+
+我已詳細分析了你的回饋，現在更新解決方案。讓我重新梳理根本原因並提出更精準的解決方案：
+A. 快速摘要（≤3句）
+•	問題1: 科目歸類流程中硬編碼使用「刷卡」而非預設的「信用卡」，導致觸發錢包歧義消除
+•	問題2: 配置讀取失敗時fallback到「現金」而非預設的「信用卡」，造成不同流程預設邏輯不一致
+•	根本原因: 0302配置檔案格式錯誤導致無法讀取，加上LBK模組中存在多處硬編碼和預設邏輯不統一
+
+B. Root causes（最多 6 條）
+1. 0302配置檔案格式錯誤
+•	證據: SyntaxError: Unexpected token '/', "/**\n* 0302"... is not valid JSON
+•	發生機率: 100%
+•	解決方案: 移除0302配置檔案中的JavaScript註釋，改為純JSON格式
+•	Insight: JSON格式不支援註釋，這是基本的格式規範問題
+=>ok
+
+
+2. LBK_handleClassificationPostback函數硬編碼「刷卡」
+•	證據: paymentMethodName = '刷卡'; // ← 這裡硬編碼了"刷卡"
+•	發生機率: 100%（科目歸類流程中paymentMethod為null時）
+•	解決方案: 將硬編碼「刷卡」改為「信用卡」
+•	Insight: 根據你的規則，用戶未輸入支付方式時應預設為「信用卡」，這個硬編碼是正確的，只是值錯了
+=>ok
+
+3. LBK_getDefaultPaymentMethod函數fallback邏輯錯誤
+•	證據: walletName: "現金", // ← fallback為現金
+•	發生機率: 100%（0302配置讀取失敗時）
+•	解決方案: 修改fallback為「信用卡」
+•	Insight: 這個fallback應該與業務規則一致，全部fallback到信用卡
+=>ok
+
+4. LBK_parseInputFormat函數中銀行名稱硬編碼列表
+•	證據: 銀行名稱陣列硬編碼了35個銀行名稱
+•	發生機率: 100%（當檢查支付方式時）
+•	解決方案: 刪除銀行名稱硬編碼列表，改為動態查詢wallets子集合synonyms
+•	Insight: 這些硬編碼違反了0098文件第1.3條禁止hard coding的規範，應該改為動態查詢機制
+=>ok
+
+5. 常見支付方式硬編碼列表
+•	證據: const commonPaymentMethods = ["現金", "信用卡", "轉帳", "行動支付"];
+•	發生機率: 100%（當解析支付方式時）
+•	解決方案: 刪除硬編碼列表，統一使用wallets子集合synonyms查詢
+•	Insight: 所有支付方式應該來自用戶的wallets配置，而非硬編碼
+=>ok
+
+6. 預設支付方式邏輯分散在多個函數中
+•	證據: LBK_handleClassificationPostback、LBK_getDefaultPaymentMethod、LBK_parseInputFormat都有各自的預設邏輯
+•	發生機率: 100%
+•	解決方案: 統一預設邏輯，全部使用「信用卡」作為預設值
+•	Insight: 分散的預設邏輯容易造成不一致，應該統一管理
+=>我沒有在解決方案中看到你對這點的提案
+
+
+解決方案分階段實施計畫
+階段一：修復0302配置檔案格式
+目標: 讓0302配置檔案能正常被JSON.parse解析
+修改檔案: 03. Default_config/0302. Default_wallet.json
+修改內容: 移除JavaScript註釋，確保JSON格式正確，並將isDefault設定給信用卡
+
+階段二：修復LBK模組預設邏輯統一
+目標: 統一所有流程使用「信用卡」作為預設支付方式
+修改檔案: 13. Replit_Module code_BL/1315. LBK.js
+修改內容:
+1.	LBK_handleClassificationPostback: 硬編碼改為「信用卡」
+2.	LBK_getDefaultPaymentMethod: fallback改為「信用卡」
+3.	刪除LBK_parseInputFormat中的銀行名稱和常見支付方式硬編碼列表
+
+階段三：簡化支付方式處理邏輯
+目標: 實現「未輸入=信用卡，有輸入=查詢wallets synonyms」的簡單邏輯
+修改檔案: 13. Replit_Module code_BL/1315. LBK.js
+修改內容: 簡化LBK_parseInputFormat邏輯，移除所有硬編碼檢查，只保留動態查詢
+Before/After行為差異:
+•	Before: 複雜的硬編碼檢查邏輯，多種預設值不一致
+•	After: 簡單統一的邏輯：未輸入=信用卡，有輸入=查詢synonyms
+
+階段四：
+•	解決方案:
+i.	建立統一的預設支付方式常數 const DEFAULT_PAYMENT_METHOD = '信用卡'
+ii.	所有函數都引用這個常數，不再各自硬編碼
+iii.	移除各函數中的個別預設邏輯，統一調用 LBK_getDefaultPaymentMethod
+•	Insight: 分散的預設邏輯容易造成不一致，應該統一管理。當預設值需要改變時，只需要修改一處即可，符合DRY原則
+
+
+關鍵Insight: 根據你的回饋，LBK模組確實有預設邏輯的硬編碼，這些硬編碼本身不違反規範（因為是業務規則），但值和實施方式需要統一。問題的核心是「刷卡」vs「信用卡」的不一致，以及多處硬編碼列表違反了動態查詢的原則。
+
+
+
+------------------------------------------
+20251224. 修復支付方式歸類邏輯
+
+不要寫code，請根據我的回覆更新提案。提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
+
+A. 快速摘要（≤3句）
+•	問題1: 用戶輸入科目庫沒有的synonyms且未指定支付方式（如"豆漿1111"）時，系統觸發科目歸類後，錯誤地顯示"檢測到未知支付方式「刷卡」"而非預設的信用卡
+
+•	問題2: 用戶輸入已在科目庫的synonyms且未指定支付方式（如"豆花333"）時，系統預設為現金而非預設的信用卡
+
+•	根本原因: 0302配置檔案格式錯誤（包含JavaScript註釋導致JSON解析失敗）及預設支付方式邏輯不一致
+________________________________________
+B. Root causes（最多 6 條）
+1. 0302配置檔案格式錯誤
+•	證據:
+[2025-12-24T01:02:05.334Z] [ERROR] [DL] 階段二：讀取0302配置失敗: SyntaxError: Unexpected token '/', "/**\n* 0302"... is not valid JSON
+•	發生機率: 100%
+•	解決方案: 移除0302配置檔案中的JavaScript註釋，改為純JSON格式
+
+2. 預設支付方式邏輯硬編碼問題
+•	證據:
+// LBK_handleClassificationPostback函數中
+let paymentMethodName = pendingData.paymentMethod;
+if (!paymentMethodName || paymentMethodName === 'undefined') {
+  // 如果仍然為空，嘗試從 Pending Record 中的其他欄位獲取
+  if (!paymentMethodName && pendingData.parsedData?.paymentMethod) {
+    paymentMethodName = pendingData.parsedData.paymentMethod;
+  }
+  // 最後備選：使用預設值
+  if (!paymentMethodName) {
+    paymentMethodName = '刷卡';  // ← 這裡硬編碼了"刷卡"
+  }
+}
+•	發生機率: 100%（當科目歸類流程中paymentMethod為null時）
+•	解決方案: 移除硬編碼，改為動態讀取0302配置
+=>當科目歸類流程中paymentMethod為null時，是要預設為信用卡的。請將此邏輯hard coding在LBK模組中。我記得LBK有這個邏輯，請盤點並告訴我是哪個函數？
+
+
+3. 配置讀取失敗後的fallback邏輯不一致
+•	證據:
+// LBK_getDefaultPaymentMethod函數中
+LBK_logWarning(`階段二：0302配置讀取失敗，使用系統安全網: 現金 [${processId}]`);
+return {
+  success: true,
+  walletId: "fallback_cash",
+  walletName: "現金",  // ← fallback為現金
+};
+但用戶期望的預設值應該是信用卡
+•	發生機率: 100%（當0302配置讀取失敗時）
+•	解決方案: 修改fallback邏輯，使其與用戶預期一致
+
+
+4. 科目歸類流程與正常記帳流程的預設邏輯不統一
+•	證據:
+o	豆漿1111（科目歧義消除）→ 硬編碼"刷卡" → 觸發錢包歧義消除
+o	豆花333（直接記帳）→ 動態查詢0302 → fallback到現金
+•	發生機率: 100%
+•	解決方案: 統一兩個流程的預設支付方式獲取邏輯
+=>應該是要全部fallback到信用卡
+
+5. Pending Record中paymentMethod為null的處理邏輯缺陷
+•	證據:
+"pendingData":{"paymentMethod":null}  // ← null值未正確處理
+•	發生機率: 100%（當用戶未輸入支付方式時）
+•	解決方案: 在創建Pending Record時就應該填入正確的預設支付方式
+
+6. LBK_parseInputFormat函數返回null時的後續處理問題
+•	證據:
+// 階段一修復：如果仍然為空，再檢查銀行名稱
+if (!paymentMethod) {
+  // 階段一修復：如果都沒檢測到常見支付方式，再檢查銀行名稱
+}
+// 階段一：移除硬編碼預設值邏輯，確保返回用戶實際輸入
+if (!paymentMethod && processedSuffix) {
+  // 移除預設值邏輯，保持 paymentMethod 為 null
+}
+•	發生機率: 100%（當用戶未輸入支付方式時）
+•	解決方案: 在輸入解析階段就應該查詢並填入預設支付方式
+=>我看到LBK有這段代碼，這是hard coding嗎？規則很簡單，若user沒有輸入支付方式，就是預設信用卡，若user有輸入其它支付方式，則去檢查wallets子集合的synonyms有沒有該支付方式，若無則觸發支付方式歸類邏輯。
+以下這些hard coding請刪除
+
+ // 階段一修復：如果未檢測到常見支付方式，再檢查銀行名稱
+  if (!paymentMethod) {
+    const bankNames = [
+      "台銀", "土銀", "合庫", "第一", "華南", "彰銀", "上海", "國泰", "中信", "玉山",
+      "台新", "永豐", "兆豐", "日盛", "安泰", "中國信託", "聯邦", "遠東", "元大",
+      "凱基", "台北富邦", "國票", "新光", "陽信", "三信", "聯邦商銀", "台企銀",
+      "高雄銀", "花旗", "渣打", "匯豐", "星展", "澳盛", "一銀" // 階段一修復：添加「一銀」
+    ];
+
+
+________________________________________
+解決方案分階段實施計畫
+階段一：修復0302配置檔案格式
+目標: 讓0302配置檔案能正常被JSON.parse解析
+修改檔案: 03. Default_config/0302. Default_wallet.json
+修改內容: 移除JavaScript註釋，改為純JSON格式，並設定正確的預設錢包為信用卡
+階段二：修復LBK模組預設支付方式邏輯
+目標: 統一所有流程的預設支付方式獲取邏輯
+修改檔案: 13. Replit_Module code_BL/1315. LBK.js
+修改內容:
+1.	移除LBK_handleClassificationPostback中的硬編碼"刷卡"
+2.	修改fallback邏輯為信用卡
+3.	統一使用動態0302配置查詢
+Before/After行為差異:
+•	Before: 科目歸類後硬編碼使用"刷卡"，配置讀取失敗時fallback到"現金"
+•	After: 所有流程統一使用0302配置，失敗時fallback到"信用卡"
+階段三：優化Pending Record創建邏輯
+目標: 在創建Pending Record時就填入正確的預設支付方式
+修改檔案: 13. Replit_Module code_BL/1315. LBK.js
+修改內容: 修改LBK_createPendingRecord函數，在創建時就查詢預設支付方式
+影響範圍: 只影響科目歧義消除流程的初始化階段
+等待您的Approve後，我將開始實施這些修復方案。每個階段完成後都可以進行測試驗證，確保問題得到解決。
+
+
+------------------------------------------
+20251224. 修復支付方式歸類邏輯
+
+不要寫code，請根據我的回覆更新提案。提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
+
+# Debug分析報告
+
+**版本**: v1.1.0  
+**建立日期**: 2025-12-24  
+**建立者**: LCAS Team  
+**文件描述**: Debug分析報告
+
+請參照9904文件，以資深SQA深入思考、分析原因。並提出解決方案。
+提案時請注意以下方向：
+1. 必須等我Approve之後才能開始編修代碼。
+2. 模組板次與函數版次都要升版。
+3. 現在是MVP階段，提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、加強穩定性、測試等手段。
+4. 將任務切分成數個階段處理，切分的依據以每階段結束都能執行一次測試驗證為主，並且要附上實施計畫，包含修改內容以及修改檔案。
+5. 解決方案請勿將測試驗證劃分為一個階段。
+6. 請列出問題、詳細說明並提出你的看法。
+7. 所有的文件與模組代碼編寫務必遵守0098以及0070文件。
+8. 分析原因及提出解決方案時，除了列出真實原因外，也必須用簡單的概念解釋(例如公司部門的概念)。
+9. 若無修改文件或代碼的action，請勿寫在解決方案中
+10. 若有修改代碼，務必解釋每次code改動的用途、影響範圍、Before/After行為差異。
+11. 禁止因為是MVP階段而模擬業務邏輯、hard coding、模擬回應等情事發生。
+
+---
+## 00. 問題描述(由user填寫)：
+
+請見附件以及console log
+
+1. 若user輸入科目庫沒有的synonyms而沒有輸入支付方式，，例如豆漿1111，則系統會跳出n\n檢測到未知支付方式「刷卡」，請問這屬於何種支付方式。 若user沒有輸入支付方式，預設為信用卡，可是系統卻跳出「刷卡」。
+2. 若user輸入已在科目庫的synonyms而沒有輸入支付方式，例如豆花333，系統就會預設支付方式為現金。我的設定是如果user沒有輸入支付方式，支付方式就會預設信用卡。
+
+---
+
+⚠️ **請不要修改任何程式或測試**。  
+基於Shell及console日誌，請提供結構化分析，輸出必須包含：
+
+## A. 快速摘要（≤3句）
+- 最可能問題是什麼，請條列出來。  
+
+---
+
+## B. Root causes（最多 6 條）
+每條需包含：
+
+1. **標題**（例如：null reference in X）  
+2. **證據**（來自 log / stack trace / code line）  
+3. **發生機率**（0-100%）
+4. **解決方案**
