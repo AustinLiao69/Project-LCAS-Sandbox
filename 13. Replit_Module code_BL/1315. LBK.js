@@ -2195,16 +2195,13 @@ function LBK_isStatisticsPostback(messageText) {
     'daily_statistics',
     'weekly_statistics', 
     'monthly_statistics',
-    'yearly_statistics',
     'general_statistics',
     '本日統計',
     '本週統計',
     '本月統計',
-    '本年統計',
     '今日統計',
     '週統計',
-    '月統計',
-    '年統計'
+    '月統計'
   ];
 
   return statisticsPostbacks.some(postback => 
@@ -2232,16 +2229,13 @@ function LBK_parseStatisticsType(messageText) {
     'daily_statistics': 'daily_statistics',
     'weekly_statistics': 'weekly_statistics',
     'monthly_statistics': 'monthly_statistics', 
-    'yearly_statistics': 'yearly_statistics',
     'general_statistics': 'general_statistics',
     '本日統計': 'daily_statistics',
     '今日統計': 'daily_statistics',
     '本週統計': 'weekly_statistics',
     '週統計': 'weekly_statistics',
     '本月統計': 'monthly_statistics',
-    '月統計': 'monthly_statistics',
-    '本年統計': 'yearly_statistics',
-    '年統計': 'yearly_statistics'
+    '月統計': 'monthly_statistics'
   };
 
   for (const [key, value] of Object.entries(typeMapping)) {
