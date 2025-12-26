@@ -93,7 +93,7 @@ const WH_CONFIG = {
     enabled: true,
     maxEntries: 50,
     trackingData: new Map() // 使用Map追蹤處理狀態
-  }
+  },
   FIRESTORE: {
     COLLECTION: "ledgers", // Firestore集合名稱
     LOG_SUBCOLLECTION: "log", // 日誌子集合名稱
