@@ -2073,7 +2073,7 @@ async function LBK_provideFallbackStatistics(statisticsType, inputData, processI
         break;
       case 'general_statistics':
       default:
-        periodName = '今日';
+        periodName = '本日';
         break;
     }
 
