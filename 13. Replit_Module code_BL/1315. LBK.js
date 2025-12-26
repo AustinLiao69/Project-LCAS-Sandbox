@@ -1827,93 +1827,88 @@ async function LBK_checkStatisticsKeyword(messageText, userId, processId) {
 }
 
 /**
- * 處理統計查詢請求 - 階段三修復版
- * @version 2025-12-26-V1.3.1
+ * 處理統計查詢請求 - 階段一簡化版：純轉發函數
+ * @version 2025-12-26-V1.4.0
  * @param {string} statisticsType - 統計類型
  * @param {object} inputData - 輸入資料
  * @param {string} processId - 處理ID
  * @returns {Object} 處理結果
- * @description 階段三修復：完善SR模組調用邏輯，增加動態載入和錯誤處理機制
+ * @description 階段一：簡化為純轉發函數，直接委派給SR模組處理所有統計邏輯
  */
 async function LBK_handleStatisticsRequest(statisticsType, inputData, processId) {
   const functionName = "LBK_handleStatisticsRequest";
   try {
-    LBK_logInfo(`階段三：處理統計查詢請求: ${statisticsType} [${processId}]`, "統計查詢", inputData.userId, functionName);
+    LBK_logInfo(`統計查詢轉發至SR模組: ${statisticsType} [${processId}]`, "統計轉發", inputData.userId, functionName);
 
-    // 階段三修復：動態檢查並載入SR模組
-    let srModuleAvailable = false;
+    // 動態載入SR模組（避免循環依賴）
     let srModule = null;
-
-    // 嘗試動態載入SR模組（避免循環依賴）
     try {
       if (!SR) {
-        LBK_logInfo(`階段三：嘗試動態載入SR模組 [${processId}]`, "統計查詢", inputData.userId, functionName);
-        const dynamicSR = require('./1305. SR.js');
-        if (dynamicSR && typeof dynamicSR.SR_processQuickStatistics === 'function') {
-          srModule = dynamicSR;
-          srModuleAvailable = true;
-          LBK_logInfo(`階段三：SR模組動態載入成功 [${processId}]`, "統計查詢", inputData.userId, functionName);
-        }
-      } else if (typeof SR.SR_processQuickStatistics === 'function') {
+        srModule = require('./1305. SR.js');
+      } else {
         srModule = SR;
-        srModuleAvailable = true;
-        LBK_logInfo(`階段三：使用已載入的SR模組 [${processId}]`, "統計查詢", inputData.userId, functionName);
       }
     } catch (srLoadError) {
-      LBK_logWarning(`階段三：SR模組載入失敗: ${srLoadError.message} [${processId}]`, "統計查詢", inputData.userId, functionName);
+      LBK_logError(`SR模組載入失敗: ${srLoadError.message} [${processId}]`, "統計轉發", inputData.userId, "SR_LOAD_ERROR", srLoadError.toString(), functionName);
+      return {
+        success: false,
+        message: "統計查詢服務暫時不可用，請稍後再試",
+        responseMessage: "統計查詢服務暫時不可用，請稍後再試",
+        moduleCode: "LBK",
+        module: "LBK",
+        processingTime: 0,
+        moduleVersion: "1.4.0",
+        errorType: "SR_MODULE_UNAVAILABLE"
+      };
     }
 
-    // 如果SR模組可用，委派處理
-    if (srModuleAvailable && srModule) {
-      try {
-        LBK_logInfo(`階段三：委派統計查詢給SR模組處理 [${processId}]`, "統計查詢", inputData.userId, functionName);
-        
-        const srResult = await srModule.SR_processQuickStatistics({
+    // 檢查SR模組是否有統計查詢函數
+    if (!srModule || typeof srModule.SR_processStatisticsQuery !== 'function') {
+      // 向後相容：使用舊的函數名稱
+      if (srModule && typeof srModule.SR_processQuickStatistics === 'function') {
+        LBK_logInfo(`使用SR模組相容模式處理統計查詢 [${processId}]`, "統計轉發", inputData.userId, functionName);
+        const result = await srModule.SR_processQuickStatistics({
           ...inputData,
           statisticsType: statisticsType,
           processId: processId
         });
-
-        // 驗證SR模組回應格式
-        if (srResult && typeof srResult === 'object') {
-          LBK_logInfo(`階段三：SR模組處理完成，結果類型: ${srResult.success ? '成功' : '失敗'} [${processId}]`, "統計查詢", inputData.userId, functionName);
-          return {
-            ...srResult,
-            moduleVersion: "1.3.1",
-            routedFrom: "LBK",
-            routedTo: "SR"
-          };
-        } else {
-          throw new Error("SR模組返回格式異常");
-        }
-
-      } catch (srError) {
-        LBK_logError(`階段三：SR模組處理失敗: ${srError.message} [${processId}]`, "統計查詢", inputData.userId, "SR_PROCESSING_ERROR", srError.toString(), functionName);
-        // 繼續執行降級處理
+        
+        return {
+          ...result,
+          routedFrom: "LBK",
+          routedTo: "SR",
+          routingMode: "compatibility"
+        };
       }
+      
+      throw new Error("SR模組統計函數不可用");
     }
 
-    // 階段三降級機制：提供基礎統計功能
-    LBK_logInfo(`階段三：執行降級統計處理 [${processId}]`, "統計查詢", inputData.userId, functionName);
+    // 轉發至SR模組的新統計查詢入口
+    LBK_logInfo(`轉發至SR_processStatisticsQuery [${processId}]`, "統計轉發", inputData.userId, functionName);
     
-    const fallbackResult = await LBK_provideFallbackStatistics(statisticsType, inputData, processId);
-    
-    return {
-      success: true,
-      message: fallbackResult.message,
-      responseMessage: fallbackResult.message,
-      quickReply: fallbackResult.quickReply,
-      moduleCode: "LBK",
-      module: "LBK",
-      processingTime: (Date.now() - parseInt(processId, 16)) / 1000,
-      moduleVersion: "1.3.1",
-      statisticsHandled: true,
-      fallbackMode: true,
-      statisticsType: statisticsType
-    };
+    const srResult = await srModule.SR_processStatisticsQuery({
+      ...inputData,
+      statisticsType: statisticsType,
+      processId: processId
+    });
+
+    // 驗證並返回SR模組結果
+    if (srResult && typeof srResult === 'object') {
+      LBK_logInfo(`SR模組統計處理${srResult.success ? '成功' : '失敗'} [${processId}]`, "統計轉發", inputData.userId, functionName);
+      return {
+        ...srResult,
+        routedFrom: "LBK",
+        routedTo: "SR",
+        routingMode: "direct"
+      };
+    } else {
+      throw new Error("SR模組返回格式異常");
+    }
 
   } catch (error) {
-    LBK_logError(`階段三：處理統計查詢請求失敗: ${error.toString()} [${processId}]`, "統計查詢", inputData.userId, "HANDLE_STATISTICS_REQUEST_ERROR", error.toString(), functionName);
+    LBK_logError(`統計查詢轉發失敗: ${error.toString()} [${processId}]`, "統計轉發", inputData.userId, "STATISTICS_ROUTING_ERROR", error.toString(), functionName);
+    
     return {
       success: false,
       message: "統計查詢處理失敗，請稍後再試",
@@ -1921,45 +1916,14 @@ async function LBK_handleStatisticsRequest(statisticsType, inputData, processId)
       moduleCode: "LBK",
       module: "LBK",
       processingTime: 0,
-      moduleVersion: "1.3.1",
-      errorType: "HANDLE_STATISTICS_REQUEST_ERROR"
+      moduleVersion: "1.4.0",
+      errorType: "STATISTICS_ROUTING_ERROR",
+      originalError: error.message
     };
   }
 }
 
-/**
- * 建立統計 Quick Reply
- * @version 2025-12-19-V1.3.0
- * @param {string} statisticsType - 統計類型
- * @param {string} processId - 處理ID
- * @returns {Object} Quick Reply配置
- */
-function LBK_buildStatisticsQuickReply(statisticsType, processId) {
-  const functionName = "LBK_buildStatisticsQuickReply";
-  try {
-    LBK_logDebug(`建立統計Quick Reply: ${statisticsType} [${processId}]`, "統計查詢", "", functionName);
 
-    const quickReplyItems = [
-      {
-        type: 'action',
-        action: {
-          type: 'postback',
-          label: '📊 本月統計',
-          data: 'statistics_monthly',
-          displayText: '本月統計'
-        }
-      }
-    ];
-
-    return {
-      items: quickReplyItems
-    };
-
-  } catch (error) {
-    LBK_logError(`建立統計Quick Reply失敗: ${error.toString()} [${processId}]`, "統計查詢", "", "BUILD_STATISTICS_QR_ERROR", error.toString(), functionName);
-    return { items: [] };
-  }
-}
 
 /**
  * 處理直接統計查詢
@@ -2032,193 +1996,9 @@ async function LBK_getDirectStatistics(statisticsType, userId, processId) {
   }
 }
 
-/**
- * 提供降級統計處理 - 階段三新增
- * @version 2025-12-26-V1.3.1
- * @param {string} statisticsType - 統計類型
- * @param {object} inputData - 輸入資料
- * @param {string} processId - 處理ID
- * @returns {Object} 降級統計結果
- * @description 階段三新增：當SR模組不可用時，提供基礎統計查詢功能
- */
-async function LBK_provideFallbackStatistics(statisticsType, inputData, processId) {
-  const functionName = "LBK_provideFallbackStatistics";
-  try {
-    LBK_logInfo(`階段三：提供降級統計處理: ${statisticsType} [${processId}]`, "降級統計", inputData.userId, functionName);
 
-    const currentDateTime = new Date().toLocaleString("zh-TW", {
-      timeZone: "Asia/Taipei",
-      year: "numeric",
-      month: "2-digit", 
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit"
-    });
 
-    // 嘗試直接查詢Firestore獲取基礎統計資料
-    let statisticsData = null;
-    try {
-      statisticsData = await LBK_getBasicStatistics(inputData.userId, statisticsType, processId);
-    } catch (dbError) {
-      LBK_logWarning(`階段三：直接查詢統計失敗: ${dbError.message} [${processId}]`, "降級統計", inputData.userId, functionName);
-    }
 
-    // 根據統計類型建立訊息
-    let message = '';
-    let periodName = '';
-
-    switch (statisticsType) {
-      case 'monthly_statistics':
-        periodName = '本月';
-        break;
-      case 'general_statistics':
-      default:
-        periodName = '本日';
-        break;
-    }
-
-    if (statisticsData && statisticsData.success) {
-      const data = statisticsData.data;
-      message = `📊 ${periodName}統計報表\n\n`;
-      message += `💰 總收入：${data.totalIncome || 0} 元\n`;
-      message += `💸 總支出：${data.totalExpense || 0} 元\n`;
-      message += `📈 淨收支：${(data.totalIncome || 0) - (data.totalExpense || 0)} 元\n`;
-      message += `📝 交易筆數：${data.recordCount || 0} 筆\n\n`;
-      message += `⏰ 查詢時間：${currentDateTime}\n`;
-    } else {
-      message = `📊 ${periodName}統計報表\n\n`;
-      message += `暫無統計資料\n\n`;
-      message += `💡 開始記帳以獲得統計分析\n`;
-      message += `⏰ 查詢時間：${currentDateTime}\n`;
-    }
-
-    // 建立基礎Quick Reply選項
-    const quickReply = {
-      items: [
-        {
-          type: 'action',
-          action: {
-            type: 'postback',
-            label: '📊 本日統計',
-            data: 'general_statistics',
-            displayText: '本日統計'
-          }
-        },
-        {
-          type: 'action',
-          action: {
-            type: 'postback',
-            label: '📈 本月統計', 
-            data: 'monthly_statistics',
-            displayText: '本月統計'
-          }
-        }
-      ]
-    };
-
-    return {
-      message: message,
-      quickReply: quickReply,
-      statisticsData: statisticsData
-    };
-
-  } catch (error) {
-    LBK_logError(`階段三：降級統計處理失敗: ${error.toString()} [${processId}]`, "降級統計", inputData.userId, "FALLBACK_STATISTICS_ERROR", error.toString(), functionName);
-    
-    return {
-      message: `📊 統計查詢服務暫時不可用\n\n💡 請稍後再試，或聯繫系統管理員\n⏰ ${new Date().toLocaleString("zh-TW", { timeZone: "Asia/Taipei" })}`,
-      quickReply: { items: [] }
-    };
-  }
-}
-
-/**
- * 取得基礎統計資料 - 階段三新增
- * @version 2025-12-26-V1.3.1
- * @param {string} userId - 用戶ID
- * @param {string} statisticsType - 統計類型
- * @param {string} processId - 處理ID
- * @returns {Object} 統計資料結果
- * @description 階段三新增：直接查詢Firestore獲取基礎統計資料
- */
-async function LBK_getBasicStatistics(userId, statisticsType, processId) {
-  const functionName = "LBK_getBasicStatistics";
-  try {
-    LBK_logDebug(`階段三：查詢基礎統計資料: ${statisticsType} [${processId}]`, "基礎統計", userId, functionName);
-
-    await LBK_initializeFirestore();
-    const db = LBK_INIT_STATUS.firestore_db;
-    const ledgerId = `user_${userId}`;
-
-    // 設定查詢時間範圍
-    const now = new Date();
-    let startDate, endDate;
-
-    switch (statisticsType) {
-      case 'monthly_statistics':
-        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-        endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
-        break;
-      case 'general_statistics':
-      default:
-        // 本日統計
-        startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
-        endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
-        break;
-    }
-
-    // 查詢transactions集合
-    const transactionsRef = db.collection('ledgers').doc(ledgerId).collection('transactions');
-    const snapshot = await transactionsRef
-      .where('createdAt', '>=', admin.firestore.Timestamp.fromDate(startDate))
-      .where('createdAt', '<=', admin.firestore.Timestamp.fromDate(endDate))
-      .get();
-
-    let totalIncome = 0;
-    let totalExpense = 0;
-    let recordCount = 0;
-
-    snapshot.forEach(doc => {
-      const data = doc.data();
-      const amount = parseFloat(data.amount || 0);
-      
-      if (data.type === 'income') {
-        totalIncome += amount;
-      } else if (data.type === 'expense') {
-        totalExpense += amount;
-      }
-      recordCount++;
-    });
-
-    LBK_logInfo(`階段三：統計查詢完成: 收入${totalIncome}, 支出${totalExpense}, ${recordCount}筆 [${processId}]`, "基礎統計", userId, functionName);
-
-    return {
-      success: true,
-      data: {
-        totalIncome,
-        totalExpense,
-        recordCount,
-        period: statisticsType,
-        dateRange: {
-          start: startDate.toISOString(),
-          end: endDate.toISOString()
-        }
-      }
-    };
-
-  } catch (error) {
-    LBK_logError(`階段三：查詢基礎統計失敗: ${error.toString()} [${processId}]`, "基礎統計", userId, "BASIC_STATISTICS_ERROR", error.toString(), functionName);
-    return {
-      success: false,
-      error: error.toString(),
-      data: {
-        totalIncome: 0,
-        totalExpense: 0,
-        recordCount: 0
-      }
-    };
-  }
-}
 
 /**
  * 格式化統計訊息

@@ -2611,58 +2611,38 @@ async function SR_getDirectStatistics(userId, period) {
 }
 
 /**
- * 44. 處理快速統計查詢 - LBK模組專用接口
- * @version 2025-12-26-V1.6.1
- * @date 2025-12-26 11:30:00
- * @description 為LBK模組提供統一的統計查詢接口，支援多種統計類型
+ * 44. 統一統計查詢入口 - 階段一擴展版
+ * @version 2025-12-26-V1.7.0
+ * @date 2025-12-26 15:00:00
+ * @description 統一的統計查詢入口，支援LBK模組統計關鍵字識別和完整統計處理
  */
-async function SR_processQuickStatistics(inputData) {
-  const functionName = "SR_processQuickStatistics";
+async function SR_processStatisticsQuery(inputData) {
+  const functionName = "SR_processStatisticsQuery";
   const processId = inputData.processId || Date.now().toString(36);
   const userId = inputData.userId;
 
   try {
-    SR_logInfo(`處理快速統計查詢: ${inputData.statisticsType || 'general'}`, "統計查詢", userId, "", "", functionName);
+    SR_logInfo(`統一統計查詢入口: ${inputData.statisticsType || 'general'}`, "統計查詢", userId, "", "", functionName);
 
     // 檢查統計功能權限
     const permissionCheck = await SR_validatePremiumFeature(userId, 'BASIC_STATISTICS');
     if (!permissionCheck.allowed) {
-      // 返回付費功能牆
       return await SR_handlePaywallQuickReply(userId, 'blocked', { 
         blockedFeature: '統計查詢',
         reason: permissionCheck.reason 
       });
     }
 
-    // 根據統計類型處理
-    const statisticsType = inputData.statisticsType || 'general_statistics';
-    let period = 'daily';
-
-    switch (statisticsType) {
-      case 'monthly_statistics':
-        period = 'monthly';
-        break;
-      case 'yearly_statistics':
-        period = 'yearly';
-        break;
-      case 'expense_statistics':
-      case 'income_statistics':
-      case 'general_statistics':
-      default:
-        period = 'daily';
-        break;
-    }
-
     // 獲取統計資料
-    const statsResult = await SR_getDirectStatistics(userId, period);
+    const statsResult = await SR_getStatisticsData(userId, inputData.statisticsType, processId);
 
-    // 建立回覆訊息
-    const replyMessage = SR_buildStatisticsReplyMessage(period, statsResult?.success ? statsResult.data : null);
+    // 建立統計報表訊息
+    const replyMessage = await SR_buildStatisticsMessage(statsResult, inputData.statisticsType, processId);
 
-    // 生成Quick Reply選項
-    const quickReplyButtons = await SR_generateQuickReplyOptions(userId, 'statistics');
+    // 生成動態Quick Reply按鈕
+    const quickReplyButtons = await SR_generateStatisticsQuickReply(userId, inputData.statisticsType, processId);
 
-    SR_logInfo(`統計查詢完成: ${period}統計`, "統計查詢", userId, "", "", functionName);
+    SR_logInfo(`統計查詢完成: ${inputData.statisticsType}`, "統計查詢", userId, "", "", functionName);
 
     return {
       success: true,
@@ -2672,15 +2652,13 @@ async function SR_processQuickStatistics(inputData) {
       moduleCode: "SR",
       module: "SR",
       processingTime: (Date.now() - parseInt(processId, 36)) / 1000,
-      moduleVersion: "1.6.1",
+      moduleVersion: "1.7.0",
       statisticsHandled: true,
-      statisticsType: statisticsType,
-      period: period
+      statisticsType: inputData.statisticsType
     };
 
   } catch (error) {
-    SR_logError(`處理快速統計查詢失敗: ${error.message}`, "統計查詢", userId, "SR_QUICK_STATS_ERROR", error.toString(), functionName);
-
+    SR_logError(`統計查詢入口處理失敗: ${error.message}`, "統計查詢", userId, "SR_STATS_QUERY_ERROR", error.toString(), functionName);
     return {
       success: false,
       message: "統計查詢處理失敗，請稍後再試",
@@ -2688,9 +2666,318 @@ async function SR_processQuickStatistics(inputData) {
       moduleCode: "SR",
       module: "SR",
       processingTime: 0,
-      moduleVersion: "1.6.1",
-      errorType: "SR_QUICK_STATS_ERROR",
-      statisticsHandled: false
+      moduleVersion: "1.7.0",
+      errorType: "SR_STATS_QUERY_ERROR"
+    };
+  }
+}
+
+/**
+ * 45. 時間範圍計算與資料查詢
+ * @version 2025-12-26-V1.7.0
+ * @date 2025-12-26 15:00:00
+ * @description 根據統計類型計算時間範圍並查詢統計資料
+ */
+async function SR_getStatisticsData(userId, statisticsType, processId) {
+  const functionName = "SR_getStatisticsData";
+  
+  try {
+    SR_logInfo(`取得統計資料: ${statisticsType}`, "統計資料", userId, "", "", functionName);
+
+    const ledgerId = `user_${userId}`;
+    const now = moment().tz(TIMEZONE);
+    let startDate, endDate, period;
+
+    // 根據統計類型設定時間範圍
+    switch (statisticsType) {
+      case 'daily_statistics':
+      case 'general_statistics':
+        period = 'daily';
+        startDate = now.clone().startOf('day').toDate();
+        endDate = now.clone().endOf('day').toDate();
+        break;
+        
+      case 'weekly_statistics':
+        period = 'weekly';
+        startDate = now.clone().startOf('week').toDate();
+        endDate = now.clone().endOf('week').toDate();
+        break;
+        
+      case 'monthly_statistics':
+        period = 'monthly';
+        startDate = now.clone().startOf('month').toDate();
+        endDate = now.clone().endOf('month').toDate();
+        break;
+        
+      case 'yearly_statistics':
+        period = 'yearly';
+        startDate = now.clone().startOf('year').toDate();
+        endDate = now.clone().endOf('year').toDate();
+        break;
+        
+      default:
+        period = 'daily';
+        startDate = now.clone().startOf('day').toDate();
+        endDate = now.clone().endOf('day').toDate();
+    }
+
+    // 查詢transactions集合資料
+    const transactionsRef = db.collection('ledgers').doc(ledgerId).collection('transactions');
+    const snapshot = await transactionsRef
+      .where('createdAt', '>=', admin.firestore.Timestamp.fromDate(startDate))
+      .where('createdAt', '<=', admin.firestore.Timestamp.fromDate(endDate))
+      .get();
+
+    let totalIncome = 0;
+    let totalExpense = 0;
+    let recordCount = snapshot.size;
+
+    snapshot.forEach(doc => {
+      const data = doc.data();
+      const amount = parseFloat(data.amount || 0);
+      
+      if (data.type === 'income') {
+        totalIncome += amount;
+      } else if (data.type === 'expense') {
+        totalExpense += amount;
+      }
+    });
+
+    const statsData = {
+      period,
+      totalIncome,
+      totalExpense,
+      netAmount: totalIncome - totalExpense,
+      recordCount,
+      dateRange: {
+        start: startDate.toISOString(),
+        end: endDate.toISOString()
+      }
+    };
+
+    SR_logInfo(`統計資料取得完成: 收入${totalIncome}，支出${totalExpense}，${recordCount}筆`, "統計資料", userId, "", "", functionName);
+
+    return {
+      success: true,
+      data: statsData
+    };
+
+  } catch (error) {
+    SR_logError(`取得統計資料失敗: ${error.message}`, "統計資料", userId, "SR_GET_STATS_ERROR", error.toString(), functionName);
+    return {
+      success: false,
+      error: error.message,
+      data: {
+        period: 'unknown',
+        totalIncome: 0,
+        totalExpense: 0,
+        netAmount: 0,
+        recordCount: 0
+      }
+    };
+  }
+}
+
+/**
+ * 46. 統計報表格式化
+ * @version 2025-12-26-V1.7.0
+ * @date 2025-12-26 15:00:00
+ * @description 根據統計資料和類型格式化統計報表訊息
+ */
+async function SR_buildStatisticsMessage(statsResult, statisticsType, processId) {
+  const functionName = "SR_buildStatisticsMessage";
+  
+  try {
+    const currentDateTime = new Date().toLocaleString("zh-TW", {
+      timeZone: "Asia/Taipei",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit"
+    });
+
+    // 統計類型標題映射
+    const typeLabels = {
+      'daily_statistics': '本日',
+      'general_statistics': '本日',
+      'weekly_statistics': '本週',
+      'monthly_statistics': '本月',
+      'yearly_statistics': '本年'
+    };
+
+    const periodLabel = typeLabels[statisticsType] || '本日';
+
+    if (!statsResult || !statsResult.success || !statsResult.data) {
+      return `📊 ${periodLabel}統計報表
+
+暫無統計資料
+
+💡 開始記帳以獲得統計分析
+⏰ 查詢時間：${currentDateTime}`;
+    }
+
+    const data = statsResult.data;
+    const netAmount = data.netAmount || 0;
+
+    let message = `📊 ${periodLabel}統計報表\n\n`;
+    message += `💰 總收入：${data.totalIncome || 0} 元\n`;
+    message += `💸 總支出：${data.totalExpense || 0} 元\n`;
+    message += `📈 淨收支：${netAmount >= 0 ? '+' : ''}${netAmount} 元\n`;
+    message += `📝 交易筆數：${data.recordCount || 0} 筆\n\n`;
+    message += `${netAmount >= 0 ? '✅ 收支狀況良好' : '⚠️ 支出大於收入'}\n\n`;
+    message += `⏰ 查詢時間：${currentDateTime}`;
+
+    SR_logInfo(`統計報表格式化完成: ${periodLabel}統計`, "統計報表", "", "", "", functionName);
+    
+    return message;
+
+  } catch (error) {
+    SR_logError(`統計報表格式化失敗: ${error.message}`, "統計報表", "", "SR_BUILD_MSG_ERROR", error.toString(), functionName);
+    return `📊 統計查詢失敗\n\n系統暫時無法處理統計請求，請稍後再試`;
+  }
+}
+
+/**
+ * 47. 動態按鈕生成
+ * @version 2025-12-26-V1.7.0
+ * @date 2025-12-26 15:00:00
+ * @description 根據統計類型和用戶權限動態生成Quick Reply按鈕
+ */
+async function SR_generateStatisticsQuickReply(userId, currentStatisticsType, processId) {
+  const functionName = "SR_generateStatisticsQuickReply";
+  
+  try {
+    SR_logInfo(`生成統計Quick Reply: ${currentStatisticsType}`, "Quick Reply", userId, "", "", functionName);
+
+    // 取得用戶訂閱狀態
+    const subscriptionStatus = await SR_checkSubscriptionStatus(userId);
+    const trialStatus = await SR_checkTrialStatus(userId);
+    const hasPremiumAccess = subscriptionStatus.isPremium || trialStatus.isInTrial;
+
+    let quickReplyItems = [];
+
+    // 基礎統計選項（所有用戶可用）
+    if (currentStatisticsType !== 'general_statistics') {
+      quickReplyItems.push({
+        type: 'action',
+        action: {
+          type: 'postback',
+          label: '📊 本日統計',
+          data: 'general_statistics',
+          displayText: '本日統計'
+        }
+      });
+    }
+
+    if (currentStatisticsType !== 'weekly_statistics') {
+      quickReplyItems.push({
+        type: 'action',
+        action: {
+          type: 'postback',
+          label: '📅 本週統計',
+          data: 'weekly_statistics',
+          displayText: '本週統計'
+        }
+      });
+    }
+
+    if (currentStatisticsType !== 'monthly_statistics') {
+      quickReplyItems.push({
+        type: 'action',
+        action: {
+          type: 'postback',
+          label: '📈 本月統計',
+          data: 'monthly_statistics',
+          displayText: '本月統計'
+        }
+      });
+    }
+
+    // Premium用戶額外選項
+    if (hasPremiumAccess) {
+      if (currentStatisticsType !== 'yearly_statistics') {
+        quickReplyItems.push({
+          type: 'action',
+          action: {
+            type: 'postback',
+            label: '📋 本年統計',
+            data: 'yearly_statistics',
+            displayText: '本年統計'
+          }
+        });
+      }
+    } else {
+      // 免費用戶升級提示
+      quickReplyItems.push({
+        type: 'action',
+        action: {
+          type: 'postback',
+          label: '⭐ 升級會員',
+          data: 'upgrade_premium',
+          displayText: '升級會員'
+        }
+      });
+    }
+
+    // 限制按鈕數量（LINE限制最多13個）
+    quickReplyItems = quickReplyItems.slice(0, 4);
+
+    const quickReply = {
+      items: quickReplyItems
+    };
+
+    SR_logInfo(`生成${quickReplyItems.length}個統計Quick Reply選項`, "Quick Reply", userId, "", "", functionName);
+
+    return quickReply;
+
+  } catch (error) {
+    SR_logError(`生成統計Quick Reply失敗: ${error.message}`, "Quick Reply", userId, "SR_QR_GEN_ERROR", error.toString(), functionName);
+    
+    // 錯誤時返回基本選項
+    return {
+      items: [
+        {
+          type: 'action',
+          action: {
+            type: 'postback',
+            label: '📊 本日統計',
+            data: 'general_statistics',
+            displayText: '本日統計'
+          }
+        }
+      ]
+    };
+  }
+}
+
+/**
+ * 48. 處理快速統計查詢 - 保持向後相容
+ * @version 2025-12-26-V1.7.0
+ * @date 2025-12-26 15:00:00
+ * @description 為LBK模組提供統一的統計查詢接口，內部調用新的統計處理函數
+ */
+async function SR_processQuickStatistics(inputData) {
+  const functionName = "SR_processQuickStatistics";
+  
+  try {
+    SR_logInfo(`快速統計查詢（相容模式）: ${inputData.statisticsType || 'general'}`, "統計查詢", inputData.userId, "", "", functionName);
+    
+    // 調用新的統一統計查詢入口
+    return await SR_processStatisticsQuery(inputData);
+
+  } catch (error) {
+    SR_logError(`快速統計查詢失敗: ${error.message}`, "統計查詢", inputData.userId, "SR_QUICK_STATS_ERROR", error.toString(), functionName);
+    
+    return {
+      success: false,
+      message: "統計查詢處理失敗，請稍後再試",
+      responseMessage: "統計查詢處理失敗，請稍後再試",
+      moduleCode: "SR",
+      module: "SR",
+      processingTime: 0,
+      moduleVersion: "1.7.0",
+      errorType: "SR_QUICK_STATS_ERROR"
     };
   }
 }
@@ -2812,7 +3099,11 @@ module.exports = {
   // 模組初始化
   SR_initialize,
 
-  // 新增統計查詢函數
+  // 階段一：新增完整統計查詢函數
+  SR_processStatisticsQuery,
+  SR_getStatisticsData,
+  SR_buildStatisticsMessage,
+  SR_generateStatisticsQuickReply,
   SR_getDirectStatistics,
   SR_processQuickStatistics,
 
