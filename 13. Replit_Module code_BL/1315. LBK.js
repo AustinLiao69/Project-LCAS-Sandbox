@@ -2099,9 +2099,9 @@ async function LBK_provideFallbackStatistics(statisticsType, inputData, processI
           type: 'action',
           action: {
             type: 'postback',
-            label: '📊 今日統計',
+            label: '📊 本日統計',
             data: 'general_statistics',
-            displayText: '今日統計'
+            displayText: '本日統計'
           }
         },
         {
@@ -2161,7 +2161,7 @@ async function LBK_getBasicStatistics(userId, statisticsType, processId) {
         break;
       case 'general_statistics':
       default:
-        // 今日統計
+        // 本日統計
         startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
         endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
         break;
