@@ -1961,15 +1961,6 @@ function LBK_buildStatisticsQuickReply(statisticsType, processId) {
           displayText: '年度統計'
         }
       },
-      {
-        type: 'action',
-        action: {
-          type: 'postback',
-          label: '💸 支出分析',
-          data: 'statistics_expense',
-          displayText: '支出分析'
-        }
-      }
     ];
 
     return {
@@ -2115,13 +2106,11 @@ async function LBK_provideFallbackStatistics(statisticsType, inputData, processI
       message += `📈 淨收支：${(data.totalIncome || 0) - (data.totalExpense || 0)} 元\n`;
       message += `📝 交易筆數：${data.recordCount || 0} 筆\n\n`;
       message += `⏰ 查詢時間：${currentDateTime}\n`;
-      message += `🔧 資料來源：LBK降級模式`;
     } else {
       message = `📊 ${periodName}統計報表\n\n`;
       message += `暫無統計資料\n\n`;
       message += `💡 開始記帳以獲得統計分析\n`;
       message += `⏰ 查詢時間：${currentDateTime}\n`;
-      message += `🔧 資料來源：LBK降級模式`;
     }
 
     // 建立基礎Quick Reply選項
@@ -2145,16 +2134,6 @@ async function LBK_provideFallbackStatistics(statisticsType, inputData, processI
             displayText: '本月統計'
           }
         },
-        {
-          type: 'action',
-          action: {
-            type: 'postback',
-            label: '💸 支出分析',
-            data: 'expense_statistics',
-            displayText: '支出分析'
-          }
-        }
-      ]
     };
 
     return {
