@@ -1961,6 +1961,15 @@ function LBK_buildStatisticsQuickReply(statisticsType, processId) {
           displayText: '年度統計'
         }
       },
+      {
+        type: 'action',
+        action: {
+          type: 'postback',
+          label: '💸 支出分析',
+          data: 'statistics_expense',
+          displayText: '支出分析'
+        }
+      }
     ];
 
     return {
@@ -2134,6 +2143,17 @@ async function LBK_provideFallbackStatistics(statisticsType, inputData, processI
             displayText: '本月統計'
           }
         },
+        {
+          type: 'action',
+          action: {
+            type: 'postback',
+            label: '💸 支出分析',
+            data: 'expense_statistics',
+            displayText: '支出分析'
+          }
+        }
+      ]
+    };
 
     return {
       message: message,
