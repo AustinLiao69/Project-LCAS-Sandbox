@@ -1697,7 +1697,7 @@ async function SR_generateQuickReplyOptions(userId, context, additionalParams = 
           { label: '設定提醒', postbackData: 'setup_reminder' }
         ];
         }
-    }
+
 
     // 確保選項數量不超過限制
     options = options.slice(0, maxOptions);
