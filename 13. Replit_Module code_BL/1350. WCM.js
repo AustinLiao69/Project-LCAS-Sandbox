@@ -635,7 +635,7 @@ async function WCM_createCategory(ledgerId, categoryData, options = {}) {
         return WCM_formatErrorResponse("LOAD_0099_FAILED", "載入0099科目資料失敗", subjectData.error);
       }
 
-      const collectionPath = `ledgers/${ledgerId}/categories`;
+      const categoryCollectionPath = `ledgers/${ledgerId}/categories`;
       const batch = db.batch();
       let batchCount = 0;
       const now = admin.firestore.Timestamp.now();
@@ -649,7 +649,7 @@ async function WCM_createCategory(ledgerId, categoryData, options = {}) {
 
         // 使用純數字格式作為文檔ID，與0099.json中的categoryId保持一致
         const categoryId = subject.categoryId ? subject.categoryId.toString() : `${Date.now()}`;
-        const categoryRef = db.collection(collectionPath).doc(categoryId);
+        const categoryRef = db.collection(categoryCollectionPath).doc(categoryId);
 
         const categoryDoc = {
           id: categoryId,
@@ -682,13 +682,13 @@ async function WCM_createCategory(ledgerId, categoryData, options = {}) {
 
       await batch.commit();
 
-      WCM_logInfo(`批量載入完成: ${batchCount} 筆科目 (路徑: ${collectionPath})`, "批量載入科目", categoryData.userId, functionName);
+      WCM_logInfo(`批量載入完成: ${batchCount} 筆科目 (路徑: ${categoryCollectionPath})`, "批量載入科目", categoryData.userId, functionName);
 
       return WCM_formatSuccessResponse({
         batchLoaded: true,
         totalCategories: batchCount,
         ledgerId: ledgerId,
-        collectionPath: collectionPath,
+        collectionPath: categoryCollectionPath,
         dataSource: '0099. Subject_code.json'
       }, `成功批量載入 ${batchCount} 筆科目`);
     }
@@ -733,10 +733,10 @@ async function WCM_createCategory(ledgerId, categoryData, options = {}) {
     };
 
     // 儲存至Firebase子集合
-    const collectionPath = `ledgers/${ledgerId}/categories`;
-    await db.collection(collectionPath).doc(categoryId).set(category);
+    const singleCategoryCollectionPath = `ledgers/${ledgerId}/categories`;
+    await db.collection(singleCategoryCollectionPath).doc(categoryId).set(category);
 
-    WCM_logInfo(`科目創建成功: ${categoryId} (路徑: ${collectionPath}/${categoryId})`, "創建科目", categoryData.userId, functionName);
+    WCM_logInfo(`科目創建成功: ${categoryId} (路徑: ${singleCategoryCollectionPath}/${categoryId})`, "創建科目", categoryData.userId, functionName);
 
     return WCM_formatSuccessResponse({
       categoryId: categoryId,
@@ -746,7 +746,7 @@ async function WCM_createCategory(ledgerId, categoryData, options = {}) {
       color: category.color,
       icon: category.icon,
       ledgerId: ledgerId,
-      path: `${collectionPath}/${categoryId}`
+      path: `${singleCategoryCollectionPath}/${categoryId}`
     }, "科目創建成功");
 
   } catch (error) {
