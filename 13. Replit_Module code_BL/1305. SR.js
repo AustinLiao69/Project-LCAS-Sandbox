@@ -2855,7 +2855,8 @@ async function SR_generateStatisticsQuickReply(userId, currentStatisticsType, pr
     let quickReplyItems = [];
 
     // 基礎統計選項（所有用戶可用）
-    if (currentStatisticsType !== 'general_statistics') {
+    // 修復邏輯：daily_statistics 和 general_statistics 都代表本日統計，應該排除
+    if (currentStatisticsType !== 'general_statistics' && currentStatisticsType !== 'daily_statistics') {
       quickReplyItems.push({
         type: 'action',
         action: {
