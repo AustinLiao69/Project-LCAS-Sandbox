@@ -61,16 +61,24 @@ try {
   console.warn('LBK模組: SR模組載入失敗，部分進階功能將受限:', error.message);
 }
 
-// 配置參數
+// 配置參數 - 階段二：智能調試控制
 const LBK_CONFIG = {
-  DEBUG: true,
-  LOG_LEVEL: "DEBUG",
+  DEBUG: process.env.LBK_DEBUG === 'true' || process.env.NODE_ENV !== 'production',
+  LOG_LEVEL: process.env.NODE_ENV === 'production' ? "ERROR" : "DEBUG",
   FIRESTORE_ENABLED: 'true',
   TIMEZONE: "Asia/Taipei",
   TEXT_PROCESSING: {
     ENABLE_SMART_PARSING: true,
     MIN_AMOUNT_DIGITS: 3,
     MAX_REMARK_LENGTH: 20
+  },
+  
+  // 階段二新增：智能日誌控制
+  SMART_LOGGING: {
+    SUCCESS_LOGGING: process.env.NODE_ENV !== 'production', // 成功案例僅開發環境記錄
+    PARSING_DETAILS: process.env.NODE_ENV !== 'production', // 解析詳情僅開發環境記錄
+    MEMORY_CACHE: [], // 記憶體快取解析過程
+    MAX_CACHE_SIZE: 50
   },
   // 階段一修正：移除預設支付方式配置，確保無硬編碼
   // 新增 cache 配置
@@ -93,10 +101,30 @@ function LBK_logInfo(message, category, userId, functionName) {
 }
 
 function LBK_logDebug(message, category, userId, functionName) {
-  if (LBK_CONFIG.DEBUG && typeof DL !== 'undefined' && DL && typeof DL.DL_debug === 'function') {
-    DL.DL_debug(message, category, userId, 'DEBUG', '', 0, functionName, 'LBK');
-  } else if (LBK_CONFIG.DEBUG) {
-    console.log(`[DEBUG] [LBK] ${message}`);
+  // 階段二：智能調試日誌
+  if (LBK_CONFIG.DEBUG) {
+    if (process.env.NODE_ENV === 'production') {
+      // 正式環境：僅存入記憶體快取
+      LBK_CONFIG.SMART_LOGGING.MEMORY_CACHE.push({
+        timestamp: new Date().toISOString(),
+        message: message,
+        category: category,
+        userId: userId,
+        functionName: functionName
+      });
+      
+      // 限制快取大小
+      if (LBK_CONFIG.SMART_LOGGING.MEMORY_CACHE.length > LBK_CONFIG.SMART_LOGGING.MAX_CACHE_SIZE) {
+        LBK_CONFIG.SMART_LOGGING.MEMORY_CACHE.shift();
+      }
+    } else {
+      // 開發環境：正常記錄
+      if (typeof DL !== 'undefined' && DL && typeof DL.DL_debug === 'function') {
+        DL.DL_debug(message, category, userId, 'DEBUG', '', 0, functionName, 'LBK');
+      } else {
+        console.log(`[DEBUG] [LBK] ${message}`);
+      }
+    }
   }
 }
 
@@ -426,15 +454,16 @@ async function LBK_processQuickBookkeeping(inputData) {
     }
 
     // 階段三改進：移除主記帳流程中的synonyms更新，這部分邏輯已移至wallet確認時執行
-    console.log(`✅ 記帳成功: ${bookkeepingResult.data.transactionId}`);
-
+    // 階段二：成功記錄簡化
+      if (LBK_CONFIG.SMART_LOGGING.SUCCESS_LOGGING) {
+        console.log(`✅ 記帳成功: ${bookkeepingResult.data.transactionId}`);
+        LBK_logInfo(`快速記帳完成 [${processId}]`, "快速記帳", userId || "", "LBK_processQuickBookkeeping");
+      }
 
     // 格式化回覆訊息，傳遞原始輸入作為參考
     const replyMessage = LBK_formatReplyMessage(bookkeepingResult.data, "LBK", {
       originalInput: parseResult.data.subject
     });
-
-    LBK_logInfo(`快速記帳完成 [${processId}]`, "快速記帳", userId || "", "LBK_processQuickBookkeeping");
 
     return {
       success: true,
@@ -478,9 +507,14 @@ async function LBK_processQuickBookkeeping(inputData) {
  */
 async function LBK_parseUserMessage(messageText, userId, processId) {
   try {
-    LBK_logDebug(`用戶訊息解析: "${messageText}" [${processId}]`, "訊息解析", userId, "LBK_parseUserMessage");
+    // 階段二：僅在解析過程啟用時記錄詳情
+    if (LBK_CONFIG.SMART_LOGGING.PARSING_DETAILS) {
+      LBK_logDebug(`用戶訊息解析: "${messageText}" [${processId}]`, "訊息解析", userId, "LBK_parseUserMessage");
+    }
 
     if (!messageText || messageText.trim() === "") {
+      // 失敗時必須記錄
+      LBK_logError(`空訊息解析失敗 [${processId}]`, "訊息解析", userId, "EMPTY_MESSAGE", "", "LBK_parseUserMessage");
       return {
         success: false,
         error: "空訊息",

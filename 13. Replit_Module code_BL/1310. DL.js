@@ -28,21 +28,25 @@ const moment = require("moment-timezone");
 
 // 1. 配置參數
 const DL_CONFIG = {
-  // 1.1 日誌記錄基本設置
+  // 1.1 日誌記錄基本設置 - 階段二：環境變數控制
   enableConsoleLog: true, // 是否啟用控制台日誌
   enableFirestoreLog: true, // 是否啟用Firestore日誌
-  consoleLogLevel: 0, // 控制台日誌級別 (0=DEBUG, 1=INFO, 2=WARNING, 3=ERROR)
-  firestoreLogLevel: 0, // Firestore日誌級別
+  consoleLogLevel: process.env.DL_CONSOLE_LOG_LEVEL ? parseInt(process.env.DL_CONSOLE_LOG_LEVEL) : 0, // 控制台日誌級別
+  firestoreLogLevel: process.env.DL_FIRESTORE_LOG_LEVEL ? parseInt(process.env.DL_FIRESTORE_LOG_LEVEL) : (process.env.NODE_ENV === 'production' ? 3 : 0), // 正式環境僅ERROR以上
 
   // 1.2 日誌存儲位置
   logCollection: "log", // Firestore日誌集合名稱
   timezone: "Asia/Taipei", // 時區設置
 
-  // 1.3 緩衝區設置
-  logBufferSize: 50, // 緩衝區大小 (增加到50條，減少寫入頻率)
-  bufferFlushInterval: 120000, // 緩衝區刷新間隔 (2分鐘)
+  // 1.3 緩衝區設置 - 階段二：智能緩衝
+  logBufferSize: process.env.NODE_ENV === 'production' ? 20 : 50, // 正式環境減少緩衝區大小
+  bufferFlushInterval: process.env.NODE_ENV === 'production' ? 300000 : 120000, // 正式環境延長刷新間隔
   logBuffer: [], // 日誌緩衝區
   lastBufferFlush: 0, // 上次緩衝區刷新時間
+  
+  // 階段二新增：記憶體暫存機制
+  memoryCache: [], // 開發調試資訊記憶體暫存
+  memoryCacheSize: 100, // 記憶體暫存大小限制
 
   // 1.4 過濾設置
   enabledModules: ["ALL"], // 啟用的模組列表 (ALL 表示全部)
@@ -542,18 +546,15 @@ async function DL_log(logData) {
     }
   }
 
-  // Firestore 日誌
-  if (
-    DL_CONFIG.enableFirestoreLog &&
-    severityLevel >= DL_CONFIG.firestoreLogLevel
-  ) {
+  // 階段二：智能日誌處理
+  if (DL_CONFIG.enableFirestoreLog) {
     try {
       // 格式化時間戳
       const formattedTimestamp = moment(timestamp)
         .tz(DL_CONFIG.timezone)
         .format("YYYY-MM-DD HH:mm:ss");
 
-      // 準備日誌數據行 - 確保使用正確的source欄位
+      // 準備日誌數據行
       const logRow = [
         formattedTimestamp, // 1. 時間戳記
         logData.message || "", // 2. 訊息
@@ -567,15 +568,25 @@ async function DL_log(logData) {
         logData.severity || "INFO", // 10. 嚴重等級
       ];
 
-      // 將日誌添加到緩衝區
-      DL_CONFIG.logBuffer.push(logRow);
-
-      // 檢查緩衝區是否需要刷新
-      await DL_checkAndFlushBuffer();
+      // 階段二：根據嚴重等級和環境決定處理方式
+      if (severityLevel >= DL_CONFIG.firestoreLogLevel) {
+        // 達到Firestore記錄級別，加入緩衝區
+        DL_CONFIG.logBuffer.push(logRow);
+        await DL_checkAndFlushBuffer();
+      } else if (process.env.NODE_ENV !== 'production') {
+        // 開發環境：低級別日誌放入記憶體暫存
+        DL_CONFIG.memoryCache.push(logRow);
+        
+        // 限制記憶體暫存大小
+        if (DL_CONFIG.memoryCache.length > DL_CONFIG.memoryCacheSize) {
+          DL_CONFIG.memoryCache.shift(); // 移除最舊的記錄
+        }
+      }
+      // 正式環境低級別日誌直接丟棄，不消耗資源
 
       return true;
     } catch (error) {
-      console.error(`DL_log錯誤: 添加日誌到緩衝區失敗: ${error.toString()}`);
+      console.error(`DL_log錯誤: 添加日誌處理失敗: ${error.toString()}`);
       return false;
     }
   }
@@ -1064,6 +1075,38 @@ function setDependencies(whModule, bkModule, ddModule) {
   // 未來如有需要可以在此處設置模組間依賴
 }
 
+/**
+ * 階段二新增：設定生產環境日誌級別
+ * @description 快速設定生產環境僅記錄ERROR和CRITICAL級別
+ */
+function DL_setProductionLogLevel() {
+  DL_CONFIG.firestoreLogLevel = DL_SEVERITY_LEVELS.ERROR;
+  DL_CONFIG.consoleLogLevel = DL_SEVERITY_LEVELS.ERROR;
+  console.log('✅ 已設定生產環境日誌級別 (ERROR+)');
+}
+
+/**
+ * 階段二新增：設定開發環境日誌級別
+ * @description 恢復開發環境完整日誌記錄
+ */
+function DL_setDevelopmentLogLevel() {
+  DL_CONFIG.firestoreLogLevel = DL_SEVERITY_LEVELS.DEBUG;
+  DL_CONFIG.consoleLogLevel = DL_SEVERITY_LEVELS.DEBUG;
+  console.log('✅ 已設定開發環境日誌級別 (ALL)');
+}
+
+/**
+ * 階段二新增：獲取記憶體暫存內容
+ * @description 在開發環境中查看暫存的調試資訊
+ */
+function DL_getMemoryCache() {
+  return {
+    cacheSize: DL_CONFIG.memoryCache.length,
+    maxSize: DL_CONFIG.memoryCacheSize,
+    entries: DL_CONFIG.memoryCache.slice(-10) // 返回最新10筆
+  };
+}
+
 // 導出所有函數
 module.exports = {
   DL_initialize,
@@ -1080,12 +1123,17 @@ module.exports = {
   DL_diagnose,
   DL_getModeStatus,
   DL_SEVERITY_LEVELS,
-  DL_rotateLogSheet, // 保留但改為適用於Firestore
-  DL_writeToFirestore, // 新增，替代原來的DL_writeToGoogleSheets
+  DL_rotateLogSheet,
+  DL_writeToFirestore,
 
   // v2.2.1新增相容性函數
   DL_logSimple,
   DL_logError,
+
+  // 階段二新增函數
+  DL_setProductionLogLevel,
+  DL_setDevelopmentLogLevel,
+  DL_getMemoryCache,
 
   // 新增依賴注入函數
   setDependencies,
