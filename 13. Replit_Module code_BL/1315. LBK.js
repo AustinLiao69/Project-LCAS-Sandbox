@@ -1795,10 +1795,7 @@ async function LBK_checkStatisticsKeyword(messageText, userId, processId) {
     // 統計查詢關鍵字
     const statisticsKeywords = [
       { keywords: ['統計', '報表', '分析'], type: 'general_statistics' },
-      { keywords: ['月統計', '月報表'], type: 'monthly_statistics' },
-      { keywords: ['年統計', '年報表'], type: 'yearly_statistics' },
-      { keywords: ['支出統計', '支出報表'], type: 'expense_statistics' },
-      { keywords: ['收入統計', '收入報表'], type: 'income_statistics' }
+      { keywords: ['月統計', '月報表'], type: 'monthly_statistics' }
     ];
 
     for (const keywordGroup of statisticsKeywords) {
@@ -1951,24 +1948,6 @@ function LBK_buildStatisticsQuickReply(statisticsType, processId) {
           data: 'statistics_monthly',
           displayText: '本月統計'
         }
-      },
-      {
-        type: 'action',
-        action: {
-          type: 'postback',
-          label: '📈 年度統計',
-          data: 'statistics_yearly',
-          displayText: '年度統計'
-        }
-      },
-      {
-        type: 'action',
-        action: {
-          type: 'postback',
-          label: '💸 支出分析',
-          data: 'statistics_expense',
-          displayText: '支出分析'
-        }
       }
     ];
 
@@ -2092,15 +2071,6 @@ async function LBK_provideFallbackStatistics(statisticsType, inputData, processI
       case 'monthly_statistics':
         periodName = '本月';
         break;
-      case 'yearly_statistics':
-        periodName = '本年';
-        break;
-      case 'expense_statistics':
-        periodName = '支出';
-        break;
-      case 'income_statistics':
-        periodName = '收入';
-        break;
       case 'general_statistics':
       default:
         periodName = '今日';
@@ -2141,15 +2111,6 @@ async function LBK_provideFallbackStatistics(statisticsType, inputData, processI
             label: '📈 本月統計', 
             data: 'monthly_statistics',
             displayText: '本月統計'
-          }
-        },
-        {
-          type: 'action',
-          action: {
-            type: 'postback',
-            label: '💸 支出分析',
-            data: 'expense_statistics',
-            displayText: '支出分析'
           }
         }
       ]
@@ -2198,12 +2159,6 @@ async function LBK_getBasicStatistics(userId, statisticsType, processId) {
         startDate = new Date(now.getFullYear(), now.getMonth(), 1);
         endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
         break;
-      case 'yearly_statistics':
-        startDate = new Date(now.getFullYear(), 0, 1);
-        endDate = new Date(now.getFullYear(), 11, 31, 23, 59, 59);
-        break;
-      case 'expense_statistics':
-      case 'income_statistics':
       case 'general_statistics':
       default:
         // 今日統計
