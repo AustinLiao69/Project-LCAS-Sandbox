@@ -8,6 +8,94 @@
 
 不要寫code，請根據我的回覆更新提案。提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
 
+Debug分析報告
+版本: v1.1.0
+建立日期: 2025-12-26
+建立者: LCAS Team
+文件描述: Debug分析報告
+________________________________________
+A. 快速摘要（≤3句）
+1.	統計查詢關鍵字匹配錯誤：LBK模組將「本月統計」錯誤識別為「general_statistics」類型，導致Quick Reply按鈕配置錯誤
+2.	Postback事件處理失敗：統計相關的postback事件被當作記帳格式解析，導致「記帳失敗」錯誤
+3.	統計關鍵字映射表不完整：缺少「本週統計」的關鍵字定義，且現有關鍵字匹配邏輯有問題
+________________________________________
+B. Root causes（最多 6 條）
+1. 統計關鍵字識別邏輯錯誤
+•	證據：從console log可見 檢測到統計查詢關鍵字: "統計" → general_statistics，將「本月統計」誤判為general_statistics
+•	發生機率：100%
+•	解決方案：修正LBK_checkStatisticsKeyword函數的關鍵字匹配邏輯，優先匹配完整關鍵字
+2. Quick Reply按鈕配置硬編碼
+•	證據：不論輸入什麼統計類型，Quick Reply都固定顯示「本日統計」和「本月統計」
+•	發生機率：100%
+•	解決方案：動態生成Quick Reply按鈕，根據當前統計類型提供相應選項
+
+3. 缺少本週統計關鍵字定義
+•	證據：程式碼中只有general_statistics和monthly_statistics，沒有weekly_statistics
+•	發生機率：100%
+•	解決方案：新增weekly_statistics統計類型和對應關鍵字
+4. Postback事件錯誤路由到記帳解析
+•	證據：console顯示無法匹配輸入格式: "general_statistics"，postback事件被送入記帳格式解析
+•	發生機率：100%
+•	解決方案：在postback處理前增加統計類型檢查，避免進入記帳解析流程
+5. 統計降級處理邏輯固定回傳general_statistics
+•	證據：所有統計查詢最終都執行LBK_provideFallbackStatistics並固定處理為general_statistics
+•	發生機率：100%
+•	解決方案：修正降級處理邏輯，根據實際統計類型執行相應處理
+6. 統計時間範圍計算錯誤
+•	證據：所有統計查詢都顯示「本日統計報表」，時間範圍計算固定為當日
+•	發生機率：100%
+•	解決方案：根據統計類型動態計算正確的時間範圍
+________________________________________
+C. 解決方案分階段實施計畫
+階段一：修正統計關鍵字識別邏輯
+目標：正確識別本日、本週、本月統計關鍵字
+修改檔案：
+•	13. Replit_Module code_BL/1315. LBK.js
+修改內容：
+1.	修正LBK_checkStatisticsKeyword函數關鍵字匹配邏輯
+2.	新增weekly_statistics統計類型
+3.	調整關鍵字優先級匹配（完整關鍵字優先於部分關鍵字）
+Before行為：「本月統計」被識別為general_statistics
+After行為：「本月統計」正確識別為monthly_statistics，「本週統計」識別為weekly_statistics
+
+階段二：修正統計類型處理和時間範圍計算
+目標：根據統計類型執行正確的時間範圍查詢
+修改檔案：
+•	13. Replit_Module code_BL/1315. LBK.js
+修改內容：
+1.	修正LBK_getBasicStatistics函數的時間範圍計算邏輯
+2.	新增weekly統計的時間範圍處理
+3.	修正統計報表標題動態生成
+Before行為：所有統計都顯示「本日統計報表」
+After行為：根據統計類型顯示正確標題和時間範圍
+
+階段三：修正Quick Reply按鈕動態生成
+目標：根據當前統計類型動態生成相應的Quick Reply按鈕
+修改檔案：
+•	13. Replit_Module code_BL/1315. LBK.js
+修改內容：
+1.	修正LBK_buildStatisticsQuickReply函數
+2.	根據當前統計類型動態生成按鈕選項
+3.	確保按鈕邏輯符合業務需求
+Before行為：固定顯示「本日統計」和「本月統計」按鈕
+After行為：根據當前統計類型顯示相應按鈕組合
+階段四：修正Postback事件統計類型檢查
+目標：防止統計postback事件進入記帳解析流程
+修改檔案：
+•	13. Replit_Module code_BL/1315. LBK.js
+修改內容：
+1.	在LBK_processQuickBookkeeping函數開始處增加統計postback檢查
+2.	統計相關postback直接路由到統計處理邏輯
+3.	避免統計postback進入記帳格式解析
+Before行為：統計postback被當作記帳輸入解析，導致「記帳失敗」
+After行為：統計postback正確執行統計查詢
+版本更新：
+•	模組版本：LBK v3.0.0 → v3.1.0
+•	函數版本：相關函數版本號遞增
+實施驗證：每階段完成後可透過LINE介面測試統計功能是否正常運作
+
+
+
 ------------------------------------------
 20251226. 統計查詢按鈕失靈
 
