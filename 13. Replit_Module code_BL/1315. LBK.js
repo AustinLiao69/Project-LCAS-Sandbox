@@ -3440,9 +3440,6 @@ if (!LBK_CONFIG.MEMORY_CLEANUP_TIMER) {
   }, 30 * 60 * 1000); // 每30分鐘清理一次
 }
 
-
-}
-
 /**
  * 階段三：獲取記憶體Session - 優先記憶體查詢
  * @version 2025-12-24-V3.0.0
