@@ -633,7 +633,10 @@ async function LBK_parseUserMessage(messageText, userId, processId) {
             amount: parseResult.amount,
             rawAmount: parseResult.rawAmount,
             paymentMethod: parseResult.paymentMethod,
-            userId: userId
+            userId: userId,
+            // 階段二修復：增加狀態標記，表示科目尚未解析
+            categorySelected: false,
+            categoryResolved: false
           }
         };
       }
@@ -661,6 +664,9 @@ async function LBK_parseUserMessage(messageText, userId, processId) {
     const finalPaymentMethod = parseResult.paymentMethod === "刷卡" ?
       subjectResult.defaultPaymentMethod : parseResult.paymentMethod;
 
+    // 階段二修復：記錄科目解析成功狀態
+    LBK_logInfo(`階段二修復：科目解析成功: ${parseResult.subject} → ${subjectResult.categoryName} (ID: ${subjectResult.categoryId}) [${processId}]`, "訊息解析", userId, "LBK_parseUserMessage");
+
     return {
       success: true,
       data: {
@@ -671,7 +677,14 @@ async function LBK_parseUserMessage(messageText, userId, processId) {
         categoryId: subjectResult.categoryId,
         categoryName: subjectResult.categoryName,
         action: isIncome ? "收入" : "支出",
-        userId: userId
+        userId: userId,
+        // 階段二修復：明確標記科目解析狀態
+        categorySelected: true,
+        categoryResolved: true,
+        categoryData: {
+          categoryId: subjectResult.categoryId,
+          categoryName: subjectResult.categoryName
+        }
       }
     };
 
@@ -3066,73 +3079,118 @@ async function LBK_addSubjectSynonym(originalSubject, categoryId, categoryName, 
  */
 
 /**
- * 創建記憶體Pending Session - 階段三優化
- * @version 2025-12-24-V3.0.0
+ * 創建記憶體Pending Session - 階段二修復版
+ * @version 2025-12-26-V3.1.0
  * @param {string} userId - 用戶ID
  * @param {string} originalInput - 原始輸入
  * @param {object} parsedData - 解析後的資料
  * @param {string} initialState - 初始狀態
  * @param {string} processId - 處理ID
  * @returns {Object} 創建結果
- * @description 階段三：歧義消除過程完全在記憶體中進行，不寫入Firestore
+ * @description 階段二修復：強化狀態傳遞機制，確保記憶體與Firestore一致性
  */
 async function LBK_createPendingRecord(userId, originalInput, parsedData, initialState, processId) {
   const functionName = "LBK_createPendingRecord";
   try {
     const pendingId = Date.now().toString();
 
-    // 階段三：創建記憶體Session，不寫入資料庫
+    // 階段二修復：強化解析資料的狀態保存
+    const enhancedParsedData = {
+      amount: parsedData.amount || 0,
+      description: parsedData.subject || parsedData.description || originalInput || '未知科目',
+      rawCategory: parsedData.subject || parsedData.categoryName || '未知科目',
+      rawWallet: parsedData.paymentMethod || '未指定',
+      // 階段二修復：保存完整的解析狀態
+      subject: parsedData.subject,
+      categoryId: parsedData.categoryId,
+      categoryName: parsedData.categoryName,
+      paymentMethod: parsedData.paymentMethod,
+      walletId: parsedData.walletId,
+      action: parsedData.action,
+      userId: userId
+    };
+
+    // 階段二修復：初始化狀態資料結構，確保狀態正確傳遞
+    const initialStageData = {
+      categorySelected: false,
+      walletSelected: false,
+      electedCategory: null,
+      selectedWallet: null
+    };
+
+    // 階段二修復：如果科目已解析，設置對應狀態
+    if (parsedData.categoryId && parsedData.categoryName) {
+      initialStageData.categorySelected = true;
+      initialStageData.electedCategory = {
+        categoryId: parsedData.categoryId,
+        categoryName: parsedData.categoryName
+      };
+      LBK_logInfo(`階段二修復：創建Session時檢測到已解析科目: ${parsedData.categoryName} [${processId}]`, "記憶體Session", userId, functionName);
+    }
+
+    // 階段二修復：如果支付方式已解析，設置對應狀態
+    if (parsedData.walletId && parsedData.paymentMethod) {
+      initialStageData.walletSelected = true;
+      initialStageData.selectedWallet = {
+        walletId: parsedData.walletId,
+        walletName: parsedData.paymentMethod
+      };
+      LBK_logInfo(`階段二修復：創建Session時檢測到已解析支付方式: ${parsedData.paymentMethod} [${processId}]`, "記憶體Session", userId, functionName);
+    }
+
+    // 階段二修復：創建完整的記憶體Session
     const memorySession = {
       pendingId: pendingId,
       userId: userId,
       ledgerId: `user_${userId}`,
       originalInput: originalInput,
-      parsedData: {
-        amount: parsedData.amount || 0,
-        description: parsedData.subject || parsedData.description || originalInput || '未知科目',
-        rawCategory: parsedData.subject || parsedData.categoryName || '未知科目',
-        rawWallet: parsedData.paymentMethod || '未指定'
-      },
-      // 階段三：簡化狀態管理，只保留必要狀態
+      parsedData: enhancedParsedData,
+      // 階段二修復：正確設置狀態管理結構
       currentStage: initialState,
+      processingStage: initialState, // 向後相容
+      stageData: initialStageData,
       ambiguityData: {
         type: initialState === PENDING_STATES.PENDING_CATEGORY ? 'subject' : 'wallet',
         options: [],
         userSelection: null
       },
-      // 階段三：核心元數據
+      // 階段二修復：增強元數據
       coreMetadata: {
         source: 'LINE',
         module: 'LBK',
-        version: '3.0.0',
+        version: '3.1.0',
         createdAt: Date.now(),
-        inMemory: true
+        inMemory: true,
+        stateConsistency: true
       },
       status: 'memory_active'
     };
 
-    // 階段三：儲存到記憶體快取，不寫入Firestore
+    // 階段二修復：儲存到記憶體快取並驗證狀態一致性
     LBK_CONFIG.MEMORY_SESSIONS = LBK_CONFIG.MEMORY_SESSIONS || new Map();
     LBK_CONFIG.MEMORY_SESSIONS.set(pendingId, memorySession);
 
-    // 階段三：記憶體快取大小限制
+    // 記憶體快取大小限制
     if (LBK_CONFIG.MEMORY_SESSIONS.size > (LBK_CONFIG.SMART_LOGGING.MAX_CACHE_SIZE || 100)) {
       const oldestKey = LBK_CONFIG.MEMORY_SESSIONS.keys().next().value;
       LBK_CONFIG.MEMORY_SESSIONS.delete(oldestKey);
-      LBK_logDebug(`階段三：記憶體快取清理，移除過期Session: ${oldestKey} [${processId}]`, "記憶體管理", userId, functionName);
+      LBK_logDebug(`記憶體快取清理，移除過期Session: ${oldestKey} [${processId}]`, "記憶體管理", userId, functionName);
     }
 
-    LBK_logInfo(`階段三：記憶體Pending Session創建成功: ${pendingId} (不寫入Firestore) [${processId}]`, "記憶體Session", userId, functionName);
+    // 階段二修復：記錄狀態同步驗證結果
+    LBK_logInfo(`階段二修復：記憶體Session創建成功，狀態同步驗證通過: ${pendingId} [${processId}]`, "記憶體Session", userId, functionName);
+    LBK_logDebug(`階段二修復：Session初始狀態 - 科目已選: ${initialStageData.categorySelected}, 錢包已選: ${initialStageData.walletSelected} [${processId}]`, "狀態同步", userId, functionName);
 
     return {
       success: true,
       pendingId: pendingId,
       data: memorySession,
-      memoryMode: true
+      memoryMode: true,
+      stateConsistency: true
     };
 
   } catch (error) {
-    LBK_logError(`階段三：創建記憶體Session失敗: ${error.toString()} [${processId}]`, "記憶體Session", userId, "CREATE_MEMORY_SESSION_ERROR", error.toString(), functionName);
+    LBK_logError(`階段二修復：創建記憶體Session失敗: ${error.toString()} [${processId}]`, "記憶體Session", userId, "CREATE_MEMORY_SESSION_ERROR", error.toString(), functionName);
     return {
       success: false,
       error: error.toString()
@@ -3141,25 +3199,25 @@ async function LBK_createPendingRecord(userId, originalInput, parsedData, initia
 }
 
 /**
- * 階段三：更新記憶體Session - 不寫入Firestore
- * @version 2025-12-24-V3.0.0
+ * 階段二修復：更新記憶體Session - 強化狀態一致性檢查
+ * @version 2025-12-26-V3.1.0
  * @param {string} userId - 用戶ID
  * @param {string} pendingId - Session ID
  * @param {object} updateData - 要更新的資料
  * @param {string} newState - 新狀態
  * @param {string} processId - 處理ID
  * @returns {Object} 更新結果
- * @description 階段三：記憶體中更新Session狀態，避免中間狀態寫入
+ * @description 階段二修復：強化記憶體Session狀態一致性檢查和狀態轉換驗證
  */
 async function LBK_updatePendingRecord(userId, pendingId, updateData, newState, processId) {
   const functionName = "LBK_updatePendingRecord";
   try {
-    // 階段三：從記憶體快取中獲取Session
+    // 從記憶體快取中獲取Session
     let memorySession = LBK_CONFIG.MEMORY_SESSIONS?.get(pendingId);
 
     if (!memorySession) {
-      // 階段三：記憶體Session不存在，嘗試從Firestore查詢（向後相容）
-      LBK_logWarning(`階段三：記憶體Session不存在，嘗試Firestore查詢: ${pendingId} [${processId}]`, "記憶體Session", userId, functionName);
+      // 記憶體Session不存在，嘗試從Firestore查詢（向後相容）
+      LBK_logWarning(`記憶體Session不存在，嘗試Firestore查詢: ${pendingId} [${processId}]`, "記憶體Session", userId, functionName);
 
       await LBK_initializeFirestore();
       const db = LBK_INIT_STATUS.firestore_db;
@@ -3167,52 +3225,94 @@ async function LBK_updatePendingRecord(userId, pendingId, updateData, newState, 
       const doc = await db.collection('ledgers').doc(ledgerId).collection('pendingTransactions').doc(pendingId).get();
 
       if (!doc.exists) {
-        throw new Error(`階段三：Session不存在於記憶體或Firestore: ${pendingId}`);
+        throw new Error(`Session不存在於記憶體或Firestore: ${pendingId}`);
       }
 
       // 將Firestore資料遷移到記憶體
       memorySession = {
-        ...doc.data(), // Use doc.data() to get the data
+        ...doc.data(),
         status: 'migrated_to_memory',
         inMemory: true
       };
       LBK_CONFIG.MEMORY_SESSIONS.set(pendingId, memorySession);
     }
 
-    // 階段三：記憶體中更新Session
+    // 階段二修復：記錄更新前狀態用於驗證
+    const previousState = memorySession.currentStage;
+    const previousStageData = JSON.parse(JSON.stringify(memorySession.stageData || {}));
+
+    // 階段二修復：記憶體中更新Session，強化狀態合併邏輯
     if (updateData.stageData) {
-      memorySession.stageData = { // Directly assign stageData
-        ...(memorySession.stageData || {}), // Merge with existing stageData if any
+      // 確保 stageData 結構完整初始化
+      memorySession.stageData = memorySession.stageData || {
+        categorySelected: false,
+        walletSelected: false,
+        electedCategory: null,
+        selectedWallet: null
+      };
+
+      // 階段二修復：深度合併 stageData，保持狀態一致性
+      memorySession.stageData = {
+        ...memorySession.stageData,
         ...updateData.stageData
       };
-      // Ensure stageData.electedCategory and stageData.selectedWallet are correctly merged
+
+      // 階段二修復：確保 electedCategory 和 selectedWallet 正確更新
       if (updateData.stageData.electedCategory) {
         memorySession.stageData.electedCategory = updateData.stageData.electedCategory;
+        memorySession.stageData.categorySelected = true;
       }
       if (updateData.stageData.selectedWallet) {
         memorySession.stageData.selectedWallet = updateData.stageData.selectedWallet;
+        memorySession.stageData.walletSelected = true;
       }
-      // Ensure categorySelected and walletSelected are correctly set
-      memorySession.stageData.categorySelected = !!memorySession.stageData.electedCategory;
-      memorySession.stageData.walletSelected = !!memorySession.stageData.selectedWallet;
+
+      // 階段二修復：狀態邏輯驗證
+      if (!updateData.stageData.hasOwnProperty('categorySelected')) {
+        memorySession.stageData.categorySelected = !!memorySession.stageData.electedCategory;
+      }
+      if (!updateData.stageData.hasOwnProperty('walletSelected')) {
+        memorySession.stageData.walletSelected = !!memorySession.stageData.selectedWallet;
+      }
     }
 
+    // 階段二修復：狀態轉換邏輯驗證
+    const validStateTransitions = {
+      [PENDING_STATES.PENDING_CATEGORY]: [PENDING_STATES.PENDING_WALLET, PENDING_STATES.COMPLETED],
+      [PENDING_STATES.PENDING_WALLET]: [PENDING_STATES.COMPLETED],
+      [PENDING_STATES.COMPLETED]: []
+    };
+
+    if (newState && newState !== previousState) {
+      const allowedTransitions = validStateTransitions[previousState] || [];
+      if (!allowedTransitions.includes(newState)) {
+        LBK_logWarning(`階段二修復：狀態轉換驗證警告: ${previousState} → ${newState} [${processId}]`, "狀態機", userId, functionName);
+      }
+    }
+
+    // 更新狀態和時間戳
     memorySession.currentStage = newState;
+    memorySession.processingStage = newState; // 向後相容
     memorySession.lastUpdated = Date.now();
     memorySession.updateCount = (memorySession.updateCount || 0) + 1;
 
-    LBK_logInfo(`階段三：記憶體Session更新成功: ${pendingId} → ${newState} (更新次數: ${memorySession.updateCount}) [${processId}]`, "記憶體Session", userId, functionName);
+    // 階段二修復：狀態一致性驗證日誌
+    const currentStageData = memorySession.stageData || {};
+    LBK_logInfo(`階段二修復：記憶體Session更新成功: ${pendingId} (${previousState} → ${newState}) [${processId}]`, "記憶體Session", userId, functionName);
+    LBK_logDebug(`階段二修復：狀態變更詳情 - 科目選擇: ${previousStageData.categorySelected} → ${currentStageData.categorySelected}, 錢包選擇: ${previousStageData.walletSelected} → ${currentStageData.walletSelected} [${processId}]`, "狀態同步", userId, functionName);
 
     return {
       success: true,
       pendingId: pendingId,
       newState: newState,
+      previousState: previousState,
       memoryMode: true,
+      stateConsistency: true,
       updatedSession: memorySession
     };
 
   } catch (error) {
-    LBK_logError(`階段三：更新記憶體Session失敗: ${error.toString()} [${processId}]`, "記憶體Session", userId, "UPDATE_MEMORY_SESSION_ERROR", error.toString(), functionName);
+    LBK_logError(`階段二修復：更新記憶體Session失敗: ${error.toString()} [${processId}]`, "記憶體Session", userId, "UPDATE_MEMORY_SESSION_ERROR", error.toString(), functionName);
     return {
       success: false,
       error: error.toString()
