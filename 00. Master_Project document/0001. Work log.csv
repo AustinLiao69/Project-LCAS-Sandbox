@@ -483,5 +483,7 @@ MM 	 DD 	 Description 	    Progress
 12	26	 修復科目歸類、支付歸類邏輯併merge到main  	 Closed
 12	26	 降低firestore寫入量  	 Critical
 12	26	 研究rich menu統計查詢導入quick reply按鈕  	 Obgoing
-12	26	 修復統計查詢按鈕失靈問題  	 Obgoing
+12	26	 修復統計查詢按鈕失靈問題  	 Closed
+12	26	 需刪除SR模組FEATURE_USEAGE集合  	 Obgoing
+12	26	 修復支付歸類邏輯現金、銀行轉帳問題  	 Obgoing
 
