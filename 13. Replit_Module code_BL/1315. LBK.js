@@ -1793,9 +1793,9 @@ async function LBK_checkStatisticsKeyword(messageText, userId, processId) {
 
     const normalizedText = messageText.trim().toLowerCase();
 
-    // 階段二：優先匹配邏輯 - 先匹配最具體的關鍵字，再匹配通用關鍵字
+    // 階段二：優先匹配邏輯 - 先匹配最具體的關鍵字
     const statisticsKeywords = [
-      // 第一優先級：完整精確匹配（防止被通用關鍵字覆蓋）
+      // 第一優先級：完整精確匹配
       { keywords: ['本日統計', '今日統計', '日統計'], type: 'daily_statistics', priority: 1 },
       { keywords: ['本週統計', '本周統計', '週統計', '周統計'], type: 'weekly_statistics', priority: 1 },
       { keywords: ['本月統計', '月統計'], type: 'monthly_statistics', priority: 1 },
@@ -1803,10 +1803,7 @@ async function LBK_checkStatisticsKeyword(messageText, userId, processId) {
       // 第二優先級：部分匹配（更具體的期間）
       { keywords: ['今日', '本日'], type: 'daily_statistics', priority: 2 },
       { keywords: ['本週', '本周', '這週', '這周'], type: 'weekly_statistics', priority: 2 },
-      { keywords: ['本月', '這個月'], type: 'monthly_statistics', priority: 2 },
-      
-      // 第三優先級：通用關鍵字（最後匹配，避免覆蓋具體關鍵字）
-      { keywords: ['統計', '報表', '分析'], type: 'general_statistics', priority: 3 }
+      { keywords: ['本月', '這個月'], type: 'monthly_statistics', priority: 2 }
     ];
 
     // 階段二：按優先級排序，優先匹配最具體的關鍵字
