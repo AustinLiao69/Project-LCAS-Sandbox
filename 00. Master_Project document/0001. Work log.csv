@@ -482,4 +482,5 @@ MM 	 DD 	 Description 	    Progress
 12	24	 盤點各模組之資料庫資料欄位  	 Ongoing
 12	26	 修復科目歸類、支付歸類邏輯併merge到main  	 Closed
 12	26	 降低firestore寫入量  	 Closed
+12	26	 研究rich menu統計查詢導入quick reply按鈕  	 Closed
 
