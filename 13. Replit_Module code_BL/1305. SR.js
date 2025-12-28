@@ -2447,16 +2447,7 @@ async function SR_checkFeatureQuota(userId, featureName, maxQuota) {
  * @description 記錄用戶的功能使用情況
  */
 async function SR_recordFeatureUsage(userId, featureName, context) {
-  try {
-    await db.collection('feature_usage').add({
-      userId,
-      featureName,
-      timestamp: admin.firestore.Timestamp.now(),
-      context: context || {}
-    });
-  } catch (error) {
-    // 靜默處理記錄失敗
-  }
+  // 功能使用記錄已停用 - 不再寫入 feature_usage 集合
 }
 
 /**
