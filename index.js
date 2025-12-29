@@ -75,21 +75,21 @@ let BK, LBK, DD, AM, SR;
 // 延遲載入函數
 async function loadApplicationModules() {
   console.log('🔄 延遲載入應用模組...');
-  
+
   try {
     BK = require('./13. Replit_Module code_BL/1301. BK.js');
-    
+
     // 驗證BK模組關鍵函數
     const requiredBKFunctions = ['BK_processBookkeeping', 'BK_processAPIGetDashboard'];
     let bkFunctionsOk = true;
-    
+
     for (const funcName of requiredBKFunctions) {
       if (typeof BK[funcName] !== 'function') {
         console.error(`❌ BK模組缺少函數: ${funcName}`);
         bkFunctionsOk = false;
       }
     }
-    
+
     if (bkFunctionsOk) {
       console.log('✅ BK 模組載入成功');
     } else {
@@ -102,7 +102,7 @@ async function loadApplicationModules() {
 
 try {
     LBK = require('./13. Replit_Module code_BL/1315. LBK.js');
-    
+
     // 驗證LBK模組關鍵函數
     if (typeof LBK.LBK_processQuickBookkeeping === 'function') {
       console.log('✅ LBK 模組載入成功');
@@ -125,14 +125,14 @@ try {
     console.log('🔍 開始載入 AM 模組...');
     AM = require('./13. Replit_Module code_BL/1309. AM.js');
     console.log('✅ AM 模組載入成功');
-    
+
     // 驗證AM模組的關鍵函數
     if (typeof AM.AM_createLineAccount === 'function') {
       console.log('✅ AM_createLineAccount函數檢查通過');
     } else {
       console.log('⚠️ AM_createLineAccount函數不存在');
     }
-    
+
     if (typeof AM.moduleVersion !== 'undefined') {
       console.log(`✅ AM模組版本: ${AM.moduleVersion}`);
     }
@@ -141,26 +141,26 @@ try {
     console.error('❌ 錯誤訊息:', error.message);
     console.error('❌ 錯誤堆疊:', error.stack);
     console.error('❌ 錯誤類型:', error.name);
-    
+
     // 嘗試讀取檔案內容來檢查語法錯誤位置
     try {
       const fs = require('fs');
       const fileContent = fs.readFileSync('./13. Replit_Module code_BL/1309. AM.js', 'utf8');
       const lines = fileContent.split('\n');
-      
+
       console.error('❌ 檔案總行數:', lines.length);
       console.error('❌ 正在檢查語法錯誤...');
-      
+
       // 檢查常見的語法錯誤模式
       for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
         const lineNum = i + 1;
-        
+
         // 檢查可能的冒號語法錯誤
         if (line.includes(':') && (line.includes('::') || line.match(/}:/))) {
           console.error(`❌ 可能的語法錯誤在第 ${lineNum} 行:`, line.trim());
         }
-        
+
         // 檢查不匹配的括號
         const openBraces = (line.match(/{/g) || []).length;
         const closeBraces = (line.match(/}/g) || []).length;
@@ -195,7 +195,7 @@ async function loadWebhookModule() {
     console.log('📦 載入WH模組...');
     WH = require('./13. Replit_Module code_BL/1320. WH.js');
     console.log('✅ WH 模組載入成功');
-    
+
     if (typeof WH.doPost === 'function') {
       console.log('✅ WH模組核心函數檢查通過');
     }
@@ -686,10 +686,10 @@ const heartbeatInterval = setInterval(() => {
     // 檢查關鍵模組狀態
     const criticalModules = ['WH', 'LBK', 'DL'];
     const inactiveModules = criticalModules.filter(module => !eval(module));
-    
+
     if (inactiveModules.length > 0) {
       console.warn('⚠️ 關鍵模組未載入:', inactiveModules.join(', '));
-      
+
       if (DL && typeof DL.DL_warning === 'function') {
         DL.DL_warning(`關鍵模組未載入: ${inactiveModules.join(', ')}`, 'HEARTBEAT_WARNING', '', '', '', 'index.js');
       }
@@ -698,10 +698,10 @@ const heartbeatInterval = setInterval(() => {
     // 記憶體使用量警告
     const memoryUsage = process.memoryUsage();
     const memoryUsageMB = memoryUsage.heapUsed / 1024 / 1024;
-    
+
     if (memoryUsageMB > 500) { // 超過500MB警告
       console.warn(`⚠️ 記憶體使用量較高: ${memoryUsageMB.toFixed(2)}MB`);
-      
+
       if (DL && typeof DL.DL_warning === 'function') {
         DL.DL_warning(`記憶體使用量較高: ${memoryUsageMB.toFixed(2)}MB`, 'MEMORY_WARNING', '', '', '', 'index.js');
       }
@@ -709,7 +709,7 @@ const heartbeatInterval = setInterval(() => {
 
   } catch (error) {
     console.error('💥 心跳檢查失敗:', error.message);
-    
+
     if (DL && typeof DL.DL_error === 'function') {
       DL.DL_error('心跳檢查失敗', 'HEARTBEAT_ERROR', '', 'HEARTBEAT_FAILURE', error.toString(), 'index.js');
     }
@@ -756,12 +756,12 @@ process.on('SIGINT', () => {
 server.listen(PORT, '0.0.0.0', async () => {
   console.log(`🌐 LCAS 2.0 LINE Webhook 服務已啟動於 Port ${PORT}`);
   console.log(`📡 基礎服務已就緒，正在背景載入完整功能...`);
-  
+
   // 在背景中載入其他模組
   try {
     await loadWebhookModule();
     await loadApplicationModules();
-    
+
     console.log(`✅ 完整功能載入完成`);
     console.log(`📋 DCN-0011 Phase 4 重構統計:`);
     console.log(`   ✅ API端點遷移完成: 132個 → ASL.js (Port 5000)`);

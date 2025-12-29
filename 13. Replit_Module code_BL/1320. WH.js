@@ -613,12 +613,7 @@ async function processWebhookAsync(e) {
                     "ERROR",
                   ]);
 
-                  // 即使建立失敗，仍然歡迎用戶（可能是重複加入）
-                  WH_replyMessage(event.replyToken, {
-                    success: true,
-                    responseMessage:
-                      "感謝您加入LCAS記帳助手！\n\n📝 輸入 '幫助' 或 '?' 可獲取使用說明\n💡 直接輸入如 '午餐-100' 即可開始記帳！",
-                  });
+                  // 即使建立失敗，不回覆歡迎訊息
                 }
 
               } catch (followError) {
@@ -638,12 +633,7 @@ async function processWebhookAsync(e) {
                   "ERROR",
                 ]);
 
-                // 發送簡化的歡迎訊息
-                WH_replyMessage(event.replyToken, {
-                  success: true,
-                  responseMessage:
-                    "感謝您加入記帳助手！\n輸入 '幫助' 或 '?' 可獲取使用說明。",
-                });
+                // 不發送歡迎訊息
               }
             } else if (event.type === "unfollow") {
               // 處理用戶取消關注事件 - 無法回覆
@@ -2087,12 +2077,7 @@ async function WH_processEventAsync(event, requestId, userId) {
               "ERROR",
             ]);
 
-            // 即使建立失敗，仍然歡迎用戶（可能是重複加入）
-            WH_replyMessage(event.replyToken, {
-              success: true,
-              responseMessage:
-                "感謝您加入LCAS記帳助手！\n\n📝 輸入 '幫助' 或 '?' 可獲取使用說明\n💡 直接輸入如 '午餐-100' 即可開始記帳！",
-            });
+            // 不發送歡迎訊息
           }
 
         } catch (followError) {
@@ -2112,12 +2097,7 @@ async function WH_processEventAsync(event, requestId, userId) {
             "ERROR",
           ]);
 
-          // 發送簡化的歡迎訊息
-          WH_replyMessage(event.replyToken, {
-            success: true,
-            responseMessage:
-              "感謝您加入記帳助手！\n輸入 '幫助' 或 '?' 可獲取使用說明。",
-          });
+          // 不發送歡迎訊息
         }
       } else if (event.type === "unfollow") {
         // 處理用戶取消關注事件 - 無法回覆
@@ -3152,15 +3132,15 @@ async function WH_handleWalletConfirmationPostback(postbackData, userId, replyTo
           }
         } else {
           // wallet創建失敗
-          const errorMessage = `❌ 新增支付方式失敗：${createWalletResult.message}\n\n請重新嘗試或使用現有的支付方式`;
+          const errorMessage = `❌ 新增支付方式失敗：${createResult.message}\n\n請重新嘗試或使用現有的支付方式`;
           WH_directLogWrite([
             WH_formatDateTime(new Date()),
-            `WH 2.5.2: wallet創建失敗: ${createWalletResult.message} [${requestId}]`,
+            `WH 2.5.2: wallet創建失敗: ${createResult.message} [${requestId}]`,
             "Wallet確認",
             userId,
             "WALLET_CREATE_FAILED",
             "WH",
-            createWalletResult.message,
+            createResult.message,
             0,
             functionName,
             "ERROR",
