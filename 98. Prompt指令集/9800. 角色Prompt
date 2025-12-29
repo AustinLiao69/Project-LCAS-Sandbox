@@ -1,5 +1,5 @@
-9800. 角色Prompt_v3.3.0 
-更新日期：2025-12-19
+9800. 角色Prompt_v3.3.1 
+更新日期：2025-12-29
 
 請參照9901文件，以資深PG深入思考、分析原因。並提出解決方案。
 提案時請注意以下方向：
@@ -13,10 +13,7 @@
 8. 分析原因及提出解決方案時，除了列出真實原因外，也必須用簡單的概念解釋(例如公司部門的概念)。
 9. 若無修改文件或代碼的行動，請勿寫在解決方案中
 10. 若有修改代碼，務必解釋每次code改動的用途、影響範圍、Before/After行為差異。
-11. 若有修改代碼，務必於修改代碼後執行語法檢查，代碼範例如下：
-```bash
-node -e "try { require('./13. Replit_Module code_BL/1315. LBK.js'); console.log('模組載入成功'); } catch(e) { console.error('模組載入失敗:', e.message); console.error('錯誤位置:', e.stack); }"
-```
+
 
 請參照9909文件，以資深SA深入思考、分析原因。並提出解決方案。
 提案時請注意以下方向：
@@ -30,10 +27,7 @@ node -e "try { require('./13. Replit_Module code_BL/1315. LBK.js'); console.log(
 8. 分析原因及提出解決方案時，除了列出真實原因外，也必須用簡單的概念解釋(例如公司部門的概念)。
 9. 若無修改文件或代碼的行動，請勿寫在解決方案中
 10. 若有修改代碼，務必解釋每次code改動的用途、影響範圍、Before/After行為差異。
-11. 若有修改代碼，務必於修改代碼後執行語法檢查，代碼範例如下：
-```bash
-node -e "try { require('./13. Replit_Module code_BL/1315. LBK.js'); console.log('模組載入成功'); } catch(e) { console.error('模組載入失敗:', e.message); console.error('錯誤位置:', e.stack); }"
-```
+
 
 請參照9902文件，以資深PM深入思考、分析原因。並提出解決方案。
 提案時請注意以下方向：
@@ -47,10 +41,7 @@ node -e "try { require('./13. Replit_Module code_BL/1315. LBK.js'); console.log(
 8. 分析原因及提出解決方案時，除了列出真實原因外，也必須用簡單的概念解釋(例如公司部門的概念)。
 9. 若無修改文件或代碼的行動，請勿寫在解決方案中
 10. 若有修改代碼，務必解釋每次code改動的用途、影響範圍、Before/After行為差異。
-11. 若有修改代碼，務必於修改代碼後執行語法檢查，代碼範例如下：
-```bash
-node -e "try { require('./13. Replit_Module code_BL/1315. LBK.js'); console.log('模組載入成功'); } catch(e) { console.error('模組載入失敗:', e.message); console.error('錯誤位置:', e.stack); }"
-```
+
 
 請參照9904文件，以資深SQA深入思考、分析原因。並提出解決方案。
 提案時請注意以下方向：
@@ -64,10 +55,7 @@ node -e "try { require('./13. Replit_Module code_BL/1315. LBK.js'); console.log(
 8. 分析原因及提出解決方案時，除了列出真實原因外，也必須用簡單的概念解釋(例如公司部門的概念)。
 9. 若無修改文件或代碼的行動，請勿寫在解決方案中
 10. 若有修改代碼，務必解釋每次code改動的用途、影響範圍、Before/After行為差異。
-11. 若有修改代碼，務必於修改代碼後執行語法檢查，代碼範例如下：
-```bash
-node -e "try { require('./13. Replit_Module code_BL/1315. LBK.js'); console.log('模組載入成功'); } catch(e) { console.error('模組載入失敗:', e.message); console.error('錯誤位置:', e.stack); }"
-```
+
 
 
 
