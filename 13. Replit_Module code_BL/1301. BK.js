@@ -365,7 +365,9 @@ const WCM = require('./1350. WCM.js'); // DCN-0023階段三：引入WCM模組進
 // FS模組已完全移除 - 階段五完成
 
 // BK模組專注記帳核心邏輯，透過WCM處理帳戶科目驗證，直接使用Firebase
-console.log('✅ BK模組v3.3.3：階段二路徑擴展 - 支援協作帳本路徑，實作動態路徑解析');
+if (process.env.NODE_ENV !== 'production') {
+  console.log('✅ BK模組v3.3.3載入完成');
+}
 
 /**
  * 生成預設用戶ID（業務邏輯版本）

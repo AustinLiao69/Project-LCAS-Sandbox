@@ -150,18 +150,19 @@ function WH_checkEnvironmentVariables() {
 
   const isComplete = missingVars.length === 0;
 
-  // 記錄檢查結果
-  console.log('WH模組環境變數檢查結果:');
-  requiredEnvVars.forEach(varName => {
-    const status = envStatus[varName];
-    const statusText = status.hasValue ? '✅' : '❌';
-    console.log(`  ${statusText} ${varName}: ${status.hasValue ? `已設定(${status.length}字符)` : '未設定或為空'}`);
-  });
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('WH模組環境變數檢查結果:');
+    requiredEnvVars.forEach(varName => {
+      const status = envStatus[varName];
+      const statusText = status.hasValue ? '✅' : '❌';
+      console.log(`  ${statusText} ${varName}: ${status.hasValue ? `已設定(${status.length}字符)` : '未設定或為空'}`);
+    });
+  }
 
   if (!isComplete) {
     console.warn(`⚠️  缺少必要環境變數: ${missingVars.join(', ')}`);
     console.warn('💡 請在Replit Secrets中設定這些環境變數');
-  } else {
+  } else if (process.env.NODE_ENV !== 'production') {
     console.log('✅ 所有必要環境變數已正確設定');
   }
 
@@ -194,7 +195,7 @@ if (!envCheckResult.isComplete) {
     "WH_init",
     "WARNING",
   ]);
-} else {
+} else if (process.env.NODE_ENV !== 'production') {
   console.log('✅ WH模組環境變數檢查完整');
 }
 

@@ -2954,7 +2954,9 @@ async function SR_processQuickStatistics(inputData) {
 async function SR_initialize() {
   const functionName = "SR_initialize";
   try {
-    console.log('📅 SR 排程提醒模組初始化中...');
+    if (process.env.NODE_ENV !== 'production') {
+  console.log('📅 SR排程提醒模組初始化中...');
+}
 
     // 檢查 Firestore 連線
     if (!admin.apps.length) {
@@ -2981,7 +2983,9 @@ async function SR_initialize() {
     SR_INIT_STATUS.lastInitTime = new Date();
 
     SR_logInfo("SR 排程提醒模組初始化完成", "模組初始化", "", "", "", functionName);
-    console.log('✅ SR 排程提醒模組已成功啟動');
+    if (process.env.NODE_ENV !== 'production') {
+  console.log('✅ SR排程提醒模組載入完成');
+}
 
     return true;
   } catch (error) {

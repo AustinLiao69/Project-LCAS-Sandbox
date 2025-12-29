@@ -2155,7 +2155,9 @@ async function CM_initialize() {
     CM_INIT_STATUS.lastInitTime = new Date();
 
     CM_logInfo("CM 協作管理模組初始化完成", "模組初始化", "", "", "", functionName);
-    console.log('✅ CM 協作管理模組已成功啟動');
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('✅ CM協作管理模組v2.4.0載入完成');
+    }
 
     return true;
   } catch (error) {
@@ -2815,7 +2817,7 @@ async function CM_createSharedLedger(ledgerData, requesterId = 'system') {
         }
       },
       {
-        name: 'transactions', 
+        name: 'transactions',
         data: {
           _placeholder: true,
           description: '協作帳本交易記錄子集合',
@@ -3588,5 +3590,3 @@ module.exports = {
 CM_initialize().catch(error => {
   console.error('CM 模組自動初始化失敗:', error);
 });
-
-console.log('✅ CM 協作與帳本管理模組v2.4.0載入完成 - 階段一擴展：建立完整協作帳本子集合架構（members, transactions, wallets, budgets, categories）');

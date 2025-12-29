@@ -1480,7 +1480,7 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
 
       // 5. 階段五新增：調用LBK模組進行pendingTransactions子集合初始化
       console.log(`📋 ${functionName}: 調用LBK模組進行pendingTransactions子集合初始化...`);
-      
+
       if (LBK && typeof LBK.LBK_initializePendingTransactionsSubcollection === 'function') {
         const pendingResult = await LBK.LBK_initializePendingTransactionsSubcollection(userLedgerId, { userId: UID });
         if (pendingResult.success) {
@@ -5103,8 +5103,9 @@ async function AM_recordAPIUsage(userId, apiEndpoint, userMode, success, process
 }
 
 // 導出模組函數
-console.log('📤 AM.js: 開始導出模組函數...');
-console.log('✅ AM.js: 所有函數定義完成，準備導出');
+if (process.env.NODE_ENV !== 'production') {
+  console.log('✅ AM模組8.0.3載入完成 (59個函數)');
+}
 module.exports = {
   // 階段四完成：原創用戶帳號管理函數 (v8.0.0)
   AM_createLineAccount,
@@ -5185,22 +5186,6 @@ module.exports = {
     duplicateFunctionsRemoved: true
   }
 };
-
-console.log('✅ AM模組8.0.3 DCN-0023職責重構完成！');
-console.log('📋 功能概覽:');
-console.log('   ├── 核心帳號管理功能 (18個)');
-console.log('   ├── SR模組專用付費功能 (4個)');
-console.log('   ├── DCN-0012 API端點處理函數 (22個)');
-console.log('   ├── DCN-0014 API處理函數 (19個)');
-console.log('   ├── DCN-0020 帳本結構初始化 (專注基礎結構)');
-console.log('   └── 總計: 59個函數 (移除4個重複函數)');
-console.log('🔧 DCN-0023職責重構: 完全移除與WCM重複功能');
-console.log('🎯 職責邊界: AM專注帳號管理+帳本基礎結構，WCM負責科目和帳戶管理');
-console.log('🔧 整合模式: AM_initializeUserLedger() 調用WCM模組進行科目和帳戶初始化');
-console.log('📊 資料流: AM → WCM (科目+帳戶) → Firebase');
-console.log('✨ v8.0.3重構成果: 移除重複函數，職責邊界清晰，避免功能衝突');
-console.log('🎉 重構完成: AM模組功能精簡，與WCM模組職責劃分明確！');
-console.log('🎯 AM.js 模組載入完成，59個函數已成功導出');
 
 /**
  * AM_calculateModeFromAnswers - 計算使用者模式
