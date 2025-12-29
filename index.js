@@ -52,7 +52,7 @@ process.on('unhandledRejection', (reason, promise) => {
  * @date 2025-12-15
  * @description 部署環境優化：延遲載入非關鍵模組，優先啟動HTTP服務器
  */
-console.log('📦 部署模式載入模組...');
+
 
 // 部署環境優化：只載入關鍵模組
 let DL, WH;
@@ -67,14 +67,14 @@ function loadCriticalModules() {
   }
 }
 
-console.log('✅ 階段五完成：FS模組已移除，Firebase操作由各專門模組直接處理');
+
 
 // 部署優化：延遲載入非關鍵模組
 let BK, LBK, DD, AM, SR;
 
 // 延遲載入函數
 async function loadApplicationModules() {
-  console.log('🔄 延遲載入應用模組...');
+  
 
   try {
     BK = require('./13. Replit_Module code_BL/1301. BK.js');
@@ -640,7 +640,7 @@ server.listen(PORT, '0.0.0.0', async () => {
     await loadWebhookModule();
     await loadApplicationModules();
 
-    console.log(`✅ 完整功能載入完成`);
+    
   } catch (error) {
     console.error('❌ 背景模組載入失敗:', error.message);
   }
