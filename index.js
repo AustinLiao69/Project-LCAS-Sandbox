@@ -477,11 +477,11 @@ server.listen(PORT, '0.0.0.0', async () => {
   console.log(`🌐 LCAS 服務已啟動於 Port ${PORT}`);
 
   // 在背景中載入其他模組
-  try {
-    await loadWebhookModule();
-    await loadApplicationModules();
-    console.log('✅ 系統啟動完成');
-  } catch (error) {
-    console.error('❌ 系統啟動失敗:', error.message);
-  }
+    try {
+      await loadWebhookModule();
+      await loadApplicationModules();
+      console.log('✅ 所有模組載入完成');
+    } catch (error) {
+      console.error('❌ 系統啟動失敗:', error.message);
+    }
 });

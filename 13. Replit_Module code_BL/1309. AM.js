@@ -7,20 +7,12 @@
  * @update v8.0.4: 階段五整合 - 新增LBK模組pendingTransactions子集合初始化功能
  */
 
-console.log('🔍 AM.js 模組開始載入...');
-console.log('📋 AM.js 版本: v8.0.4');
-
 // 引入必要模組
-console.log('📦 AM.js: 開始引入依賴模組...');
 const admin = require("firebase-admin");
-console.log('✅ AM.js: firebase-admin 引入成功');
 const axios = require("axios");
-console.log('✅ AM.js: axios 引入成功');
 const crypto = require("crypto");
-console.log('✅ AM.js: crypto 引入成功');
 
 // AM模組配置常數 - 完全動態化
-console.log('⚙️ AM.js: 開始定義AM_CONFIG配置物件...');
 const AM_CONFIG = {
   TIMEOUTS: {
     FIREBASE_CONNECT: parseInt(process.env.AM_FIREBASE_TIMEOUT) || getDefaultTimeout('FIREBASE'),
@@ -106,18 +98,14 @@ function detectSystemCurrency() {
 }
 
 // 引入Firebase動態配置模組
-console.log('🔥 AM.js: 開始引入Firebase動態配置模組...');
 const firebaseConfig = require("./1399. firebase-config");
-console.log('✅ AM.js: Firebase動態配置模組引入成功');
 
 // 初始化Firebase並取得 Firestore 實例
-console.log('🔧 AM.js: 初始化Firebase Admin SDK...');
 let db;
 try {
   // 確保Firebase已初始化
   firebaseConfig.initializeFirebaseAdmin();
   db = firebaseConfig.getFirestoreInstance();
-  console.log('✅ AM.js: Firebase初始化完成，Firestore實例已取得');
 } catch (error) {
   console.error('❌ AM.js: Firebase初始化失敗:', error.message);
   // 設置一個空的db物件避免後續錯誤
@@ -132,7 +120,7 @@ let WCM;
 try {
   WCM = require("./1350. WCM.js");
 } catch (error) {
-  console.warn('⚠️ WCM模組載入失敗，將使用備用函數:', error.message);
+  console.warn('⚠️ WCM模組載入失敗:', error.message);
 }
 
 const BM = require("./1312. BM.js");
@@ -143,7 +131,7 @@ let LBK;
 try {
   LBK = require("./1315. LBK.js");
 } catch (error) {
-  console.warn('⚠️ LBK模組載入失敗，pendingTransactions初始化將跳過:', error.message);
+  console.warn('⚠️ LBK模組載入失敗:', error.message);
 }
 
 // 備用函數已移除 - 科目和配置管理功能已轉移至WCM模組 (DCN-0023)
