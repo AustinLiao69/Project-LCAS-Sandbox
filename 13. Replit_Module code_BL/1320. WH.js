@@ -87,7 +87,7 @@ const WH_CONFIG = {
   MESSAGE_DEDUPLICATION: true, // 啟用消息去重
   MESSAGE_RETENTION_HOURS: 24, // 消息ID保留時間(小時)
   ASYNC_PROCESSING: true, // 啟用異步處理（快速回應）
-  
+
   // 階段二新增：記憶體追蹤
   MEMORY_TRACKING: {
     enabled: true,
@@ -413,7 +413,7 @@ async function processWebhookAsync(e) {
               WH_formatDateTime(new Date()),
               `WH 2.1.3: 事件缺少用戶ID，跳過處理 [${requestId}]`,
               "事件驗證",
-              "",
+              userId,
               "MISSING_USER_ID",
               "WH",
               JSON.stringify(event),
@@ -590,17 +590,11 @@ async function processWebhookAsync(e) {
                     "WH",
                     "",
                     0,
-                    "processWebhookAsync",
+                    "WH_processEventAsync",
                     "INFO",
                   ]);
 
-                  // 回覆歡迎訊息
-                  WH_replyMessage(event.replyToken, {
-                    success: true,
-                    responseMessage:
-                      "🎉 感謝您加入LCAS記帳助手！\n\n您的帳號已自動建立完成。\n\n📝 輸入 '幫助' 或 '?' 可獲取使用說明\n💡 直接輸入如 '午餐-100' 即可開始記帳！",
-                  });
-
+                  // 帳號建立成功，不回覆歡迎訊息
                 } else {
                   // 帳號建立失敗的處理
                   console.log(`用戶 ${userId} 帳號建立失敗: ${createResult.error} [${requestId}]`);
@@ -615,7 +609,7 @@ async function processWebhookAsync(e) {
                     "WH",
                     createResult.error,
                     0,
-                    "processWebhookAsync",
+                    "WH_processEventAsync",
                     "ERROR",
                   ]);
 
@@ -640,7 +634,7 @@ async function processWebhookAsync(e) {
                   "WH",
                   followError.toString(),
                   0,
-                  "processWebhookAsync",
+                  "WH_processEventAsync",
                   "ERROR",
                 ]);
 
@@ -655,12 +649,7 @@ async function processWebhookAsync(e) {
               // 處理用戶取消關注事件 - 無法回覆
               console.log(`用戶 ${userId} 取消關注 [${requestId}]`);
             } else if (event.type === "join") {
-              // 處理加入群組事件
-              WH_replyMessage(event.replyToken, {
-                success: true,
-                responseMessage:
-                  "感謝邀請記帳助手加入！\n輸入 '幫助' 或 '?' 可獲取使用說明。",
-              });
+              // 處理加入群組事件，不回覆歡迎訊息
             }
             // 可處理其他事件類型...
           }
@@ -1863,7 +1852,7 @@ async function WH_processEventAsync(event, requestId, userId) {
             } else if (process.env.NODE_ENV !== 'production') {
               console.log(`LBK處理完成 [${requestId}]`);
             }
-            
+
             // 更新記憶體追蹤狀態
             if (WH_CONFIG.MEMORY_TRACKING.trackingData.has(requestId)) {
               const tracking = WH_CONFIG.MEMORY_TRACKING.trackingData.get(requestId);
@@ -1901,7 +1890,7 @@ async function WH_processEventAsync(event, requestId, userId) {
             console.log(`DD_distributeData返回空結果 [${requestId}]`);
           }
 
-          // v2.5.0: 完全信任LBK模組處理結果，包含科目歸類流程
+          // v2.5.0: 完全信任LBK模組處理結果，準備轉發回覆 [${requestId}]`);
           console.log(`WH v2.5.0: 完全信任LBK處理結果，準備轉發回覆 [${requestId}]`);
 
           WH_directLogWrite([
@@ -2075,17 +2064,11 @@ async function WH_processEventAsync(event, requestId, userId) {
               "WH",
               "",
               0,
-              "processWebhookAsync",
+              "WH_processEventAsync",
               "INFO",
             ]);
 
-            // 回覆歡迎訊息
-            WH_replyMessage(event.replyToken, {
-              success: true,
-              responseMessage:
-                "🎉 感謝您加入LCAS記帳助手！\n\n您的帳號已自動建立完成。\n\n📝 輸入 '幫助' 或 '?' 可獲取使用說明\n💡 直接輸入如 '午餐-100' 即可開始記帳！",
-            });
-
+            // 帳號建立成功，不回覆歡迎訊息
           } else {
             // 帳號建立失敗的處理
             console.log(`用戶 ${userId} 帳號建立失敗: ${createResult.error} [${requestId}]`);
@@ -2100,7 +2083,7 @@ async function WH_processEventAsync(event, requestId, userId) {
               "WH",
               createResult.error,
               0,
-              "processWebhookAsync",
+              "WH_processEventAsync",
               "ERROR",
             ]);
 
@@ -2125,7 +2108,7 @@ async function WH_processEventAsync(event, requestId, userId) {
             "WH",
             followError.toString(),
             0,
-            "processWebhookAsync",
+            "WH_processEventAsync",
             "ERROR",
           ]);
 
@@ -2140,12 +2123,7 @@ async function WH_processEventAsync(event, requestId, userId) {
         // 處理用戶取消關注事件 - 無法回覆
         console.log(`用戶 ${userId} 取消關注 [${requestId}]`);
       } else if (event.type === "join") {
-        // 處理加入群組事件
-        WH_replyMessage(event.replyToken, {
-          success: true,
-          responseMessage:
-            "感謝邀請記帳助手加入！\n輸入 '幫助' 或 '?' 可獲取使用說明。",
-        });
+        // 處理加入群組事件，不回覆歡迎訊息
       }
       // 可處理其他事件類型...
     }
@@ -2345,7 +2323,7 @@ async function WH_processTextMessage(event) {
     }
 
     // 訊息格式化和回覆
-    const replyResult = await WH_replyMessage(event.replyToken, result);
+    const replyResult = await WH_replyMessage(event.replyToken, [result]);
 
     // 記錄回覆結果
     console.log(`訊息回覆結果: ${JSON.stringify(replyResult)}`);
@@ -2519,6 +2497,7 @@ function WH_ReceiveDDdata(data, action) {
     };
   }
 }
+
 /**
  * 14. 處理 Quick Reply 事件
  * @version 2025-07-21-V1.0.0
