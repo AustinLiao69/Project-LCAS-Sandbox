@@ -61,7 +61,7 @@ let DL, WH;
 function loadCriticalModules() {
   try {
     DL = require('./13. Replit_Module code_BL/1310. DL.js');
-    
+
   } catch (error) {
     console.error('❌ DL 模組載入失敗:', error.message);
   }
@@ -79,38 +79,38 @@ async function loadApplicationModules() {
   try {
     BK = require('./13. Replit_Module code_BL/1301. BK.js');
 
-    
+
   } catch (error) {
     console.error('❌ BK 模組載入失敗:', error.message);
-    
+
   }
 
 try {
     LBK = require('./13. Replit_Module code_BL/1315. LBK.js');
 
-    
+
   } catch (error) {
     console.error('❌ LBK 模組載入失敗:', error.message);
-    
+
   }
 
   try {
     DD = require('./13. Replit_Module code_BL/1331. DD1.js');
-    
+
   } catch (error) {
     console.error('❌ DD 模組載入失敗:', error.message);
   }
 
   try {
     AM = require('./13. Replit_Module code_BL/1309. AM.js');
-    
+
   } catch (error) {
     console.error('❌ AM 模組載入失敗:', error.message);
   }
 
   try {
     SR = require('./13. Replit_Module code_BL/1305. SR.js');
-    
+
   } catch (error) {
     console.error('❌ SR 模組載入失敗:', error.message);
   }
@@ -128,13 +128,13 @@ global.FIREBASE_CONFIG_DIRECT = true;
 async function loadWebhookModule() {
   try {
     WH = require('./13. Replit_Module code_BL/1320. WH.js');
-    
+
   } catch (error) {
     console.error('❌ WH 模組載入失敗:', error.message);
     try {
       global.WH_BASIC_MODE = true;
       WH = require('./13. Replit_Module code_BL/1320. WH.js');
-      
+
     } catch (basicError) {
       console.error('❌ WH 模組基礎模式載入也失敗:', basicError.message);
     }
