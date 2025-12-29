@@ -3588,7 +3588,7 @@ async function LBK_processAuxiliaryDataBatch() {
         const auxiliaryDocRef = db
           .collection('ledgers')
           .doc(`user_${record.userId}`)
-          .collection('transactionMetadata')
+          .collection('pendingTransactions')
           .doc(record.transactionId);
 
         const auxiliaryDoc = {
