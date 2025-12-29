@@ -2666,7 +2666,7 @@ function logResponse(req, res) {
  */
 app.use((req, res) => {
   console.log(`❌ ASL未知端點: ${req.method} ${req.path}`);
-  
+
   // 特別處理webhook請求 - ASL不處理webhook
   if (req.path === '/webhook') {
     console.log(`🚫 ASL拒絕webhook請求: webhook應由index.js (Port 3000)處理`);
@@ -2683,7 +2683,7 @@ app.use((req, res) => {
     );
     return;
   }
-  
+
   res.apiError(
     `API端點不存在: ${req.method} ${req.path}`,
     'ENDPOINT_NOT_FOUND',
