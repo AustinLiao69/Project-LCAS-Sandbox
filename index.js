@@ -724,12 +724,6 @@ console.log('💓 心跳機制已啟動 - 每1分鐘執行一次');
 process.on('SIGTERM', () => {
   console.log('🛑 收到SIGTERM信號，正在關閉服務器...');
 
-  // 清除心跳定時器
-  if (heartbeatInterval) {
-    clearInterval(heartbeatInterval);
-    console.log('💓 心跳機制已停止');
-  }
-
   server.close(() => {
     console.log('✅ HTTP 服務器已關閉');
     process.exit(0);
@@ -740,12 +734,6 @@ process.on('SIGTERM', () => {
 process.on('SIGINT', () => {
   console.log('🛑 收到SIGINT信號，正在關閉服務器...');
 
-  // 清除心跳定時器
-  if (heartbeatInterval) {
-    clearInterval(heartbeatInterval);
-    console.log('💓 心跳機制已停止');
-  }
-
   server.close(() => {
     console.log('✅ HTTP 服務器已關閉');
     process.exit(0);
@@ -755,7 +743,6 @@ process.on('SIGINT', () => {
 // =============== 立即啟動LINE Webhook專用服務器 ===============
 server.listen(PORT, '0.0.0.0', async () => {
   console.log(`🌐 LCAS 2.0 LINE Webhook 服務已啟動於 Port ${PORT}`);
-  console.log(`📡 基礎服務已就緒，正在背景載入完整功能...`);
 
   // 在背景中載入其他模組
   try {
@@ -763,28 +750,8 @@ server.listen(PORT, '0.0.0.0', async () => {
     await loadApplicationModules();
 
     console.log(`✅ 完整功能載入完成`);
-    console.log(`📋 DCN-0011 Phase 4 重構統計:`);
-    console.log(`   ✅ API端點遷移完成: 132個 → ASL.js (Port 5000)`);
-    console.log(`   🎯 Webhook端點保留: 5個 (LINE OA專用)`);
-    console.log(`   🏗️ 雙服務架構: 職責完全分離`);
   } catch (error) {
     console.error('❌ 背景模組載入失敗:', error.message);
   }
 });
 
-console.log('🎉 LCAS 2.0 DCN-0011 Phase 4 重構完成！');
-console.log('📱 LINE Bot 核心功能完全保留：WH → LBK → Firestore');
-console.log('🌐 index.js 專責 LINE Webhook 服務，運行於 Port 3000');
-console.log('⚡ WH → LBK 直連路徑最佳化：WH → LBK → Firestore');
-console.log('🚀 LINE OA 快速記帳：效能最佳化，處理時間 < 2秒');
-console.log('📋 Rich Menu/APP 路徑：完整保留 WH → DD → BK 功能');
-console.log('📅 SR 排程提醒模組完整整合：支援排程提醒、Quick Reply統計、付費功能控制');
-console.log('🏥 健康檢查機制已優化：專注LINE服務監控');
-console.log('🛡️ 增強錯誤處理已啟用：全域異常捕獲與記錄');
-console.log('🔧 架構重構完成版本：v2.4.0 - 雙服務分離架構');
-console.log('📦 API端點遷移完成統計：');
-console.log('   🚚 已完全遷移至ASL.js (Port 5000)：132個RESTful API端點');
-console.log('   📱 保留LINE Webhook專用：5個核心端點');
-console.log('   ✅ 完美職責分離：RESTful API ↔ LINE Webhook');
-console.log('🎯 DCN-0011 Phase 4完成：index.js重構，雙服務架構實現');
-console.log('📈 系統架構優化達成：單一職責 + 獨立部署 + 維護便利 + 可擴展性');
