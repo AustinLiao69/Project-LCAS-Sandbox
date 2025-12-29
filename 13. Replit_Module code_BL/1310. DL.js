@@ -16,7 +16,7 @@ try {
   }
   admin = firebaseConfig.admin;
   db = firebaseConfig.getFirestoreInstance();
-  console.log('✅ DL模組：Firebase動態配置載入成功');
+  
 } catch (error) {
   console.error('❌ DL模組：Firebase動態配置載入失敗:', error.message);
   // 設定預設值以避免模組完全失效
@@ -226,7 +226,7 @@ async function DL_flushLogBuffer() {
     // 執行批次寫入
     await batch.commit();
 
-    console.log(`成功寫入 ${DL_CONFIG.logBuffer.length} 條日誌到 Firestore`);
+    
 
     // 清空緩衝區並更新最後刷新時間
     DL_CONFIG.logBuffer = [];

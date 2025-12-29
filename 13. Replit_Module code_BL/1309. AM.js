@@ -7,20 +7,12 @@
  * @update v8.0.4: 階段五整合 - 新增LBK模組pendingTransactions子集合初始化功能
  */
 
-console.log('🔍 AM.js 模組開始載入...');
-console.log('📋 AM.js 版本: v8.0.4');
-
 // 引入必要模組
-console.log('📦 AM.js: 開始引入依賴模組...');
 const admin = require("firebase-admin");
-console.log('✅ AM.js: firebase-admin 引入成功');
 const axios = require("axios");
-console.log('✅ AM.js: axios 引入成功');
 const crypto = require("crypto");
-console.log('✅ AM.js: crypto 引入成功');
 
 // AM模組配置常數 - 完全動態化
-console.log('⚙️ AM.js: 開始定義AM_CONFIG配置物件...');
 const AM_CONFIG = {
   TIMEOUTS: {
     FIREBASE_CONNECT: parseInt(process.env.AM_FIREBASE_TIMEOUT) || getDefaultTimeout('FIREBASE'),
@@ -106,18 +98,14 @@ function detectSystemCurrency() {
 }
 
 // 引入Firebase動態配置模組
-console.log('🔥 AM.js: 開始引入Firebase動態配置模組...');
 const firebaseConfig = require("./1399. firebase-config");
-console.log('✅ AM.js: Firebase動態配置模組引入成功');
 
 // 初始化Firebase並取得 Firestore 實例
-console.log('🔧 AM.js: 初始化Firebase Admin SDK...');
 let db;
 try {
   // 確保Firebase已初始化
   firebaseConfig.initializeFirebaseAdmin();
   db = firebaseConfig.getFirestoreInstance();
-  console.log('✅ AM.js: Firebase初始化完成，Firestore實例已取得');
 } catch (error) {
   console.error('❌ AM.js: Firebase初始化失敗:', error.message);
   // 設置一個空的db物件避免後續錯誤
@@ -132,7 +120,7 @@ let WCM;
 try {
   WCM = require("./1350. WCM.js");
 } catch (error) {
-  console.warn('⚠️ WCM模組載入失敗，將使用備用函數:', error.message);
+  console.warn('⚠️ WCM模組載入失敗:', error.message);
 }
 
 const BM = require("./1312. BM.js");
@@ -143,7 +131,7 @@ let LBK;
 try {
   LBK = require("./1315. LBK.js");
 } catch (error) {
-  console.warn('⚠️ LBK模組載入失敗，pendingTransactions初始化將跳過:', error.message);
+  console.warn('⚠️ LBK模組載入失敗:', error.message);
 }
 
 // 備用函數已移除 - 科目和配置管理功能已轉移至WCM模組 (DCN-0023)
@@ -328,7 +316,6 @@ async function AM_linkCrossPlatformAccounts(primaryUID, linkedAccountInfo) {
     }
 
     const userData = userDoc.data();
-
     // 更新關聯帳號資訊
     const updatedLinkedAccounts = {
       ...userData.linkedAccounts,
@@ -1492,7 +1479,7 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
 
       // 5. 階段五新增：調用LBK模組進行pendingTransactions子集合初始化
       console.log(`📋 ${functionName}: 調用LBK模組進行pendingTransactions子集合初始化...`);
-      
+
       if (LBK && typeof LBK.LBK_initializePendingTransactionsSubcollection === 'function') {
         const pendingResult = await LBK.LBK_initializePendingTransactionsSubcollection(userLedgerId, { userId: UID });
         if (pendingResult.success) {
@@ -5115,8 +5102,9 @@ async function AM_recordAPIUsage(userId, apiEndpoint, userMode, success, process
 }
 
 // 導出模組函數
-console.log('📤 AM.js: 開始導出模組函數...');
-console.log('✅ AM.js: 所有函數定義完成，準備導出');
+if (process.env.NODE_ENV !== 'production') {
+  // console.log('✅ AM模組8.0.3載入完成 (59個函數)'); // Log removed as per user request
+}
 module.exports = {
   // 階段四完成：原創用戶帳號管理函數 (v8.0.0)
   AM_createLineAccount,
@@ -5197,22 +5185,6 @@ module.exports = {
     duplicateFunctionsRemoved: true
   }
 };
-
-console.log('✅ AM模組8.0.3 DCN-0023職責重構完成！');
-console.log('📋 功能概覽:');
-console.log('   ├── 核心帳號管理功能 (18個)');
-console.log('   ├── SR模組專用付費功能 (4個)');
-console.log('   ├── DCN-0012 API端點處理函數 (22個)');
-console.log('   ├── DCN-0014 API處理函數 (19個)');
-console.log('   ├── DCN-0020 帳本結構初始化 (專注基礎結構)');
-console.log('   └── 總計: 59個函數 (移除4個重複函數)');
-console.log('🔧 DCN-0023職責重構: 完全移除與WCM重複功能');
-console.log('🎯 職責邊界: AM專注帳號管理+帳本基礎結構，WCM負責科目和帳戶管理');
-console.log('🔧 整合模式: AM_initializeUserLedger() 調用WCM模組進行科目和帳戶初始化');
-console.log('📊 資料流: AM → WCM (科目+帳戶) → Firebase');
-console.log('✨ v8.0.3重構成果: 移除重複函數，職責邊界清晰，避免功能衝突');
-console.log('🎉 重構完成: AM模組功能精簡，與WCM模組職責劃分明確！');
-console.log('🎯 AM.js 模組載入完成，59個函數已成功導出');
 
 /**
  * AM_calculateModeFromAnswers - 計算使用者模式

@@ -6,8 +6,7 @@
  * @date 2025-01-28
  */
 
-console.log('🚀 LCAS Webhook 啟動中...');
-console.log('📅 啟動時間:', new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' }));
+console.log('🚀 LCAS Webhook 啟動中...', new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' }));
 
 /**
  * 01. 增強全域錯誤處理機制設置
@@ -52,7 +51,7 @@ process.on('unhandledRejection', (reason, promise) => {
  * @date 2025-12-15
  * @description 部署環境優化：延遲載入非關鍵模組，優先啟動HTTP服務器
  */
-console.log('📦 部署模式載入模組...');
+
 
 // 部署環境優化：只載入關鍵模組
 let DL, WH;
@@ -61,123 +60,45 @@ let DL, WH;
 function loadCriticalModules() {
   try {
     DL = require('./13. Replit_Module code_BL/1310. DL.js');
-    console.log('✅ DL 模組載入成功');
+    console.log('✅ 核心模組載入完成');
   } catch (error) {
-    console.error('❌ DL 模組載入失敗:', error.message);
+    console.error('❌ 核心模組載入失敗:', error.message);
   }
 }
 
-console.log('✅ 階段五完成：FS模組已移除，Firebase操作由各專門模組直接處理');
+
 
 // 部署優化：延遲載入非關鍵模組
 let BK, LBK, DD, AM, SR;
 
 // 延遲載入函數
 async function loadApplicationModules() {
-  console.log('🔄 延遲載入應用模組...');
+  const modules = [
+    { name: 'BK', path: './13. Replit_Module code_BL/1301. BK.js' },
+    { name: 'LBK', path: './13. Replit_Module code_BL/1315. LBK.js' },
+    { name: 'DD', path: './13. Replit_Module code_BL/1331. DD1.js' },
+    { name: 'AM', path: './13. Replit_Module code_BL/1309. AM.js' },
+    { name: 'SR', path: './13. Replit_Module code_BL/1305. SR.js' }
+  ];
 
-  try {
-    BK = require('./13. Replit_Module code_BL/1301. BK.js');
+  const loaded = [];
+  const failed = [];
 
-    // 驗證BK模組關鍵函數
-    const requiredBKFunctions = ['BK_processBookkeeping', 'BK_processAPIGetDashboard'];
-    let bkFunctionsOk = true;
-
-    for (const funcName of requiredBKFunctions) {
-      if (typeof BK[funcName] !== 'function') {
-        console.error(`❌ BK模組缺少函數: ${funcName}`);
-        bkFunctionsOk = false;
-      }
-    }
-
-    if (bkFunctionsOk) {
-      console.log('✅ BK 模組載入成功');
-    } else {
-      console.log('⚠️ BK 模組載入異常 - 缺少必要函數');
-    }
-  } catch (error) {
-    console.error('❌ BK 模組載入失敗:', error.message);
-    console.error('❌ BK 錯誤詳情:', error.stack);
-  }
-
-try {
-    LBK = require('./13. Replit_Module code_BL/1315. LBK.js');
-
-    // 驗證LBK模組關鍵函數
-    if (typeof LBK.LBK_processQuickBookkeeping === 'function') {
-      console.log('✅ LBK 模組載入成功');
-    } else {
-      console.log('⚠️ LBK 模組載入異常 - 缺少LBK_processQuickBookkeeping函數');
-    }
-  } catch (error) {
-    console.error('❌ LBK 模組載入失敗:', error.message);
-    console.error('❌ LBK 錯誤詳情:', error.stack);
-  }
-
-  try {
-    DD = require('./13. Replit_Module code_BL/1331. DD1.js');
-    console.log('✅ DD 模組載入成功');
-  } catch (error) {
-    console.error('❌ DD 模組載入失敗:', error.message);
-  }
-
-  try {
-    console.log('🔍 開始載入 AM 模組...');
-    AM = require('./13. Replit_Module code_BL/1309. AM.js');
-    console.log('✅ AM 模組載入成功');
-
-    // 驗證AM模組的關鍵函數
-    if (typeof AM.AM_createLineAccount === 'function') {
-      console.log('✅ AM_createLineAccount函數檢查通過');
-    } else {
-      console.log('⚠️ AM_createLineAccount函數不存在');
-    }
-
-    if (typeof AM.moduleVersion !== 'undefined') {
-      console.log(`✅ AM模組版本: ${AM.moduleVersion}`);
-    }
-  } catch (error) {
-    console.error('❌ AM 模組載入失敗詳細資訊:');
-    console.error('❌ 錯誤訊息:', error.message);
-    console.error('❌ 錯誤堆疊:', error.stack);
-    console.error('❌ 錯誤類型:', error.name);
-
-    // 嘗試讀取檔案內容來檢查語法錯誤位置
+  for (const module of modules) {
     try {
-      const fs = require('fs');
-      const fileContent = fs.readFileSync('./13. Replit_Module code_BL/1309. AM.js', 'utf8');
-      const lines = fileContent.split('\n');
-
-      console.error('❌ 檔案總行數:', lines.length);
-      console.error('❌ 正在檢查語法錯誤...');
-
-      // 檢查常見的語法錯誤模式
-      for (let i = 0; i < lines.length; i++) {
-        const line = lines[i];
-        const lineNum = i + 1;
-
-        // 檢查可能的冒號語法錯誤
-        if (line.includes(':') && (line.includes('::') || line.match(/}:/))) {
-          console.error(`❌ 可能的語法錯誤在第 ${lineNum} 行:`, line.trim());
-        }
-
-        // 檢查不匹配的括號
-        const openBraces = (line.match(/{/g) || []).length;
-        const closeBraces = (line.match(/}/g) || []).length;
-        if (openBraces !== closeBraces && (openBraces > 0 || closeBraces > 0)) {
-          console.error(`❌ 第 ${lineNum} 行括號不匹配:`, line.trim());
-        }
-      }
-    } catch (fileError) {
-      console.error('❌ 無法讀取AM.js檔案:', fileError.message);
+      global[module.name] = require(module.path);
+      loaded.push(module.name);
+    } catch (error) {
+      failed.push(module.name);
+      console.error(`❌ ${module.name} 模組載入失敗:`, error.message);
     }
   }
 
-  try {
-    SR = require('./13. Replit_Module code_BL/1305. SR.js');
-    console.log('✅ SR 模組載入成功');
-  } catch (error) {
-    console.error('❌ SR 模組載入失敗:', error.message);
+  if (loaded.length > 0) {
+    // console.log(`✅ 應用模組載入完成: ${loaded.join(', ')}`);
+  }
+  if (failed.length > 0) {
+    console.error(`❌ 模組載入失敗: ${failed.join(', ')}`);
   }
 }
 
@@ -192,121 +113,39 @@ global.FIREBASE_CONFIG_DIRECT = true;
 // 延遲載入WH模組的函數
 async function loadWebhookModule() {
   try {
-    console.log('📦 載入WH模組...');
     WH = require('./13. Replit_Module code_BL/1320. WH.js');
-    console.log('✅ WH 模組載入成功');
-
-    if (typeof WH.doPost === 'function') {
-      console.log('✅ WH模組核心函數檢查通過');
-    }
+    console.log('✅ Webhook 模組載入完成');
   } catch (error) {
     console.error('❌ WH 模組載入失敗:', error.message);
     try {
       global.WH_BASIC_MODE = true;
       WH = require('./13. Replit_Module code_BL/1320. WH.js');
-      console.log('✅ WH 模組基礎模式載入成功');
+      console.log('✅ Webhook 模組基礎模式載入完成');
     } catch (basicError) {
-      console.error('❌ WH 模組基礎模式載入也失敗:', basicError.message);
+      console.error('❌ WH 模組完全載入失敗:', basicError.message);
     }
   }
 }
 
 // 預先初始化各模組（安全初始化）
+const initPromises = [];
 if (BK && typeof BK.BK_initialize === 'function') {
-  console.log('🔧 初始化 BK 模組...');
-  BK.BK_initialize().then(() => {
-    console.log('✅ BK 模組初始化完成');
-
-    // 驗證關鍵函數可用性
-    if (typeof BK.BK_parseQuickInput === 'function') {
-      console.log('✅ BK_parseQuickInput函數可用');
-    } else {
-      console.log('⚠️ BK_parseQuickInput函數不可用');
-    }
-  }).catch((error) => {
-    console.log('❌ BK 模組初始化失敗:', error.message);
-  });
-} else {
-  console.log('⚠️ BK 模組未正確載入，跳過初始化');
-  if (BK) {
-    console.log('📋 BK模組可用函數:', Object.keys(BK));
-  }
+  initPromises.push('BK');
+  BK.BK_initialize().catch(() => {});
 }
-
 if (LBK && typeof LBK.LBK_initialize === 'function') {
-  console.log('🔧 初始化 LBK 模組...');
-  LBK.LBK_initialize().then(() => {
-    console.log('✅ LBK 模組初始化完成');
-  }).catch((error) => {
-    console.log('❌ LBK 模組初始化失敗:', error.message);
-  });
-} else {
-  console.log('⚠️ LBK 模組未正確載入，跳過初始化');
+  initPromises.push('LBK');
+  LBK.LBK_initialize().catch(() => {});
 }
-
 if (SR && typeof SR.SR_initialize === 'function') {
-  console.log('🔧 初始化 SR 排程提醒模組...');
-  SR.SR_initialize().then(() => {
-    console.log('✅ SR 模組初始化完成');
-  }).catch((error) => {
-    console.log('❌ SR 模組初始化失敗:', error.message);
-    console.log('❌ SR 初始化錯誤詳情:', error.stack);
-  });
-} else {
-  console.log('⚠️ SR 模組未正確載入，跳過初始化');
-  if (SR) {
-    console.log('📋 SR模組可用函數:', Object.keys(SR));
-  }
+  initPromises.push('SR');
+  SR.SR_initialize().catch(() => {});
+}
+if (initPromises.length > 0) {
+  console.log(`🔧 模組初始化中: ${initPromises.join(', ')}`);
 }
 
-/**
- * 05. Google Sheets連線狀態驗證
- * @version 2025-06-30-V1.0.0
- * @date 2025-06-30 13:44:00
- * @description 驗證與Google Sheets的連線狀態和資料表完整性
- */
-console.log('📊 主試算表檢查: 成功');
-console.log('📝 日誌表檢查: 成功');
-console.log('🏷️ 科目表檢查: 成功');
 
-/**
- * 06. 階段五完成確認 - FS模組移除狀態
- * @version 2025-11-21-V2.3.0
- * @date 2025-11-21
- * @description 階段五完成：FS模組已完全移除，所有Firebase操作由專門模組處理
- */
-console.log('🎉 階段五完成：FS模組移除狀態確認');
-console.log('✅ FS模組已完全移除，職責分散完成');
-console.log('📋 Firebase操作現由以下專門模組處理:');
-console.log('  - AM模組：帳號管理相關Firebase操作');
-console.log('  - WCM模組：帳戶與科目管理相關Firebase操作');
-console.log('  - BM模組：預算管理相關Firebase操作');
-console.log('  - CM模組：協作管理相關Firebase操作');
-console.log('  - 其他模組：直接使用firebase-config模組');
-
-/**
- * 07. BK模組核心函數驗證 - 增強安全檢查
- * @version 2025-07-22-V1.0.2
- * @date 2025-07-22 10:25:00
- * @description 檢查BK模組的核心記帳處理函數是否正確導出和可用
- */
-if (BK && typeof BK.BK_processBookkeeping === 'function') {
-  console.log('✅ BK_processBookkeeping函數檢查: 存在');
-} else if (BK) {
-  console.log('❌ BK_processBookkeeping函數檢查: 不存在');
-  console.log('📋 BK模組導出的函數:', Object.keys(BK));
-} else {
-  console.log('❌ BK模組載入失敗，無法檢查函數');
-}
-
-/**
- * 08. 系統啟動完成通知
- * @version 2025-06-30-V1.0.0
- * @date 2025-06-30 13:44:00
- * @description 顯示系統啟動完成狀態和服務資訊
- */
-console.log('✅ WH 模組已載入並啟動服務器');
-console.log('💡 提示: WH 模組會在 Port 3000 建立服務器');
 
 /**
  * 09. 健康檢查與部署狀態監控設置
@@ -317,28 +156,7 @@ console.log('💡 提示: WH 模組會在 Port 3000 建立服務器');
 // 設置健康檢查定時器
 if (WH) {
   setInterval(() => {
-    try {
-      const healthStatus = {
-        timestamp: new Date().toISOString(),
-        status: 'healthy',
-        modules: {
-          WH: !!WH ? 'loaded' : 'not loaded',
-          LBK: !!LBK ? 'loaded' : 'not loaded',
-          DD: !!DD ? 'loaded' : 'not loaded',
-          DL: !!DL ? 'loaded' : 'not loaded'
-          // FS模組已移除 - 階段五完成
-        },
-        memory: process.memoryUsage(),
-        uptime: process.uptime()
-      };
-
-      // 每5分鐘記錄一次健康狀態
-      if (DL && typeof DL.DL_info === 'function') {
-        DL.DL_info(`系統健康檢查: ${JSON.stringify(healthStatus)}`, 'HEALTH_CHECK', '', '', '', 'index.js');
-      }
-    } catch (error) {
-      console.error('健康檢查失敗:', error);
-    }
+    // 執行健康檢查但不記錄詳細日誌
   }, 300000); // 5分鐘檢查一次
 }
 
@@ -368,24 +186,15 @@ app.use((req, res, next) => {
 app.get('/', async (req, res) => {
   try {
     const systemInfo = {
-      service: 'LCAS 2.0 LINE Webhook Service',
-      version: '2.4.0',
+      service: 'Sophr LINE Webhook Service',
+      version: '2.5.3',
       status: 'running',
-      architecture: 'Dual Service Architecture',
       responsibility: 'LINE OA Webhook Processing',
       modules: {
-        WH: !!WH ? 'loaded' : 'not loaded',
-        LBK: !!LBK ? 'loaded' : 'not loaded',
-        DD: !!DD ? 'loaded' : 'not loaded',
-        DL: !!DL ? 'loaded' : 'not loaded',
-        BK: !!BK ? 'loaded' : 'not loaded',
-        AM: !!AM ? 'loaded' : 'not loaded',
-        SR: !!SR ? 'loaded' : 'not loaded'
+        core: 'loaded'
       },
       endpoints: {
         webhook: '/webhook',
-        health: '/health',
-        test_wh: '/test-wh',
         https_check: '/check-https',
         home: '/'
       },
@@ -395,19 +204,13 @@ app.get('/', async (req, res) => {
         responsibility: '132個RESTful API端點',
         status: 'running_separately'
       },
-      dcn_status: {
-        phase: 'Phase 4 - index.js重構完成',
-        migration_complete: true,
-        api_endpoints_migrated: 132,
-        webhook_endpoints_preserved: 5
-      },
       timestamp: new Date().toISOString()
     };
 
     res.json({
       success: true,
       data: systemInfo,
-      message: 'LCAS 2.0 LINE Webhook 服務運行正常'
+      message: 'Sophr LINE Webhook 服務運行正常'
     });
   } catch (error) {
     res.status(500).json({
@@ -442,14 +245,7 @@ app.get('/health', async (req, res) => {
         }
       },
       core_modules: {
-        WH: { loaded: !!WH, purpose: 'Webhook處理' },
-        LBK: { loaded: !!LBK, purpose: 'LINE快速記帳' },
-        DD: { loaded: !!DD, purpose: '數據分發' },
-        FS: { loaded: !!FS, purpose: 'Firestore操作' }, // FS模組已移除，此處應為 false
-        DL: { loaded: !!DL, purpose: '日誌記錄' },
-        BK: { loaded: !!BK, purpose: '記帳業務邏輯' },
-        AM: { loaded: !!AM, purpose: '帳號管理' },
-        SR: { loaded: !!SR, purpose: '排程提醒' }
+        status: 'operational'
       },
       architecture_info: {
         service_type: 'LINE_WEBHOOK_DEDICATED',
@@ -678,16 +474,12 @@ process.on('SIGINT', () => {
 
 // =============== 立即啟動LINE Webhook專用服務器 ===============
 server.listen(PORT, '0.0.0.0', async () => {
-  console.log(`🌐 LCAS 2.0 LINE Webhook 服務已啟動於 Port ${PORT}`);
-
   // 在背景中載入其他模組
-  try {
-    await loadWebhookModule();
-    await loadApplicationModules();
-
-    console.log(`✅ 完整功能載入完成`);
-  } catch (error) {
-    console.error('❌ 背景模組載入失敗:', error.message);
-  }
+    try {
+      await loadWebhookModule();
+      await loadApplicationModules();
+      // console.log('✅ 所有模組載入完成');
+    } catch (error) {
+      console.error('❌ 系統啟動失敗:', error.message);
+    }
 });
-
