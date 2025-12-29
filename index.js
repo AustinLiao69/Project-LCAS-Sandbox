@@ -474,8 +474,6 @@ process.on('SIGINT', () => {
 
 // =============== 立即啟動LINE Webhook專用服務器 ===============
 server.listen(PORT, '0.0.0.0', async () => {
-  console.log(`🌐 LCAS 服務已啟動於 Port ${PORT}`);
-
   // 在背景中載入其他模組
     try {
       await loadWebhookModule();
