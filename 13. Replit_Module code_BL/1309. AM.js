@@ -316,7 +316,6 @@ async function AM_linkCrossPlatformAccounts(primaryUID, linkedAccountInfo) {
     }
 
     const userData = userDoc.data();
-
     // 更新關聯帳號資訊
     const updatedLinkedAccounts = {
       ...userData.linkedAccounts,
@@ -5104,7 +5103,7 @@ async function AM_recordAPIUsage(userId, apiEndpoint, userMode, success, process
 
 // 導出模組函數
 if (process.env.NODE_ENV !== 'production') {
-  console.log('✅ AM模組8.0.3載入完成 (59個函數)');
+  // console.log('✅ AM模組8.0.3載入完成 (59個函數)'); // Log removed as per user request
 }
 module.exports = {
   // 階段四完成：原創用戶帳號管理函數 (v8.0.0)

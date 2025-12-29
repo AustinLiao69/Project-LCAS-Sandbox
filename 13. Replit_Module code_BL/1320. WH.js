@@ -39,7 +39,7 @@ try {
 }
 
 // FS模組已移除 - 階段五完成：職責分散至專門模組
-console.log("✅ 階段五完成：FS模組已移除，消息去重使用NodeCache");
+
 
 // 引入必要的 Node.js 模組 - 移除Express相關依賴
 const axios = require("axios");
@@ -66,7 +66,7 @@ try {
   // 取得 Firestore 實例
   db = firebaseConfig.getFirestoreInstance();
 
-  console.log("✅ WH模組：Firebase動態配置初始化成功");
+  
 
 } catch (error) {
   console.error("❌ WH模組：Firebase動態配置初始化失敗:", error.message);
@@ -150,20 +150,11 @@ function WH_checkEnvironmentVariables() {
 
   const isComplete = missingVars.length === 0;
 
-  if (process.env.NODE_ENV !== 'production') {
-    console.log('WH模組環境變數檢查結果:');
-    requiredEnvVars.forEach(varName => {
-      const status = envStatus[varName];
-      const statusText = status.hasValue ? '✅' : '❌';
-      console.log(`  ${statusText} ${varName}: ${status.hasValue ? `已設定(${status.length}字符)` : '未設定或為空'}`);
-    });
-  }
+  
 
   if (!isComplete) {
     console.warn(`⚠️  缺少必要環境變數: ${missingVars.join(', ')}`);
     console.warn('💡 請在Replit Secrets中設定這些環境變數');
-  } else if (process.env.NODE_ENV !== 'production') {
-    console.log('✅ 所有必要環境變數已正確設定');
   }
 
   return {
@@ -175,7 +166,7 @@ function WH_checkEnvironmentVariables() {
 }
 
 // 初始化檢查 - 在全局執行一次
-console.log("WH模組初始化，版本: 2.5.3 (2025-12-19) - 階段三完成：支援連續性Quick Reply處理，識別Pending Record相關事件");
+
 
 // 執行環境變數完整性檢查
 const envCheckResult = WH_checkEnvironmentVariables();

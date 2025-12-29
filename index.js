@@ -95,7 +95,7 @@ async function loadApplicationModules() {
   }
 
   if (loaded.length > 0) {
-    console.log(`✅ 應用模組載入完成: ${loaded.join(', ')}`);
+    // console.log(`✅ 應用模組載入完成: ${loaded.join(', ')}`);
   }
   if (failed.length > 0) {
     console.error(`❌ 模組載入失敗: ${failed.join(', ')}`);
@@ -480,7 +480,7 @@ server.listen(PORT, '0.0.0.0', async () => {
     try {
       await loadWebhookModule();
       await loadApplicationModules();
-      console.log('✅ 所有模組載入完成');
+      // console.log('✅ 所有模組載入完成');
     } catch (error) {
       console.error('❌ 系統啟動失敗:', error.message);
     }

@@ -52,7 +52,6 @@ function createFirebaseConfig() {
       throw new Error('私鑰格式不正確：缺少 PEM 標頭或標尾');
     }
 
-    console.log('✅ Firebase動態配置建立成功');
     return firebaseConfig;
 
   } catch (error) {
@@ -85,7 +84,6 @@ function initializeFirebaseAdmin() {
       databaseURL: `https://${serviceAccountKey.project_id}-default-rtdb.firebaseio.com`
     });
 
-    console.log('✅ Firebase Admin SDK初始化成功');
     return firebaseApp;
 
   } catch (error) {
@@ -107,8 +105,7 @@ function getFirestoreInstance() {
         initializeFirebaseAdmin();
       }
       firestoreInstance = admin.firestore();
-      console.log('✅ Firestore實例取得成功');
-    }
+      }
     return firestoreInstance;
   } catch (error) {
     console.error('❌ Firestore實例取得失敗:', error.message);
@@ -136,7 +133,6 @@ async function validateFirebaseConfig() {
       throw new Error(`缺少必要的環境變數: ${missingVars.join(', ')}`);
     }
 
-    console.log('✅ Firebase配置驗證通過');
     return true;
   } catch (error) {
     console.error('❌ Firebase配置驗證失敗:', error.message);
