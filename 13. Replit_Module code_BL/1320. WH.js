@@ -2777,10 +2777,7 @@ async function WH_handleWebhook(event, reqId) {
     } else if (eventType === 'follow') {
       // 處理加入好友事件
       WH_logInfo(`收到 follow 事件`, "事件處理", userId, "", "", functionName);
-      await WH_replyMessage(event.replyToken, [{
-        type: 'text',
-        text: "感謝您的加入！請輸入 '幫助' 或 '?' 獲取使用說明。"
-      }]);
+      // 不發送歡迎訊息
 
     } else {
       WH_logWarning(`收到未處理的事件類型: ${eventType}`, "事件處理", userId, "UNHANDLED_EVENT", "", functionName);
