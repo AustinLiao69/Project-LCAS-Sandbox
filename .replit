@@ -35,13 +35,17 @@ localPort = 9005
 expertMode = true
 
 [workflows]
-runButton = "Run"
+runButton = "Full service"
 
 [[workflows.workflow]]
-name = "Run"
+name = "Full service"
 author = 41300326
-mode = "sequential"
+mode = "parallel"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "node index.js"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "node ASL.js"
