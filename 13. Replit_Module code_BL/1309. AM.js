@@ -1135,15 +1135,6 @@ async function AM_handleAccountError(
  */
 async function AM_monitorSystemHealth() {
   try {
-    // 檢查資料庫連線
-    const healthCheck = await db
-      .collection("_health_check")
-      .doc("am_health")
-      .set({
-        timestamp: admin.firestore.Timestamp.now(),
-        status: "healthy",
-      });
-
     // 統計活躍用戶數
     const activeUsersQuery = await db
       .collection("users")

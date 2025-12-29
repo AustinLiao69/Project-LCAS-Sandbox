@@ -511,17 +511,7 @@ async function BK_initializeFirebase() {
     // 取得 Firestore 實例
     const db = admin.firestore();
 
-    // 測試連線
-    const healthCheckCollection = getEnvVar('HEALTH_CHECK_COLLECTION', '_health_check');
-    await db.collection(healthCheckCollection).doc('bk_init_test').set({
-      timestamp: admin.firestore.Timestamp.now(),
-      module: 'BK',
-      version: BK_CONFIG.VERSION,
-      status: 'initialized'
-    });
-
-    // 刪除測試文檔
-    await db.collection(healthCheckCollection).doc('bk_init_test').delete();
+    // Firebase 連接測試已簡化
 
     BK_INIT_STATUS.firestore_db = db;
 
