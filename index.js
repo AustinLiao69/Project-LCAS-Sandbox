@@ -652,83 +652,15 @@ wss.on('connection', (ws, req) => {
   });
 });
 
-// =============== 心跳機制設置 ===============
+// =============== 心跳機制已移除 ===============
 
-// 心跳機制 - 每5分鐘執行一次
-const heartbeatInterval = setInterval(() => {
-  try {
-    const heartbeatData = {
-      timestamp: new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' }),
-      service: 'LCAS_LINE_WEBHOOK_SERVICE',
-      status: 'alive',
-      uptime: Math.floor(process.uptime()),
-      memory: process.memoryUsage(),
-      modules: {
-        WH: !!WH ? 'active' : 'inactive',
-        LBK: !!LBK ? 'active' : 'inactive',
-        BK: !!BK ? 'active' : 'inactive',
-        AM: !!AM ? 'active' : 'inactive',
-        SR: !!SR ? 'active' : 'inactive',
-        DD: !!DD ? 'active' : 'inactive',
-        DL: !!DL ? 'active' : 'inactive'
-      },
-      port: PORT,
-      environment: process.env.NODE_ENV || 'production'
-    };
-
-    console.log('💓 心跳檢查:', JSON.stringify(heartbeatData, null, 2));
-
-    // 記錄到日誌系統
-    if (DL && typeof DL.DL_info === 'function') {
-      DL.DL_info(`心跳檢查: ${JSON.stringify(heartbeatData)}`, 'HEARTBEAT', '', '', '', 'index.js');
-    }
-
-    // 檢查關鍵模組狀態
-    const criticalModules = ['WH', 'LBK', 'DL'];
-    const inactiveModules = criticalModules.filter(module => !eval(module));
-    
-    if (inactiveModules.length > 0) {
-      console.warn('⚠️ 關鍵模組未載入:', inactiveModules.join(', '));
-      
-      if (DL && typeof DL.DL_warning === 'function') {
-        DL.DL_warning(`關鍵模組未載入: ${inactiveModules.join(', ')}`, 'HEARTBEAT_WARNING', '', '', '', 'index.js');
-      }
-    }
-
-    // 記憶體使用量警告
-    const memoryUsage = process.memoryUsage();
-    const memoryUsageMB = memoryUsage.heapUsed / 1024 / 1024;
-    
-    if (memoryUsageMB > 500) { // 超過500MB警告
-      console.warn(`⚠️ 記憶體使用量較高: ${memoryUsageMB.toFixed(2)}MB`);
-      
-      if (DL && typeof DL.DL_warning === 'function') {
-        DL.DL_warning(`記憶體使用量較高: ${memoryUsageMB.toFixed(2)}MB`, 'MEMORY_WARNING', '', '', '', 'index.js');
-      }
-    }
-
-  } catch (error) {
-    console.error('💥 心跳檢查失敗:', error.message);
-    
-    if (DL && typeof DL.DL_error === 'function') {
-      DL.DL_error('心跳檢查失敗', 'HEARTBEAT_ERROR', '', 'HEARTBEAT_FAILURE', error.toString(), 'index.js');
-    }
-  }
-}, 60000); // 1分鐘 = 60,000毫秒
-
-console.log('💓 心跳機制已啟動 - 每1分鐘執行一次');
+// 心跳機制已移除，減少系統資源消耗和日誌產生
 
 // =============== 優雅關閉處理 ===============
 
 // 捕獲 SIGTERM 信號進行優雅關閉
 process.on('SIGTERM', () => {
   console.log('🛑 收到SIGTERM信號，正在關閉服務器...');
-
-  // 清除心跳定時器
-  if (heartbeatInterval) {
-    clearInterval(heartbeatInterval);
-    console.log('💓 心跳機制已停止');
-  }
 
   server.close(() => {
     console.log('✅ HTTP 服務器已關閉');
@@ -739,12 +671,6 @@ process.on('SIGTERM', () => {
 // 捕獲 SIGINT 信號 (Ctrl+C)
 process.on('SIGINT', () => {
   console.log('🛑 收到SIGINT信號，正在關閉服務器...');
-
-  // 清除心跳定時器
-  if (heartbeatInterval) {
-    clearInterval(heartbeatInterval);
-    console.log('💓 心跳機制已停止');
-  }
 
   server.close(() => {
     console.log('✅ HTTP 服務器已關閉');
