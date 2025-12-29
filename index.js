@@ -260,31 +260,6 @@ if (SR && typeof SR.SR_initialize === 'function') {
 }
 
 /**
- * 05. Google Sheets連線狀態驗證
- * @version 2025-06-30-V1.0.0
- * @date 2025-06-30 13:44:00
- * @description 驗證與Google Sheets的連線狀態和資料表完整性
- */
-console.log('📊 主試算表檢查: 成功');
-console.log('📝 日誌表檢查: 成功');
-console.log('🏷️ 科目表檢查: 成功');
-
-/**
- * 06. 階段五完成確認 - FS模組移除狀態
- * @version 2025-11-21-V2.3.0
- * @date 2025-11-21
- * @description 階段五完成：FS模組已完全移除，所有Firebase操作由專門模組處理
- */
-console.log('🎉 階段五完成：FS模組移除狀態確認');
-console.log('✅ FS模組已完全移除，職責分散完成');
-console.log('📋 Firebase操作現由以下專門模組處理:');
-console.log('  - AM模組：帳號管理相關Firebase操作');
-console.log('  - WCM模組：帳戶與科目管理相關Firebase操作');
-console.log('  - BM模組：預算管理相關Firebase操作');
-console.log('  - CM模組：協作管理相關Firebase操作');
-console.log('  - 其他模組：直接使用firebase-config模組');
-
-/**
  * 07. BK模組核心函數驗證 - 增強安全檢查
  * @version 2025-07-22-V1.0.2
  * @date 2025-07-22 10:25:00
@@ -298,15 +273,6 @@ if (BK && typeof BK.BK_processBookkeeping === 'function') {
 } else {
   console.log('❌ BK模組載入失敗，無法檢查函數');
 }
-
-/**
- * 08. 系統啟動完成通知
- * @version 2025-06-30-V1.0.0
- * @date 2025-06-30 13:44:00
- * @description 顯示系統啟動完成狀態和服務資訊
- */
-console.log('✅ WH 模組已載入並啟動服務器');
-console.log('💡 提示: WH 模組會在 Port 3000 建立服務器');
 
 /**
  * 09. 健康檢查與部署狀態監控設置
@@ -368,24 +334,19 @@ app.use((req, res, next) => {
 app.get('/', async (req, res) => {
   try {
     const systemInfo = {
-      service: 'LCAS 2.0 LINE Webhook Service',
-      version: '2.4.0',
+      service: 'Sophr LINE Webhook Service',
+      version: '2.5.3',
       status: 'running',
-      architecture: 'Dual Service Architecture',
       responsibility: 'LINE OA Webhook Processing',
       modules: {
         WH: !!WH ? 'loaded' : 'not loaded',
         LBK: !!LBK ? 'loaded' : 'not loaded',
-        DD: !!DD ? 'loaded' : 'not loaded',
         DL: !!DL ? 'loaded' : 'not loaded',
-        BK: !!BK ? 'loaded' : 'not loaded',
         AM: !!AM ? 'loaded' : 'not loaded',
         SR: !!SR ? 'loaded' : 'not loaded'
       },
       endpoints: {
         webhook: '/webhook',
-        health: '/health',
-        test_wh: '/test-wh',
         https_check: '/check-https',
         home: '/'
       },
@@ -395,19 +356,13 @@ app.get('/', async (req, res) => {
         responsibility: '132個RESTful API端點',
         status: 'running_separately'
       },
-      dcn_status: {
-        phase: 'Phase 4 - index.js重構完成',
-        migration_complete: true,
-        api_endpoints_migrated: 132,
-        webhook_endpoints_preserved: 5
-      },
       timestamp: new Date().toISOString()
     };
 
     res.json({
       success: true,
       data: systemInfo,
-      message: 'LCAS 2.0 LINE Webhook 服務運行正常'
+      message: 'Sophr LINE Webhook 服務運行正常'
     });
   } catch (error) {
     res.status(500).json({
