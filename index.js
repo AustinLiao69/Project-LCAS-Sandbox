@@ -6,8 +6,7 @@
  * @date 2025-01-28
  */
 
-console.log('🚀 LCAS Webhook 啟動中...');
-console.log('📅 啟動時間:', new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' }));
+console.log('🚀 LCAS Webhook 啟動中...', new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' }));
 
 /**
  * 01. 增強全域錯誤處理機制設置
@@ -61,9 +60,9 @@ let DL, WH;
 function loadCriticalModules() {
   try {
     DL = require('./13. Replit_Module code_BL/1310. DL.js');
-
+    console.log('✅ 核心模組載入完成');
   } catch (error) {
-    console.error('❌ DL 模組載入失敗:', error.message);
+    console.error('❌ 核心模組載入失敗:', error.message);
   }
 }
 
@@ -74,45 +73,32 @@ let BK, LBK, DD, AM, SR;
 
 // 延遲載入函數
 async function loadApplicationModules() {
+  const modules = [
+    { name: 'BK', path: './13. Replit_Module code_BL/1301. BK.js' },
+    { name: 'LBK', path: './13. Replit_Module code_BL/1315. LBK.js' },
+    { name: 'DD', path: './13. Replit_Module code_BL/1331. DD1.js' },
+    { name: 'AM', path: './13. Replit_Module code_BL/1309. AM.js' },
+    { name: 'SR', path: './13. Replit_Module code_BL/1305. SR.js' }
+  ];
 
+  const loaded = [];
+  const failed = [];
 
-  try {
-    BK = require('./13. Replit_Module code_BL/1301. BK.js');
-
-
-  } catch (error) {
-    console.error('❌ BK 模組載入失敗:', error.message);
-
+  for (const module of modules) {
+    try {
+      global[module.name] = require(module.path);
+      loaded.push(module.name);
+    } catch (error) {
+      failed.push(module.name);
+      console.error(`❌ ${module.name} 模組載入失敗:`, error.message);
+    }
   }
 
-try {
-    LBK = require('./13. Replit_Module code_BL/1315. LBK.js');
-
-
-  } catch (error) {
-    console.error('❌ LBK 模組載入失敗:', error.message);
-
+  if (loaded.length > 0) {
+    console.log(`✅ 應用模組載入完成: ${loaded.join(', ')}`);
   }
-
-  try {
-    DD = require('./13. Replit_Module code_BL/1331. DD1.js');
-
-  } catch (error) {
-    console.error('❌ DD 模組載入失敗:', error.message);
-  }
-
-  try {
-    AM = require('./13. Replit_Module code_BL/1309. AM.js');
-
-  } catch (error) {
-    console.error('❌ AM 模組載入失敗:', error.message);
-  }
-
-  try {
-    SR = require('./13. Replit_Module code_BL/1305. SR.js');
-
-  } catch (error) {
-    console.error('❌ SR 模組載入失敗:', error.message);
+  if (failed.length > 0) {
+    console.error(`❌ 模組載入失敗: ${failed.join(', ')}`);
   }
 }
 
@@ -128,30 +114,35 @@ global.FIREBASE_CONFIG_DIRECT = true;
 async function loadWebhookModule() {
   try {
     WH = require('./13. Replit_Module code_BL/1320. WH.js');
-
+    console.log('✅ Webhook 模組載入完成');
   } catch (error) {
     console.error('❌ WH 模組載入失敗:', error.message);
     try {
       global.WH_BASIC_MODE = true;
       WH = require('./13. Replit_Module code_BL/1320. WH.js');
-
+      console.log('✅ Webhook 模組基礎模式載入完成');
     } catch (basicError) {
-      console.error('❌ WH 模組基礎模式載入也失敗:', basicError.message);
+      console.error('❌ WH 模組完全載入失敗:', basicError.message);
     }
   }
 }
 
 // 預先初始化各模組（安全初始化）
+const initPromises = [];
 if (BK && typeof BK.BK_initialize === 'function') {
+  initPromises.push('BK');
   BK.BK_initialize().catch(() => {});
 }
-
 if (LBK && typeof LBK.LBK_initialize === 'function') {
+  initPromises.push('LBK');
   LBK.LBK_initialize().catch(() => {});
 }
-
 if (SR && typeof SR.SR_initialize === 'function') {
+  initPromises.push('SR');
   SR.SR_initialize().catch(() => {});
+}
+if (initPromises.length > 0) {
+  console.log(`🔧 模組初始化中: ${initPromises.join(', ')}`);
 }
 
 
@@ -483,15 +474,14 @@ process.on('SIGINT', () => {
 
 // =============== 立即啟動LINE Webhook專用服務器 ===============
 server.listen(PORT, '0.0.0.0', async () => {
-  console.log(`🌐 LCAS 2.0 LINE Webhook 服務已啟動於 Port ${PORT}`);
+  console.log(`🌐 LCAS 服務已啟動於 Port ${PORT}`);
 
   // 在背景中載入其他模組
   try {
     await loadWebhookModule();
     await loadApplicationModules();
-
-
+    console.log('✅ 系統啟動完成');
   } catch (error) {
-    console.error('❌ 背景模組載入失敗:', error.message);
+    console.error('❌ 系統啟動失敗:', error.message);
   }
 });
