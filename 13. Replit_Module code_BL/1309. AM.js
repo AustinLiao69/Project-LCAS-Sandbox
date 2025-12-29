@@ -1316,7 +1316,7 @@ async function AM_initializeUserLedger(UID, ledgerIdPrefix = "user_") {
 
     // 階段二優化：測試Firebase連接可用性
     try {
-      await db.collection('_health_check').doc('test').get();
+      await db.collection('_system').doc('_test').get();
     } catch (connectError) {
       throw new Error(`Firebase連接測試失敗: ${connectError.message}`);
     }

@@ -65,12 +65,9 @@ async function initializeServices() {
     // 步驟 5：驗證Firebase連線（階段一修復：添加超時機制）
     console.log('🔗 驗證Firebase連線...');
     try {
-      // 使用Promise.race實現超時機制
+      // 使用Promise.race實現超時機制 - 改為檢查系統集合
       await Promise.race([
-        db.collection('_health_check').doc('init_test').set({
-          timestamp: new Date(),
-          status: 'firebase_ready'
-        }),
+        db.collection('_system').doc('_test').get(),
         new Promise((_, reject) =>
           setTimeout(() => reject(new Error('Firebase連線超時')), 8000)
         )
