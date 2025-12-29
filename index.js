@@ -74,7 +74,7 @@ let BK, LBK, DD, AM, SR;
 
 // 延遲載入函數
 async function loadApplicationModules() {
-  
+
 
   try {
     BK = require('./13. Replit_Module code_BL/1301. BK.js');
@@ -490,9 +490,8 @@ server.listen(PORT, '0.0.0.0', async () => {
     await loadWebhookModule();
     await loadApplicationModules();
 
-    
+
   } catch (error) {
     console.error('❌ 背景模組載入失敗:', error.message);
   }
 });
-
