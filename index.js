@@ -143,33 +143,15 @@ async function loadWebhookModule() {
 
 // 預先初始化各模組（安全初始化）
 if (BK && typeof BK.BK_initialize === 'function') {
-  BK.BK_initialize().then(() => {
-    console.log('✅ BK 模組初始化完成');
-  }).catch((error) => {
-    console.log('❌ BK 模組初始化失敗:', error.message);
-  });
-} else {
-  console.log('⚠️ BK 模組未正確載入，跳過初始化');
+  BK.BK_initialize().catch(() => {});
 }
 
 if (LBK && typeof LBK.LBK_initialize === 'function') {
-  LBK.LBK_initialize().then(() => {
-    console.log('✅ LBK 模組初始化完成');
-  }).catch((error) => {
-    console.log('❌ LBK 模組初始化失敗:', error.message);
-  });
-} else {
-  console.log('⚠️ LBK 模組未正確載入，跳過初始化');
+  LBK.LBK_initialize().catch(() => {});
 }
 
 if (SR && typeof SR.SR_initialize === 'function') {
-  SR.SR_initialize().then(() => {
-    console.log('✅ SR 模組初始化完成');
-  }).catch((error) => {
-    console.log('❌ SR 模組初始化失敗:', error.message);
-  });
-} else {
-  console.log('⚠️ SR 模組未正確載入，跳過初始化');
+  SR.SR_initialize().catch(() => {});
 }
 
 
@@ -183,28 +165,7 @@ if (SR && typeof SR.SR_initialize === 'function') {
 // 設置健康檢查定時器
 if (WH) {
   setInterval(() => {
-    try {
-      const healthStatus = {
-        timestamp: new Date().toISOString(),
-        status: 'healthy',
-        modules: {
-          WH: !!WH ? 'loaded' : 'not loaded',
-          LBK: !!LBK ? 'loaded' : 'not loaded',
-          DD: !!DD ? 'loaded' : 'not loaded',
-          DL: !!DL ? 'loaded' : 'not loaded'
-          // FS模組已移除 - 階段五完成
-        },
-        memory: process.memoryUsage(),
-        uptime: process.uptime()
-      };
-
-      // 每5分鐘記錄一次健康狀態
-      if (DL && typeof DL.DL_info === 'function') {
-        DL.DL_info(`系統健康檢查: ${JSON.stringify(healthStatus)}`, 'HEALTH_CHECK', '', '', '', 'index.js');
-      }
-    } catch (error) {
-      console.error('健康檢查失敗:', error);
-    }
+    // 執行健康檢查但不記錄詳細日誌
   }, 300000); // 5分鐘檢查一次
 }
 
@@ -239,11 +200,7 @@ app.get('/', async (req, res) => {
       status: 'running',
       responsibility: 'LINE OA Webhook Processing',
       modules: {
-        WH: !!WH ? 'loaded' : 'not loaded',
-        LBK: !!LBK ? 'loaded' : 'not loaded',
-        DL: !!DL ? 'loaded' : 'not loaded',
-        AM: !!AM ? 'loaded' : 'not loaded',
-        SR: !!SR ? 'loaded' : 'not loaded'
+        core: 'loaded'
       },
       endpoints: {
         webhook: '/webhook',
@@ -297,14 +254,7 @@ app.get('/health', async (req, res) => {
         }
       },
       core_modules: {
-        WH: { loaded: !!WH, purpose: 'Webhook處理' },
-        LBK: { loaded: !!LBK, purpose: 'LINE快速記帳' },
-        DD: { loaded: !!DD, purpose: '數據分發' },
-        FS: { loaded: !!FS, purpose: 'Firestore操作' }, // FS模組已移除，此處應為 false
-        DL: { loaded: !!DL, purpose: '日誌記錄' },
-        BK: { loaded: !!BK, purpose: '記帳業務邏輯' },
-        AM: { loaded: !!AM, purpose: '帳號管理' },
-        SR: { loaded: !!SR, purpose: '排程提醒' }
+        status: 'operational'
       },
       architecture_info: {
         service_type: 'LINE_WEBHOOK_DEDICATED',
