@@ -1,14 +1,15 @@
 /**
- * ASL.js_API服務層模組_2.2.1
+ * ASL.js_API服務層模組_2.3.0
  * @module API服務層模組（統一回應格式）
- * @description LCAS 2.0 API Service Layer - 階段三升級：ASL路由動態化
+ * @description LCAS 2.0 API Service Layer - 階段一升級：LINE Webhook與WebSocket整合
  * @update 2025-10-03: 階段二升級 - 補完MLS.js和BM.js的API端點，並引入CM.js進行協作管理
  * @update 2025-10-10: DCN-0023階段二 - 新增WCM模組，處理帳戶與科目管理API端點轉發
  * @update 2025-10-15: 階段三 - ASL路由動態化 (帳本類型識別與動態轉發)
- * @date 2025-10-15
+ * @update 2025-12-30: 階段一升級 - 整合LINE Webhook與WebSocket功能
+ * @date 2025-12-30
  */
 
-console.log('🚀 LCAS ASL (API Service Layer) v2.2.1 啟動中...');
+console.log('🚀 LCAS ASL (API Service Layer) v2.3.0 啟動中...');
 console.log('📅 啟動時間:', new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' }));
 
 /**
@@ -37,7 +38,7 @@ process.on('unhandledRejection', (reason, promise) => {
 console.log('🔥 ASL階段二升級：優先初始化Firebase...');
 
 let firebaseInitialized = false;
-let AM, BK, DL, BM, CM, WCM; // WCM: Wallet and Category Management module (DCN-0023)
+let AM, BK, DL, BM, CM, WCM, WH; // WH: Webhook module
 
 /**
  * Firebase服務初始化函數（階段一修復版）
@@ -104,50 +105,6 @@ async function initializeServices() {
   }
 }
 
-// 階段一修復：增強Firebase初始化重試機制
-async function waitForFirebaseInit() {
-  const maxRetries = 3;
-  const maxInitTime = 15000; // 最大初始化時間15秒
-  let retryCount = 0;
-
-  while (retryCount < maxRetries) {
-    try {
-      console.log(`🔄 Firebase初始化嘗試 ${retryCount + 1}/${maxRetries}...`);
-
-      // 為整個初始化流程添加超時機制
-      const success = await Promise.race([
-        initializeServices(),
-        new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('Firebase初始化總體超時')), maxInitTime)
-        )
-      ]);
-
-      if (success) {
-        console.log(`🎯 Firebase初始化成功 (嘗試次數: ${retryCount + 1})`);
-        return true;
-      }
-    } catch (error) {
-      console.error(`💥 Firebase初始化嘗試 ${retryCount + 1} 失敗:`, error.message);
-
-      // 如果是超時錯誤，提供更具體的指導
-      if (error.message.includes('超時')) {
-        console.warn('⚠️ 檢測到超時問題，建議檢查網路連線或Firestore權限設定');
-      }
-    }
-
-    retryCount++;
-    if (retryCount < maxRetries) {
-      const waitTime = Math.min(retryCount * 2, 5); // 最多等待5秒
-      console.log(`⏳ 等待 ${waitTime} 秒後重試...`);
-      await new Promise(resolve => setTimeout(resolve, waitTime * 1000));
-    }
-  }
-
-  console.error('❌ Firebase初始化最終失敗，系統將以降級模式啟動');
-  console.warn('🔧 建議檢查：1)網路連線 2)Firebase配置 3)Firestore權限');
-  return false;
-}
-
 /**
  * 03. BL層模組載入（P1-2範圍）- 階段一修復版
  * @version 2025-09-22-V2.0.4
@@ -168,7 +125,8 @@ async function loadBLModules() {
     DL: false,
     BM: false,  // P2 模組：預算管理
     CM: false,  // P2 模組：協作與帳本管理
-    WCM: false  // DCN-0023 模組：帳戶與科目管理
+    WCM: false, // DCN-0023 模組：帳戶與科目管理
+    WH: false   // 階段一新增：Webhook模組
     // FS模組已移除 - 職責完全分散至專門模組
   };
 
@@ -315,6 +273,17 @@ async function loadBLModules() {
     } catch (error) {
       console.error('❌ WCM 模組載入失敗:', error.message);
       moduleStatus.WCM = false;
+    }
+
+    // 階段一新增：載入WH模組 (Webhook處理)
+    try {
+      console.log('📦 載入階段一新增模組 - WH (LINE Webhook處理)...');
+      WH = require('./13. Replit_Module code_BL/1311. WH.js');
+      moduleStatus.WH = true;
+      console.log('✅ WH (LINE Webhook處理) 模組載入成功');
+    } catch (error) {
+      console.error('❌ WH 模組載入失敗:', error.message);
+      moduleStatus.WH = false;
     }
 
 
@@ -619,10 +588,10 @@ app.use((req, res, next) => {
 app.get('/', (req, res) => {
   res.apiSuccess({
     service: 'LCAS 2.0 API Service Layer (統一回應格式)',
-    version: '2.2.1', // 升級到v2.2.1
+    version: '2.3.0', // 升級到v2.3.0
     status: 'running',
     port: PORT,
-    architecture: 'ASL -> BL層直接調用（優化版）',
+    architecture: 'ASL → BL層直接調用 (優化版)',
     dcn_0015_features: {
       unified_response_format: true,
       four_mode_support: true,
@@ -656,7 +625,8 @@ app.get('/', (req, res) => {
       // FS模組已移除，功能整合至其他專門模組
       BM: !!BM ? 'loaded' : 'not loaded',  // P2 模組
       CM: !!CM ? 'loaded' : 'not loaded',   // P2 模組 - 包含帳本管理功能
-      WCM: !!WCM ? 'loaded' : 'not loaded' // DCN-0023 模組
+      WCM: !!WCM ? 'loaded' : 'not loaded', // DCN-0023 模組
+      WH: !!WH ? 'loaded' : 'not loaded' // 階段一新增: Webhook模組
     },
     supported_modes: ['Expert', 'Inertial', 'Cultivation', 'Guiding']
   }, 'ASL統一回應格式運行正常');
@@ -666,7 +636,7 @@ app.get('/health', (req, res) => {
   const healthStatus = {
     status: 'healthy',
     service: 'ASL統一回應格式',
-    version: '2.2.1', // 升級到v2.2.1
+    version: '2.3.0', // 升級到v2.3.0
     port: PORT,
     uptime: process.uptime(),
     memory: process.memoryUsage(),
@@ -677,7 +647,8 @@ app.get('/health', (req, res) => {
       DL: !!DL ? 'ready' : 'unavailable',
       BM: !!BM ? 'ready' : 'unavailable',  // P2 模組
       CM: !!CM ? 'ready_with_ledger_mgmt' : 'unavailable',   // P2 模組 - 包含帳本管理功能
-      WCM: !!WCM ? 'ready' : 'unavailable' // DCN-0023 模組
+      WCM: !!WCM ? 'ready' : 'unavailable', // DCN-0023 模組
+      WH: !!WH ? 'ready' : 'unavailable'  // 階段一新增: Webhook模組
     },
     dcn_0015_phase1: {
       unified_response_implemented: true,
@@ -709,6 +680,10 @@ app.get('/health', (req, res) => {
       am_module_status: !!AM ? 'loaded' : 'failed',
       fs_module_removed: true, // FS模組已移除
       cm_module_independent: !!CM ? 'ready' : 'unavailable'
+    },
+    stage1_integration: { // 階段一新增：Webhook和WebSocket整合狀態
+      line_webhook_integrated: !!WH,
+      websocket_server_active: true // 假設WebSocket server always active if server started
     }
   };
 
@@ -2704,45 +2679,148 @@ app.use((error, req, res, next) => {
   );
 });
 
+// =============== LINE Webhook 處理 ===============
+// 階段一新增：LINE Webhook 端點
+app.post('/webhook', async (req, res) => {
+  console.log('🤖 LINE Webhook 收到請求');
+  if (!WH || typeof WH.handleWebhook !== 'function') {
+    console.error('❌ LINE Webhook 處理器未載入或不可用');
+    return res.status(500).send('Webhook processor not available');
+  }
+
+  try {
+    await WH.handleWebhook(req, res);
+  } catch (error) {
+    console.error('❌ LINE Webhook 處理錯誤:', error);
+    // 確保即使處理器拋出錯誤，也返回一個回應
+    if (!res.headersSent) {
+      res.status(500).send('Internal Server Error during webhook processing');
+    }
+  }
+});
+
+// 階段一新增：健康檢查端點 (用於檢查LINE Webhook服務)
+// 其實/health端點已經存在，這裡僅作說明，確保WH模組也被檢查
+// app.get('/health', (req, res) => { ... }); // 參考上方/health端點的實現
+
+// 階段一新增：Webhook模組載入函數
+async function loadWebhookModule() {
+  if (WH && typeof WH === 'object') {
+    console.log('✅ WH模組已預先載入');
+    return;
+  }
+  try {
+    console.log('📦 載入WH模組 (LINE Webhook處理)...');
+    WH = require('./13. Replit_Module code_BL/1311. WH.js');
+    console.log('✅ WH模組載入成功');
+    return WH;
+  } catch (error) {
+    console.error('❌ WH模組載入失敗:', error.message);
+    console.error('❌ WH模組錯誤堆疊:', error.stack);
+    throw new Error('WH module failed to load');
+  }
+}
+
+
+// =============== WebSocket 伺服器設定 ===============
+// 階段一新增：WebSocket 伺服器設定
+
+// =============== WebSocket 即時協作同步整合 ===============
+  const http = require('http');
+  const WebSocket = require('ws');
+
+  const server = http.createServer(app);
+  const wss = new WebSocket.Server({ server });
+
+  wss.on('connection', (ws, req) => {
+    console.log('📡 WebSocket 連線建立');
+
+    ws.on('message', (message) => {
+      try {
+        const data = JSON.parse(message);
+
+        // 處理即時協作同步
+        if (data.type === 'collaboration_sync') {
+          // 廣播給其他連線的用戶
+          wss.clients.forEach((client) => {
+            if (client !== ws && client.readyState === WebSocket.OPEN) {
+              client.send(JSON.stringify({
+                type: 'sync_update',
+                data: data.payload,
+                timestamp: new Date().toISOString()
+              }));
+            }
+          });
+        }
+      } catch (error) {
+        console.error('WebSocket 訊息處理錯誤:', error);
+      }
+    });
+
+    ws.on('close', () => {
+      console.log('📡 WebSocket 連線關閉');
+    });
+  });
+
+
 /**
- * 10. 服務器啟動（階段一修復版）
- * @version 2025-01-24-V2.1.6
- * @date 2025-01-24
- * @description 在模組載入完成後啟動ASL純轉發服務器，增強穩定性
+ * 10. 服務器啟動（階段一整合版）
+ * @version 2025-12-30-V2.3.0
+ * @date 2025-12-30
+ * @description 整合LINE Webhook和WebSocket功能的統一服務器
  */
-  const server = app.listen(PORT, '0.0.0.0', () => {
-    console.log(`🌐 LCAS ASL純轉發窗口已啟動於 Port ${PORT}`);
+  server.listen(PORT, '0.0.0.0', async () => {
+    // 在背景中載入Webhook模組
+    try {
+      if (!WH) {
+        await loadWebhookModule();
+      }
+      console.log('✅ 所有模組載入完成');
+    } catch (error) {
+      console.error('❌ 系統啟動失敗:', error.message);
+      // 如果webhook模組載入失敗，則可能需要終止程式
+      if (error.message.includes('WH module failed to load')) {
+        process.exit(1);
+      }
+    }
+
+    console.log(`🌐 LCAS ASL統一服務已啟動於 Port ${PORT}`);
     console.log(`📍 服務地址: http://0.0.0.0:${PORT}`);
     console.log(`🔗 健康檢查: http://0.0.0.0:${PORT}/health`);
-    console.log(`🎯 DCN-0015第二階段完成: ASL格式驗證強化`);
-    // P1-2範圍API端點: AM(19) + BK(15) = 34個端點
-    // P2範圍API端點: 預算(5) + 協作(4) = 9個端點
-    // DCN-0023範圍API端點: 帳戶(8) + 科目(6) = 14個端點
-    console.log(`📋 P1-2 + P2 + DCN-0023 API端點: AM(19) + BK(15) + BM(5) + CM(4) + WCM(14) = 57個端點`);
+    console.log(`🤖 LINE Webhook 端點: http://0.0.0.0:${PORT}/webhook`);
+    console.log(`🚀 WebSocket 伺服器已啟動`);
 
     // 第二階段完成狀態報告
     const firebaseStatus = moduleStatus.firebase ? '✅' : '❌';
     const amStatus = moduleStatus.AM ? '✅' : '❌';
+    const bkStatus = moduleStatus.BK ? '✅' : '❌';
+    const dlStatus = moduleStatus.DL ? '✅' : '❌';
     const bmStatus = moduleStatus.BM ? '✅' : '❌';
     const cmStatus = moduleStatus.CM ? '✅' : '❌';
     const wcmStatus = moduleStatus.WCM ? '✅' : '❌';
-    const overallStatus = moduleStatus.firebase && moduleStatus.AM && moduleStatus.BK && moduleStatus.BM && moduleStatus.CM && moduleStatus.WCM ? '完全就緒' : '部分就緒';
+    const whStatus = moduleStatus.WH ? '✅' : '❌';
 
-    console.log(`🔧 第二階段完成狀態: ${overallStatus}`);
-    console.log(`📦 核心模組狀態: Firebase(${firebaseStatus}), AM(${amStatus}), BK(${moduleStatus.BK ? '✅' : '❌'}), BM(${bmStatus}), CM(${cmStatus}), WCM(${wcmStatus})`);
-    console.log(`✨ 容錯機制完全移除: 100%信任BL層標準格式`);
-    console.log(`🎉 第二階段修正完成: 協作管理API端點補完`);
-    console.log(`🚀 DCN-0023階段二更新: 帳戶與科目管理API端點已整合`);
+    let overallStatus = '部分就緒';
+    if (firebaseStatus === '✅' && amStatus === '✅' && bkStatus === '✅' && bmStatus === '✅' && cmStatus === '✅' && wcmStatus === '✅' && whStatus === '✅') {
+      overallStatus = '完全就緒';
+    }
 
-    if (moduleStatus.firebase && moduleStatus.AM && moduleStatus.BK && moduleStatus.BM && moduleStatus.CM && moduleStatus.WCM) {
-      console.log('🚀 ASL v2.2.1已完全就緒，階段三動態路由功能已啟用！');
-      console.log('🔗 路由策略: 一般帳本 → ledgers/*, 協作帳本 → collaborations/*');
-      console.log('🌐 ASL服務器已啟動於 Port 5000');
+    console.log(`🔧 階段一整合狀態: ${overallStatus}`);
+    console.log(`📦 核心模組狀態: Firebase(${firebaseStatus}), AM(${amStatus}), BK(${bkStatus}), DL(${dlStatus}), BM(${bmStatus}), CM(${cmStatus}), WCM(${wcmStatus}), WH(${whStatus})`);
+    console.log(`✨ 階段一整合: LINE Webhook 與 WebSocket 功能已啟用`);
+    console.log(`🎯 統一服務: RESTful API + LINE Webhook + WebSocket`);
+
+    // 最終啟動狀態報告
+    if (moduleStatus.firebase && moduleStatus.AM && moduleStatus.BK && moduleStatus.BM && moduleStatus.CM && moduleStatus.WCM && moduleStatus.WH) {
+      console.log('🚀 ASL v2.3.0已完全就緒，LINE Webhook功能整合完成！');
+      console.log('🔗 統一服務: RESTful API + LINE Webhook + WebSocket');
+      console.log('🌐 ASL統一服務器已啟動於 Port 5000');
+    } else if (!moduleStatus.WH) {
+      console.log('⚠️ WH (LINE Webhook處理) 模組載入失敗，Webhook功能不可用');
     } else if (!moduleStatus.WCM) {
       console.log('⚠️ WCM (帳戶與科目管理) 模組載入失敗，帳戶與科目管理功能不可用');
-    }
-     else {
-      console.log('❌ 部分P2或DCN-0023模組載入失敗，請檢查相關模組狀態');
+    } else {
+      console.log('❌ 部分模組載入失敗，請檢查相關模組狀態');
     }
   });
 
@@ -2755,7 +2833,7 @@ app.use((error, req, res, next) => {
 process.on('SIGTERM', () => {
   console.log('🛑 ASL收到SIGTERM信號，正在關閉服務器...');
   server.close(() => {
-    console.log('✅ ASL純轉發窗口已安全關閉');
+    console.log('✅ ASL統一服務已安全關閉');
     process.exit(0);
   });
 });
@@ -2763,28 +2841,28 @@ process.on('SIGTERM', () => {
 process.on('SIGINT', () => {
   console.log('🛑 ASL收到SIGINT信號，正在關閉服務器...');
   server.close(() => {
-    console.log('✅ ASL純轉發窗口已安全關閉');
+    console.log('✅ ASL統一服務已安全關閉');
     process.exit(0);
   });
 });
 
-console.log('🎉 LCAS ASL階段二及DCN-0023更新完成！');
-  console.log(`📦 P1-2 + P2 + DCN-0023 範圍BL模組載入狀態: Firebase(${moduleStatus.firebase ? '✅' : '❌'}), AM(${moduleStatus.AM ? '✅' : '❌'}), BK(${moduleStatus.BK ? '✅' : '❌'}), DL(${moduleStatus.DL ? '✅' : '❌'}), FS(${moduleStatus.FS ? '✅' : '❌'}), BM(${moduleStatus.BM ? '✅' : '❌'}), CM(${moduleStatus.CM ? '✅' : '❌'}), WCM(${moduleStatus.WCM ? '✅' : '❌'})`);
-  console.log('🔧 純轉發機制: 57個API端點 -> 統一使用BL層標準格式');
-  console.log('✨ 階段二及DCN-0023更新: 協作管理API端點補完，帳戶與科目管理API端點整合');
-  console.log('🎯 協作管理功能: 帳本創建/讀取/更新/刪除，協作者管理（邀請/移除/權限更新），衝突檢測與解決');
-  console.log('🎯 帳戶與科目管理功能: 帳戶CRUD，餘額查詢，轉帳，科目CRUD，科目樹狀結構');
-  console.log('🔍 API 端點: /api/v1/ledgers, /api/v1/budgets, /api/v1/ledgers/:id/collaborators, /api/v1/ledgers/:id/invitations, /api/v1/ledgers/:id/conflicts, /api/v1/ledgers/:id/resolve-conflict, /api/v1/accounts, /api/v1/accounts/:id, /api/v1/accounts/:id/balance, /api/v1/accounts/types, /api/v1/accounts/transfer, /api/v1/categories, /api/v1/categories/:id, /api/v1/categories/tree');
+console.log('🎉 LCAS ASL階段一整合更新完成！');
+  console.log(`📦 P1-2 + P2 + DCN-0023 + WH 範圍BL模組載入狀態: Firebase(${moduleStatus.firebase ? '✅' : '❌'}), AM(${moduleStatus.AM ? '✅' : '❌'}), BK(${moduleStatus.BK ? '✅' : '❌'}), DL(${moduleStatus.DL ? '✅' : '❌'}), BM(${moduleStatus.BM ? '✅' : '❌'}), CM(${moduleStatus.CM ? '✅' : '❌'}), WCM(${moduleStatus.WCM ? '✅' : '❌'}), WH(${moduleStatus.WH ? '✅' : '❌'})`);
+  console.log('🔧 純轉發機制: 57個API端點 + Webhook + WebSocket');
+  console.log('✨ 階段一整合: LINE Webhook 與 WebSocket 功能已啟用');
+  console.log('🎯 統一服務: RESTful API + LINE Webhook + WebSocket');
+  console.log('🔍 API 端點: /api/v1/*, /webhook, WebSocket');
 
-    if (moduleStatus.firebase && moduleStatus.AM && moduleStatus.BK && moduleStatus.BM && moduleStatus.CM && moduleStatus.WCM) {
-      console.log('🚀 ASL v2.2.1已完全就緒，階段三動態路由功能已啟用！');
-      console.log('🔗 路由策略: 一般帳本 → ledgers/*, 協作帳本 → collaborations/*');
-      console.log('🌐 ASL服務器已啟動於 Port 5000');
+    if (moduleStatus.firebase && moduleStatus.AM && moduleStatus.BK && moduleStatus.BM && moduleStatus.CM && moduleStatus.WCM && moduleStatus.WH) {
+      console.log('🚀 ASL v2.3.0已完全就緒，LINE Webhook功能整合完成！');
+      console.log('🔗 統一服務: RESTful API + LINE Webhook + WebSocket');
+      console.log('🌐 ASL統一服務器已啟動於 Port 5000');
+    } else if (!moduleStatus.WH) {
+      console.log('⚠️ WH (LINE Webhook處理) 模組載入失敗，Webhook功能不可用');
     } else if (!moduleStatus.WCM) {
       console.log('⚠️ WCM (帳戶與科目管理) 模組載入失敗，帳戶與科目管理功能不可用');
-    }
-     else {
-      console.log('❌ 部分P2或DCN-0023模組載入失敗，請檢查相關模組狀態');
+    } else {
+      console.log('❌ 部分模組載入失敗，請檢查相關模組狀態');
     }
 
   return server;
