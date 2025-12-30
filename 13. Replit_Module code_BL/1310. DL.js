@@ -32,7 +32,7 @@ const DL_CONFIG = {
   enableConsoleLog: true, // 是否啟用控制台日誌
   enableFirestoreLog: true, // 是否啟用Firestore日誌
   consoleLogLevel: process.env.DL_CONSOLE_LOG_LEVEL ? parseInt(process.env.DL_CONSOLE_LOG_LEVEL) : 0, // 控制台日誌級別
-  firestoreLogLevel: process.env.DL_FIRESTORE_LOG_LEVEL ? parseInt(process.env.DL_FIRESTORE_LOG_LEVEL) : (process.env.NODE_ENV === 'production' ? 3 : 0), // 正式環境僅ERROR以上
+  firestoreLogLevel: process.env.DL_FIRESTORE_LOG_LEVEL ? parseInt(process.env.DL_FIRESTORE_LOG_LEVEL) : 0, 
 
   // 1.2 日誌存儲位置
   logCollection: "log", // Firestore日誌集合名稱
