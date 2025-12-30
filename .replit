@@ -11,7 +11,7 @@ packages = ["undollar"]
 
 [deployment]
 run = ["node", "index.js"]
-deploymentTarget = "autoscale"
+deploymentTarget = "gce"
 ignorePorts = false
 
 [[ports]]
