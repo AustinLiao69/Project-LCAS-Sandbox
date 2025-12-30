@@ -3,6 +3,89 @@
 
 不要寫code，請根據我的回覆更新提案。提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
 
+------------------------------------------
+20251230. 合併index.js至ASL
+
+approved請進行階段一
+
+根據您的回覆及9904文件作為資深SQA的分析，我同意您的解決方案，並已根據您的指示進行了調整。以下是更新後的提案：
+問題分析
+核心問題識別
+當前系統存在職責重複和架構冗餘問題：
+1.	index.js (Port 3000)：處理LINE Webhook + 部分系統監控
+2.	ASL.js (Port 5000)：處理132個RESTful API端點 + 系統監控
+真實原因分析
+技術層面：
+•	兩個服務器各自維護獨立的Express實例
+•	重複的健康檢查、監控、錯誤處理邏輯
+•	資源浪費：雙重服務器運行
+
+SQA深度洞察：
+就像公司有兩個客服部門，一個專門處理電話客服(LINE Webhook)，另一個處理線上客服(RESTful API)。但兩個部門都各自維護自己的接待櫃台(健康檢查)、主管辦公室(監控系統)，造成資源重複投入。現在要把兩個部門合併到同一個辦公區域，共用基礎設施。
+
+解決方案
+架構合併策略
+將index.js的LINE Webhook功能整合至ASL.js，形成統一服務層：
+•	保留ASL.js為主服務 (Port 5000)
+•	整合LINE Webhook處理能力
+•	統一監控與健康檢查機制（不寫入Firestore）
+
+階段性實施計畫
+階段一：核心功能整合
+目標：將index.js的LINE Webhook功能合併至ASL.js
+修改內容：
+1.	在ASL.js中新增LINE Webhook端點處理（/webhook, /check-https）
+2.	整合WebSocket功能
+3.	合併模組載入機制（WH模組整合）
+4.	保留健康檢查但不寫入Firestore
+修改檔案：
+•	ASL.js (v2.2.1 → v2.3.0)
+Before/After行為差異：
+•	Before: 兩個獨立服務器運行，各自管理Express實例
+•	After: 單一服務器處理所有功能，統一路由管理，減少資源消耗
+
+階段二：配置文件更新
+目標：更新系統配置，移除index.js依賴
+修改內容：
+1.	更新.replit工作流配置（移除並行任務中的node index.js）
+2.	調整部署配置（改為單一進入點）
+修改檔案：
+•	.replit
+Before/After行為差異：
+•	Before: 並行運行node index.js和node ASL.js
+•	After: 僅運行node ASL.js
+
+階段三：清理廢棄檔案
+目標：移除不再使用的index.js
+修改內容：
+1.	刪除index.js檔案
+2.	清理相關引用
+修改檔案：
+•	刪除 index.js
+影響範圍：
+•	所有原本調用index.js的外部服務需改為調用ASL.js Port 5000
+需要更新的調用方式
+原本調用index.js (Port 3000)的功能：
+1.	LINE Platform Webhook URL：https://domain:3000/webhook → https://domain:5000/webhook
+2.	健康檢查：https://domain:3000/health → https://domain:5000/health
+3.	HTTPS支援檢查：https://domain:3000/check-https → https://domain:5000/check-https
+4.	WebSocket連接：ws://domain:3000 → ws://domain:5000
+5.	服務狀態首頁：https://domain:3000/ → https://domain:5000/
+SQA專業建議
+品質保證重點：
+1.	合併後log數量不增加：僅保留必要的服務日誌，移除重複記錄
+2.	函數最小化原則：除非合併必要，否則不新增任何函數
+3.	向下兼容性：確保所有現有API端點功能不受影響
+4.	單一職責維持：合併後ASL.js仍專注於API服務層職責
+請確認是否Approve此更新後的解決方案，我將按階段實施合併計畫。
+
+
+
+------------------------------------------
+20251230. 合併index.js至ASL
+
+不要寫code，請根據我的回覆更新提案。提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
+
 根據9904文件作為資深SQA的角度，我深入分析當前架構問題並提出合併方案。
 問題分析
 核心問題識別
@@ -14,14 +97,18 @@
 •	兩個服務器各自維護獨立的Express實例
 •	重複的健康檢查、監控、錯誤處理邏輯
 •	資源浪費：雙重服務器運行
+
 用簡單概念解釋：
 就像公司有兩個客服部門，一個專門處理電話客服(LINE Webhook)，另一個處理線上客服(RESTful API)。但兩個部門都各自維護自己的接待櫃台(健康檢查)、主管辦公室(監控系統)，造成資源重複投入。現在要把兩個部門合併到同一個辦公區域，共用基礎設施。
+
 解決方案
 架構合併策略
 將index.js的LINE Webhook功能整合至ASL.js，形成統一服務層：
 •	保留ASL.js為主服務 (Port 5000)
 •	整合LINE Webhook處理能力
 •	統一監控與健康檢查機制
+=>健康檢查機制我OK，但是不要寫入到firestore
+
 階段性實施計畫
 階段一：核心功能整合
 目標：將index.js的LINE Webhook功能合併至ASL.js
@@ -34,6 +121,7 @@
 Before/After行為差異：
 •	Before: 兩個獨立服務器運行
 •	After: 單一服務器處理所有功能，減少資源消耗
+
 階段二：配置文件更新
 目標：更新系統配置，移除index.js依賴
 修改內容：
@@ -44,6 +132,7 @@ Before/After行為差異：
 Before/After行為差異：
 •	Before: 並行運行node index.js和node ASL.js
 •	After: 僅運行node ASL.js
+
 階段三：清理廢棄檔案
 目標：移除不再使用的index.js
 修改內容：
@@ -54,6 +143,7 @@ Before/After行為差異：
 影響範圍：
 •	所有原本調用index.js的外部服務需改為調用ASL.js Port 5000
 需要更新的調用方式
+
 原本調用index.js (Port 3000)的功能：
 1.	LINE Platform Webhook URL：https://domain:3000/webhook → https://domain:5000/webhook
 2.	健康檢查：https://domain:3000/health → https://domain:5000/health
