@@ -159,7 +159,7 @@ setInterval(() => {
   if (WH && typeof WH.WH_logDebug === 'function') {
     WH.WH_logDebug('系統健康檢查執行', '健康檢查', '', 'index.js');
   }
-}, 300000); // 5分鐘檢查一次
+}, 604800000); // 168小時檢查一次
 
 // =============== LINE Webhook專用服務器設置 ===============
 const express = require('express');
