@@ -39,8 +39,8 @@ const DL_CONFIG = {
   timezone: "Asia/Taipei", // 時區設置
 
   // 1.3 緩衝區設置 - 階段二：智能緩衝
-  logBufferSize: process.env.NODE_ENV === 'production' ? 50, // 正式環境減少緩衝區大小
-  bufferFlushInterval: process.env.NODE_ENV === 'production' ? 120000, // 正式環境延長刷新間隔
+  logBufferSize: process.env.NODE_ENV === 'production' ? 20 : 50, // 正式環境減少緩衝區大小
+  bufferFlushInterval: process.env.NODE_ENV === 'production' ? 300000 : 120000, // 正式環境延長刷新間隔
   logBuffer: [], // 日誌緩衝區
   lastBufferFlush: 0, // 上次緩衝區刷新時間
   

@@ -186,6 +186,9 @@ if (!envCheckResult.isComplete) {
     "WH_init",
     "WARNING",
   ]);
+} else if (process.env.NODE_ENV !== 'production') {
+  console.log('✅ WH模組環境變數檢查完整');
+}
 
 // 創建緩存服務 - 保留核心功能
 const cache = new NodeCache({ stdTTL: 600 }); // 10分鐘緩存
