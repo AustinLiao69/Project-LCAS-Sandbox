@@ -10,7 +10,7 @@ channel = "stable-24_11"
 packages = ["undollar"]
 
 [deployment]
-run = ["node", "index.js"]
+run = ["sh", "-c", "node index.js & node ASL.js & wait"]
 deploymentTarget = "gce"
 ignorePorts = false
 
