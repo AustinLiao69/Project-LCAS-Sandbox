@@ -1080,9 +1080,9 @@ function setDependencies(whModule, bkModule, ddModule) {
  * @description 快速設定生產環境僅記錄ERROR和CRITICAL級別
  */
 function DL_setProductionLogLevel() {
-  DL_CONFIG.firestoreLogLevel = DL_SEVERITY_LEVELS.ERROR;
-  DL_CONFIG.consoleLogLevel = DL_SEVERITY_LEVELS.ERROR;
-  console.log('✅ 已設定生產環境日誌級別 (ERROR+)');
+  DL_CONFIG.firestoreLogLevel = DL_SEVERITY_LEVELS.DEBUG;
+  DL_CONFIG.consoleLogLevel = DL_SEVERITY_LEVELS.DEBUG;
+  console.log('✅ 已設定生產環境日誌級別 (ALL)');
 }
 
 /**
