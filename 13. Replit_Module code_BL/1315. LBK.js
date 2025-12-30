@@ -63,8 +63,8 @@ try {
 
 // 配置參數 - 階段三：記憶體管理和批次處理優化
 const LBK_CONFIG = {
-  DEBUG: process.env.LBK_DEBUG === 'true' || process.env.NODE_ENV !== 'production',
-  LOG_LEVEL: process.env.NODE_ENV === 'production' ? "ERROR" : "DEBUG",
+  DEBUG: true,
+  LOG_LEVEL: "DEBUG",
   FIRESTORE_ENABLED: 'true',
   TIMEZONE: "Asia/Taipei",
   TEXT_PROCESSING: {
@@ -75,8 +75,8 @@ const LBK_CONFIG = {
 
   // 階段二保留：智能日誌控制
   SMART_LOGGING: {
-    SUCCESS_LOGGING: process.env.NODE_ENV !== 'production',
-    PARSING_DETAILS: process.env.NODE_ENV !== 'production',
+    SUCCESS_LOGGING: true,
+    PARSING_DETAILS: true,
     MEMORY_CACHE: [],
     MAX_CACHE_SIZE: 100 // 階段三：增加記憶體快取大小
   },
@@ -117,29 +117,27 @@ function LBK_logInfo(message, category, userId, functionName) {
 }
 
 function LBK_logDebug(message, category, userId, functionName) {
-  // 階段二：智能調試日誌
+  // 統一環境：所有環境都使用相同的調試日誌處理
   if (LBK_CONFIG.DEBUG) {
-    if (process.env.NODE_ENV === 'production') {
-      // 正式環境：僅存入記憶體快取
-      LBK_CONFIG.SMART_LOGGING.MEMORY_CACHE.push({
-        timestamp: new Date().toISOString(),
-        message: message,
-        category: category,
-        userId: userId,
-        functionName: functionName
-      });
-
-      // 限制快取大小
-      if (LBK_CONFIG.SMART_LOGGING.MEMORY_CACHE.length > LBK_CONFIG.SMART_LOGGING.MAX_CACHE_SIZE) {
-        LBK_CONFIG.SMART_LOGGING.MEMORY_CACHE.shift();
-      }
+    // 統一處理：正常記錄並存入記憶體快取
+    if (typeof DL !== 'undefined' && DL && typeof DL.DL_debug === 'function') {
+      DL.DL_debug(message, category, userId, 'DEBUG', '', 0, functionName, 'LBK');
     } else {
-      // 開發環境：正常記錄
-      if (typeof DL !== 'undefined' && DL && typeof DL.DL_debug === 'function') {
-        DL.DL_debug(message, category, userId, 'DEBUG', '', 0, functionName, 'LBK');
-      } else {
-        console.log(`[DEBUG] [LBK] ${message}`);
-      }
+      console.log(`[DEBUG] [LBK] ${message}`);
+    }
+    
+    // 同時存入記憶體快取供後續分析
+    LBK_CONFIG.SMART_LOGGING.MEMORY_CACHE.push({
+      timestamp: new Date().toISOString(),
+      message: message,
+      category: category,
+      userId: userId,
+      functionName: functionName
+    });
+
+    // 限制快取大小
+    if (LBK_CONFIG.SMART_LOGGING.MEMORY_CACHE.length > LBK_CONFIG.SMART_LOGGING.MAX_CACHE_SIZE) {
+      LBK_CONFIG.SMART_LOGGING.MEMORY_CACHE.shift();
     }
   }
 }
