@@ -71,6 +71,7 @@ Before/After行為差異：
 3.	HTTPS支援檢查：https://domain:3000/check-https → https://domain:5000/check-https
 4.	WebSocket連接：ws://domain:3000 → ws://domain:5000
 5.	服務狀態首頁：https://domain:3000/ → https://domain:5000/
+
 SQA專業建議
 品質保證重點：
 1.	合併後log數量不增加：僅保留必要的服務日誌，移除重複記錄
