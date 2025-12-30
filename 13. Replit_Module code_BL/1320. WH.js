@@ -81,9 +81,9 @@ try {
 
 // 1. 配置參數 - 階段二：優化日誌記錄
 const WH_CONFIG = {
-  DEBUG: process.env.NODE_ENV !== 'production',
+  DEBUG: true, // 統一環境：允許所有環境輸出調試日誌
   TEST_MODE: true, // 測試模式：跳過簽章驗證
-  LOG_MESSAGE_CONTENT: process.env.NODE_ENV !== 'production', // 正式環境不記錄訊息內容
+  LOG_MESSAGE_CONTENT: true, // 統一環境：允許所有環境記錄訊息內容
   MESSAGE_DEDUPLICATION: true, // 啟用消息去重
   MESSAGE_RETENTION_HOURS: 24, // 消息ID保留時間(小時)
   ASYNC_PROCESSING: true, // 啟用異步處理（快速回應）
@@ -1544,29 +1544,27 @@ async function WH_processEventAsync(event, requestId, userId) {
   }
 
   try {
-    // 階段二：僅在ERROR級別才寫入日誌，其他使用記憶體追蹤
-    if (process.env.NODE_ENV !== 'production') {
-      WH_directLogWrite([
-        WH_formatDateTime(new Date()),
-        `WH 2.0.3: 開始處理事件: ${event.type} [${requestId}]`,
-        "事件處理",
-        userId,
-        "",
-        "WH",
-        "",
-        0,
-        "WH_processEventAsync",
-        "INFO",
-      ]);
-    } else {
-      // 正式環境：使用記憶體追蹤
-      WH_CONFIG.MEMORY_TRACKING.trackingData.set(requestId, {
-        eventType: event.type,
-        userId: userId,
-        startTime: Date.now(),
-        status: 'processing'
-      });
-    }
+    // 階段一修復：統一所有環境的日誌輸出
+    WH_directLogWrite([
+      WH_formatDateTime(new Date()),
+      `WH 2.0.3: 開始處理事件: ${event.type} [${requestId}]`,
+      "事件處理",
+      userId,
+      "",
+      "WH",
+      "",
+      0,
+      "WH_processEventAsync",
+      "INFO",
+    ]);
+
+    // 同時使用記憶體追蹤（保留原有功能）
+    WH_CONFIG.MEMORY_TRACKING.trackingData.set(requestId, {
+      eventType: event.type,
+      userId: userId,
+      startTime: Date.now(),
+      status: 'processing'
+    });
 
     // 確保設置了預處理的replyToken屬性
     if (!event.replyToken && event.type === "message") {
@@ -1620,21 +1618,19 @@ async function WH_processEventAsync(event, requestId, userId) {
           // 階段一：實施WH→AM→LBK直接轉發流程
           console.log(`開始AM用戶驗證流程 [${requestId}]`);
 
-          // 階段二：AM驗證流程僅記錄關鍵節點
-          if (process.env.NODE_ENV !== 'production') {
-            WH_directLogWrite([
-              WH_formatDateTime(new Date()),
-              `WH 階段一: 開始AM用戶驗證流程 [${requestId}]`,
-              "AM驗證",
-              userId,
-              "",
-              "WH",
-              "",
-              0,
-              "WH_processEventAsync",
-              "INFO",
-            ]);
-          }
+          // 階段一修復：統一所有環境的AM驗證日誌
+          WH_directLogWrite([
+            WH_formatDateTime(new Date()),
+            `WH 階段一: 開始AM用戶驗證流程 [${requestId}]`,
+            "AM驗證",
+            userId,
+            "",
+            "WH",
+            "",
+            0,
+            "WH_processEventAsync",
+            "INFO",
+          ]);
 
           // 步驟1：文字訊息處理前，安全調用 AM.AM_validateAccountExists
           let accountValidation;
@@ -1770,10 +1766,20 @@ async function WH_processEventAsync(event, requestId, userId) {
 
           console.log(`用戶帳本驗證通過: ${ledgerResult.ledgerId} [${requestId}]`);
 
-          // 階段二：轉發流程不再記錄中間狀態
-          if (process.env.NODE_ENV !== 'production') {
-            console.log(`AM驗證完成，轉發至LBK [${requestId}]`);
-          }
+          // 階段一修復：統一所有環境的轉發流程日誌
+          console.log(`AM驗證完成，轉發至LBK [${requestId}]`);
+          WH_directLogWrite([
+            WH_formatDateTime(new Date()),
+            `WH 階段一: AM驗證完成，轉發至LBK [${requestId}]`,
+            "轉發流程",
+            userId,
+            "",
+            "WH",
+            "",
+            0,
+            "WH_processEventAsync",
+            "INFO",
+          ]);
 
           // 步驟3：初始化完成後，轉發給 LBK 處理（包含科目歸類）
           const lbkInputData = {
@@ -1831,8 +1837,21 @@ async function WH_processEventAsync(event, requestId, userId) {
                 "WH_processEventAsync",
                 "ERROR",
               ]);
-            } else if (process.env.NODE_ENV !== 'production') {
+            } else {
+              // 階段一修復：統一所有環境的處理完成日誌
               console.log(`LBK處理完成 [${requestId}]`);
+              WH_directLogWrite([
+                WH_formatDateTime(new Date()),
+                `WH 階段一: LBK處理完成 [${requestId}]`,
+                "處理完成",
+                userId,
+                "",
+                "WH",
+                "",
+                0,
+                "WH_processEventAsync",
+                "INFO",
+              ]);
             }
 
             // 更新記憶體追蹤狀態
