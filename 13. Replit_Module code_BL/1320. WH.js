@@ -186,7 +186,7 @@ if (!envCheckResult.isComplete) {
     "WH_init",
     "WARNING",
   ]);
-} else if (process.env.NODE_ENV !== 'production') {
+} else {
   console.log('✅ WH模組環境變數檢查完整');
 }
 
