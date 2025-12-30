@@ -236,22 +236,6 @@ function doPost(req, res) {
     });
   }
 
-  // 檢查簽章驗證（如果不是測試模式）
-  if (!WH_CONFIG.TEST_MODE) {
-    const signature = req.get('X-Line-Signature');
-    const isValidSignature = WH_verifySignature(signature, JSON.stringify(req.body));
-    
-    if (!isValidSignature) {
-      console.log(`簽章驗證失敗 [${requestId}]`);
-      return res.status(401).json({
-        error: "簽章驗證失敗",
-        request_id: requestId
-      });
-    }
-  } else {
-    console.log(`測試模式：跳過簽章驗證 [${requestId}]`);
-  }
-
   try {
     // 記錄請求接收
     WH_directLogWrite([
