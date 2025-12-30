@@ -474,7 +474,7 @@ MM 	 DD 	 Description 	    Progress
 12	22	 將subject正名為category(僅限LINE模式相關模組)  	 Closed
 12	22	 修復無法識別已寫入synonyms的資料問題  	 Closed
 12	23	 導入科目歸類邏輯與支付方式歸類邏輯一次性互動方案  	 Ongoing
-12	23	 確認firestore寫入資料量超過上限問題  	 Ongoing
+12	23	 確認firestore寫入資料量超過上限問題  	 Closed
 12	24	 修復支付方式歸類邏輯  	 Ongoing
 12	24	 修改0070文件  	 Critical
 12	24	 修改LBK過時資料欄位  	 Ongoing
@@ -495,5 +495,6 @@ MM 	 DD 	 Description 	    Progress
 12	29	 修改index.js log過多問題  	 Closed
 12	29	 檢視0070文件：wallets子集合  	 Ongoing
 12	29	 修改ASL.js log過多問題  	 Ongoing
-12	30	 分析記帳時間  	 Ongoing
-12	30	 修改WH health check 時間到168小時  	 Ongoing
+12	30	 分析記帳時間  	 Closed
+12	30	 修改WH health check 時間到168小時  	 Closed
+12	30	 建立0003文件PBI  	 Ongoing
