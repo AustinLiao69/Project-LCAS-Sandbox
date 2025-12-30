@@ -24,7 +24,7 @@ MM 	 DD 	 Description 	    Progress
 11	12	 從SIT P3開始導入uesr story轉成test case	 Open
 11	13	 帳戶管理跟帳號管理的英文名稱需要分開。帳戶管理指的是銀行帳戶、現金帳戶、花旗銀行等等；帳號指的是account，帳戶叫Wallet	 Open
 11	14	 SIT P2的預算的CRUD有無成功？在Firebase如何呈現？	 Open
-11	14	 我的精力要專心在撰寫文件與設計架構上	 Open
+11	14	 我的精力要專心在撰寫文件與設計架構上	 Critical
 11	14	 SIT_P1：LINE OA的部分，LBK串接firebase好像還沒打通	 Open
 11	14	 希望有帳戶間的轉帳功能	 Open
 11	14	 產品做好後找認識與不認識的人做不刪檔封測，並且送他們帳號。設計一個問題回饋表單讓封測使用者回饋問題及表達希望的功能	 Open
