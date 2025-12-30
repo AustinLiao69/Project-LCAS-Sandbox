@@ -1,8 +1,8 @@
 /**
- * DL_診斷與日誌模組_2.2.1
+ * DL_診斷與日誌模組_2.2.2
  * @module DL模組
  * @description 提供統一的日誌記錄和系統診斷功能 - Firestore完整整合版本
- * @update 2025-09-23: 升級至2.2.1版本，修復參數驗證問題，增加相容性函數
+ * @update 2025-12-30: 升級至2.2.2版本，統一生產環境與開發環境日誌級別配置
  */
 
 // 引入Firebase動態配置模組
@@ -28,11 +28,11 @@ const moment = require("moment-timezone");
 
 // 1. 配置參數
 const DL_CONFIG = {
-  // 1.1 日誌記錄基本設置 - 階段二：環境變數控制
+  // 1.1 日誌記錄基本設置 - v2.2.2：統一環境日誌級別
   enableConsoleLog: true, // 是否啟用控制台日誌
   enableFirestoreLog: true, // 是否啟用Firestore日誌
-  consoleLogLevel: process.env.DL_CONSOLE_LOG_LEVEL ? parseInt(process.env.DL_CONSOLE_LOG_LEVEL) : 0, // 控制台日誌級別
-  firestoreLogLevel: process.env.DL_FIRESTORE_LOG_LEVEL ? parseInt(process.env.DL_FIRESTORE_LOG_LEVEL) : 0, 
+  consoleLogLevel: 0, // 控制台日誌級別：強制設為DEBUG級別，統一所有環境
+  firestoreLogLevel: 0, // Firestore日誌級別：強制設為DEBUG級別，統一所有環境 
 
   // 1.2 日誌存儲位置
   logCollection: "log", // Firestore日誌集合名稱
@@ -576,13 +576,13 @@ async function DL_log(logData) {
         logData.severity || "INFO", // 10. 嚴重等級
       ];
 
-      // 階段二：根據嚴重等級和環境決定處理方式
+      // v2.2.2：統一環境日誌處理 - 所有環境都輸出完整日誌
       if (severityLevel >= DL_CONFIG.firestoreLogLevel) {
         // 達到Firestore記錄級別，加入緩衝區
         DL_CONFIG.logBuffer.push(logRow);
         await DL_checkAndFlushBuffer();
-      } else if (process.env.NODE_ENV !== 'production') {
-        // 開發環境：低級別日誌放入記憶體暫存
+      } else {
+        // 統一環境：低級別日誌也放入記憶體暫存，確保可觀察性
         DL_CONFIG.memoryCache.push(logRow);
 
         // 限制記憶體暫存大小
@@ -590,7 +590,6 @@ async function DL_log(logData) {
           DL_CONFIG.memoryCache.shift(); // 移除最舊的記錄
         }
       }
-      // 正式環境低級別日誌直接丟棄，不消耗資源
 
       return true;
     } catch (error) {
