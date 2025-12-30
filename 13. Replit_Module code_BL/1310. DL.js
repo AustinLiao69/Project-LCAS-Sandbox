@@ -16,7 +16,7 @@ try {
   }
   admin = firebaseConfig.admin;
   db = firebaseConfig.getFirestoreInstance();
-  
+
 } catch (error) {
   console.error('❌ DL模組：Firebase動態配置載入失敗:', error.message);
   // 設定預設值以避免模組完全失效
@@ -43,7 +43,7 @@ const DL_CONFIG = {
   bufferFlushInterval: 120000, // 正式環境延長刷新間隔
   logBuffer: [], // 日誌緩衝區
   lastBufferFlush: 0, // 上次緩衝區刷新時間
-  
+
   // 階段二新增：記憶體暫存機制
   memoryCache: [], // 開發調試資訊記憶體暫存
   memoryCacheSize: 100, // 記憶體暫存大小限制
@@ -60,10 +60,18 @@ const DL_CONFIG = {
 
   // 1.6 Firestore 連接狀態
   firestoreInitialized: false, // Firestore 初始化狀態
-  
+
   // 1.7 配額管理 (階段一新增)
   lastFailureTime: 0, // 上次配額失敗時間
   quotaExhausted: false, // 配額耗盡標記
+
+  // 階段二新增：統一環境日誌級別
+  SMART_LOGGING: {
+    SUCCESS_LOGGING: true, // 統一環境：允許記錄成功日誌
+    PARSING_DETAILS: true, // 統一環境：允許記錄解析細節
+    MEMORY_CACHE: [],
+    MAX_CACHE_SIZE: 100
+  }
 };
 
 // 2. 嚴重等級定義
@@ -79,7 +87,7 @@ const DL_SEVERITY_LEVELS = {
 const DL_MAX_LOGS_PER_SHEET = 10000; // 每個日誌表的最大行數
 
 /**
- * 獲取配置屬性 - 模擬 GAS 的 getScriptProperty 函數
+ * 獲取配置屬性 - 模擬GAS 的 getScriptProperty 函數
  */
 function getScriptProperty(key) {
   return process.env[key] || null;
@@ -226,7 +234,7 @@ async function DL_flushLogBuffer() {
     // 執行批次寫入
     await batch.commit();
 
-    
+
 
     // 清空緩衝區並更新最後刷新時間
     DL_CONFIG.logBuffer = [];
@@ -576,7 +584,7 @@ async function DL_log(logData) {
       } else if (process.env.NODE_ENV !== 'production') {
         // 開發環境：低級別日誌放入記憶體暫存
         DL_CONFIG.memoryCache.push(logRow);
-        
+
         // 限制記憶體暫存大小
         if (DL_CONFIG.memoryCache.length > DL_CONFIG.memoryCacheSize) {
           DL_CONFIG.memoryCache.shift(); // 移除最舊的記錄

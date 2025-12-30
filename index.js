@@ -153,12 +153,13 @@ if (initPromises.length > 0) {
  * @date 2025-01-22 10:00:00
  * @description 設置系統健康檢查機制，確保部署狀態可監控
  */
-// 設置健康檢查定時器
-if (WH) {
-  setInterval(() => {
-    // 執行健康檢查但不記錄詳細日誌
-  }, 300000); // 5分鐘檢查一次
-}
+// 設置健康檢查定時器 - 統一環境
+setInterval(() => {
+  // 統一環境：執行健康檢查
+  if (WH && typeof WH.WH_logDebug === 'function') {
+    WH.WH_logDebug('系統健康檢查執行', '健康檢查', '', 'index.js');
+  }
+}, 300000); // 5分鐘檢查一次
 
 // =============== LINE Webhook專用服務器設置 ===============
 const express = require('express');

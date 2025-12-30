@@ -171,7 +171,7 @@ function WH_checkEnvironmentVariables() {
 // 執行環境變數完整性檢查
 const envCheckResult = WH_checkEnvironmentVariables();
 
-// 如果環境變數不完整，記錄警告但不阻止模組載入
+// 統一環境：始終記錄環境變數檢查結果
 if (!envCheckResult.isComplete) {
   console.warn('⚠️ WH模組環境變數不完整，建議在部署前設定完整');
   WH_directLogWrite([
@@ -188,6 +188,18 @@ if (!envCheckResult.isComplete) {
   ]);
 } else {
   console.log('✅ WH模組環境變數檢查完整');
+  WH_directLogWrite([
+    WH_formatDateTime(new Date()),
+    `WH 2.3.0: 環境變數檢查完整`,
+    "模組初始化",
+    "",
+    "",
+    "WH",
+    "",
+    0,
+    "WH_init",
+    "INFO",
+  ]);
 }
 
 // 創建緩存服務 - 保留核心功能
@@ -857,7 +869,7 @@ async function WH_directLogWrite(logData, userId = null) {
 
 // 日誌函數（使用直接寫入）
 function WH_logDebug(message, operationType = "", userId = "", location = "") {
-  if (!WH_CONFIG.DEBUG) return;
+  // 統一環境：始終輸出調試日誌
   console.log(`[WH-DEBUG] ${message}`);
 
   // 使用try-catch包裹日誌寫入，確保不會影響主要流程
