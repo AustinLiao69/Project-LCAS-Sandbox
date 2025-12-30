@@ -1,0 +1,117 @@
+
+------------------------------------------
+20251230. 處理正式環境log問題
+
+不要寫code，請根據我的回覆更新提案。提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
+
+
+------------------------------------------
+20251230. 處理正式環境log問題
+
+不要寫code，請根據我的回覆更新提案。提案時請專注解決當前發生的問題就好，不需要優化、強化、驗證、監測、測試等手段，除了列出原因之外也請你提出insight。
+
+
+Debug分析報告
+版本: v1.1.0
+建立日期: 2025-12-30
+建立者: LCAS Team SQA
+文件描述: 生產環境日誌級別問題分析報告
+________________________________________
+A. 快速摘要（≤3句）
+•	主要問題：生產環境與開發環境的日誌級別配置不一致，導致生產環境日誌輸出受限
+•	核心原因：DL模組和WH模組存在環境變數控制的日誌級別差異，生產環境預設為較高級別
+•	影響範圍：所有通過DL和WH模組記錄的日誌在生產環境中可能被過濾掉
+________________________________________
+B. Root Causes（最多 6 條）
+1. DL模組環境變數控制日誌級別差異
+•	證據：
+// 1310. DL.js 第28-29行
+consoleLogLevel: process.env.DL_CONSOLE_LOG_LEVEL ? parseInt(process.env.DL_CONSOLE_LOG_LEVEL) : 0,
+firestoreLogLevel: process.env.DL_FIRESTORE_LOG_LEVEL ? parseInt(process.env.DL_FIRESTORE_LOG_LEVEL) : 0,
+•	發生機率：95%
+•	解決方案：統一設定所有環境的日誌級別為DEBUG(0)，移除環境變數差異控制
+2. WH模組測試模式與生產模式日誌輸出差異
+•	證據：
+// 1320. WH.js 第42行
+DEBUG: true, // 統一環境：允許所有環境輸出調試日誌
+TEST_MODE: true, // 測試模式：跳過簽章驗證
+LOG_MESSAGE_CONTENT: true, // 統一環境：允許所有環境記錄訊息內容
+•	發生機率：85%
+•	解決方案：確保所有日誌輸出函數不受TEST_MODE影響，統一輸出行為
+3. DL模組智能日誌處理機制過濾低級別日誌
+•	證據：
+// 1310. DL.js 第350-360行 (DL_log函數)
+if (severityLevel >= DL_CONFIG.firestoreLogLevel) {
+  // 達到Firestore記錄級別，加入緩衝區
+  DL_CONFIG.logBuffer.push(logRow);
+} else if (process.env.NODE_ENV !== 'production') {
+  // 開發環境：低級別日誌放入記憶體暫存
+}
+// 正式環境低級別日誌直接丟棄，不消耗資源
+•	發生機率：90%
+•	解決方案：修改智能日誌處理邏輯，確保生產環境也能輸出所有級別日誌
+4. console日誌級別控制機制過於嚴格
+•	證據：
+// 1310. DL.js 第315-320行
+if (DL_CONFIG.enableConsoleLog && severityLevel >= DL_CONFIG.consoleLogLevel) {
+  // 只有達到設定級別的日誌才會輸出到console
+}
+•	發生機率：88%
+•	解決方案：統一設定consoleLogLevel為0(DEBUG級別)，確保所有日誌都能輸出到console
+5. WH模組直接日誌寫入函數環境判斷邏輯
+•	證據：
+// 1320. WH.js WH_directLogWrite函數
+// 直接向控制台輸出完整日誌
+console.log(`[WH 2.0.16 LOG] ${logData[1]} (${logData[9]})`);
+•	發生機率：80%
+•	解決方案：檢查WH_directLogWrite函數是否有環境相關的條件判斷影響日誌輸出
+6. index.js健康檢查日誌頻率過低
+•	證據：
+// index.js 第106行
+setInterval(() => {
+  if (WH && typeof WH.WH_logDebug === 'function') {
+    WH.WH_logDebug('系統健康檢查執行', '健康檢查', '', 'index.js');
+  }
+}, 300000); // 5分鐘檢查一次
+•	發生機率：75%
+•	解決方案：增加更多常規日誌輸出點，不僅依賴健康檢查來驗證日誌功能
+________________________________________
+解決方案階段規劃
+階段一：統一DL模組日誌級別配置
+目標：消除環境變數控制的日誌級別差異
+修改內容：
+1.	修改DL_CONFIG中的日誌級別設定，強制設為DEBUG級別
+2.	移除process.env環境變數控制邏輯
+3.	修改智能日誌處理機制，確保生產環境也輸出所有日誌
+修改檔案：13. Replit_Module code_BL/1310. DL.js
+實施計畫：
+•	將consoleLogLevel和firestoreLogLevel強制設為0(DEBUG級別)
+•	修改DL_log函數中的環境判斷邏輯
+•	更新模組版本至v2.2.2
+
+階段二：優化WH模組日誌輸出一致性
+目標：確保WH模組在所有環境下都有一致的日誌輸出行為
+修改內容：
+1.	檢查並統一所有日誌函數的輸出邏輯
+2.	確保WH_directLogWrite函數不受環境變數影響
+3.	統一DEBUG、TEST_MODE等配置對日誌的影響
+修改檔案：13. Replit_Module code_BL/1320. WH.js
+實施計畫：
+•	檢查所有WH_log*函數的實作
+•	確保console.log輸出不受條件限制
+•	更新模組版本至v2.5.4
+
+階段三：增強index.js日誌可見性
+目標：增加更多可觀察的日誌輸出點
+修改內容：
+1.	增加模組載入完成的詳細日誌
+2.	增加請求處理的常規日誌輸出
+3.	確保核心操作都有對應的console輸出
+修改檔案：index.js
+實施計畫：
+•	在關鍵流程節點增加console.log
+•	確保Webhook處理過程有可見的日誌軌跡
+•	更新版本至v2.3.1
+________________________________________
+等待您的Approve後開始實施修改
+
