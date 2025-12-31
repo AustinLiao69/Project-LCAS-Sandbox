@@ -1,6 +1,6 @@
 {
-  "version": "1.0.1",
-  "last_updated": "2025-12-17",
+  "version": "1.0.3",
+  "last_updated": "2025-12-31",
   "default_wallets": [
     {
       "walletId": "cash",
@@ -34,6 +34,17 @@
       "isDefault": true,
       "isActive": true,
       "synonyms": "信用卡"
+    },
+    {
+      "walletId": "other",
+      "walletName": "其他支付方式",
+      "subWalletId": null,
+      "subWalletName": null,
+      "currency": "{{default_currency}}",
+      "balance": 0,
+      "isDefault": false,
+      "isActive": true,
+      "synonyms": "其他支付方式"
     }
   ]
 }
