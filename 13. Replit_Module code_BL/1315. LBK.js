@@ -723,10 +723,10 @@ function LBK_parseInputFormat(message, processId) {
     const preprocessedMessage = LBK_preprocessCommaNumbers(message);
     LBK_logDebug(`階段一：千位分隔符預處理: "${message}" → "${preprocessedMessage}" [${processId}]`, "格式解析", "", "LBK_parseInputFormat");
 
-    // 階段一修復：增強格式匹配，支援千位分隔符後的金額識別
-    // 支援格式：科目名稱 + 數字金額（含千位分隔符） + 可選的支付方式
-    const basicPattern = /^(.+?)(\d{1,3}(?:,\d{3})*|\d+)(.*)$/;
-    const match = preprocessedMessage.match(basicPattern);
+    // 階段一修復：改進格式匹配邏輯，避免將連續數字拆分
+    // 優先匹配最長的連續數字作為金額
+    const enhancedPattern = /^(.+?)(\d+)(.*)$/;
+    const match = preprocessedMessage.match(enhancedPattern);
 
     if (!match) {
       LBK_logWarning(`無法匹配輸入格式: "${message}" [${processId}]`, "格式解析", "", "LBK_parseInputFormat");
@@ -737,9 +737,12 @@ function LBK_parseInputFormat(message, processId) {
     let rawAmount = match[2];
     const suffixPart = match[3].trim();
 
-    // 階段一修復：移除千位分隔符得到純數字
-    rawAmount = rawAmount.replace(/,/g, '');
-    LBK_logDebug(`階段一：移除千位分隔符: "${match[2]}" → "${rawAmount}" [${processId}]`, "格式解析", "", "LBK_parseInputFormat");
+    // 階段一修復：檢查是否為千位分隔符格式
+    const commaMatch = preprocessedMessage.match(/(.+?)(\d{1,3}(?:,\d{3})+)(.*)/);
+    if (commaMatch) {
+      rawAmount = commaMatch[2].replace(/,/g, '');
+      LBK_logDebug(`階段一：千位分隔符金額處理: "${commaMatch[2]}" → "${rawAmount}" [${processId}]`, "格式解析", "", "LBK_parseInputFormat");
+    }
 
     // 驗證金額格式
     if (rawAmount.length > 1 && rawAmount.startsWith('0')) {
@@ -753,7 +756,7 @@ function LBK_parseInputFormat(message, processId) {
       return null;
     }
 
-    // 階段三：簡化支付方式識別邏輯
+    // 修復：只有在後綴部分不是純數字時才視為支付方式
     let paymentMethod = null;
     let finalSubject = rawCategory;
     let processedSuffix = suffixPart;
@@ -769,20 +772,32 @@ function LBK_parseInputFormat(message, processId) {
 
     processedSuffix = processedSuffix.replace(supportedUnits, '').trim();
 
-    // 階段三：簡化邏輯 - 如果有後綴文字，就當作支付方式處理
-    if (processedSuffix && processedSuffix.length > 0) {
+    // 修復：只有在後綴不是純數字且不為空時，才視為支付方式
+    if (processedSuffix && processedSuffix.length > 0 && !/^\d+$/.test(processedSuffix)) {
       paymentMethod = processedSuffix;
       LBK_logDebug(`階段三：提取支付方式: "${paymentMethod}" [${processId}]`, "格式解析", "", "LBK_parseInputFormat");
+    } else if (processedSuffix && /^\d+$/.test(processedSuffix)) {
+      // 如果後綴是純數字，可能是用戶輸入了更長的金額，重新解析
+      const fullAmount = rawAmount + processedSuffix;
+      const fullAmountNum = parseInt(fullAmount, 10);
+      if (fullAmountNum > 0) {
+        LBK_logDebug(`修復：發現連續數字，重新解析為完整金額: ${rawAmount} + ${processedSuffix} = ${fullAmount} [${processId}]`, "格式解析", "", "LBK_parseInputFormat");
+        return {
+          subject: finalSubject,
+          amount: fullAmountNum,
+          rawAmount: fullAmount,
+          paymentMethod: null
+        };
+      }
     }
 
-    // 階段三：移除所有硬編碼檢查，保持paymentMethod為用戶實際輸入或null
-    LBK_logInfo(`階段三：簡化解析結果: 科目="${finalSubject}", 金額=${amount}, 支付方式="${paymentMethod || '未指定'}" [${processId}]`, "格式解析", "", "LBK_parseInputFormat");
+    LBK_logInfo(`階段三：解析結果: 科目="${finalSubject}", 金額=${amount}, 支付方式="${paymentMethod || '未指定'}" [${processId}]`, "格式解析", "", "LBK_parseInputFormat");
 
     return {
       subject: finalSubject,
       amount: amount,
       rawAmount: rawAmount,
-      paymentMethod: paymentMethod // null將觸發預設值查詢，有值將查詢synonyms
+      paymentMethod: paymentMethod
     };
 
   } catch (error) {
