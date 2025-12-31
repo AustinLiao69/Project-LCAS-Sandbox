@@ -3346,20 +3346,25 @@ async function LBK_addSubjectSynonym(originalSubject, categoryId, categoryName, 
  */
 
 /**
- * 創建記憶體Pending Session - 階段二修復版
- * @version 2025-12-26-V3.1.0
+ * 創建記憶體Pending Session - 階段二：整合5分鐘超時機制
+ * @version 2025-12-31-V2.0.0
  * @param {string} userId - 用戶ID
  * @param {string} originalInput - 原始輸入
  * @param {object} parsedData - 解析後的資料
  * @param {string} initialState - 初始狀態
  * @param {string} processId - 處理ID
  * @returns {Object} 創建結果
- * @description 階段二修復：強化狀態傳遞機制，確保記憶體與Firestore一致性
+ * @description 階段二：整合0070規範的expiresAt欄位處理，設定5分鐘超時自動歧義消除
  */
 async function LBK_createPendingRecord(userId, originalInput, parsedData, initialState, processId) {
   const functionName = "LBK_createPendingRecord";
   try {
     const pendingId = Date.now().toString();
+    const now = Date.now();
+    
+    // 階段二：設定5分鐘超時時間（符合0070規範）
+    const expiresAt = new Date(now + 5 * 60 * 1000); // 5分鐘後過期
+    const firestoreExpiresAt = admin.firestore.Timestamp.fromDate(expiresAt);
 
     // 階段二修復：強化解析資料的狀態保存
     const enhancedParsedData = {
@@ -3405,7 +3410,7 @@ async function LBK_createPendingRecord(userId, originalInput, parsedData, initia
       LBK_logInfo(`階段二修復：創建Session時檢測到已解析支付方式: ${parsedData.paymentMethod} [${processId}]`, "記憶體Session", userId, functionName);
     }
 
-    // 階段二修復：創建完整的記憶體Session
+    // 階段二：創建完整的記憶體Session，整合0070規範欄位
     const memorySession = {
       pendingId: pendingId,
       userId: userId,
@@ -3421,16 +3426,20 @@ async function LBK_createPendingRecord(userId, originalInput, parsedData, initia
         options: [],
         userSelection: null
       },
+      // 階段二：整合0070規範的時間欄位
+      createdAt: admin.firestore.Timestamp.fromDate(new Date(now)),
+      updatedAt: admin.firestore.Timestamp.fromDate(new Date(now)),
+      expiresAt: firestoreExpiresAt,
       // 階段二修復：增強元數據
       coreMetadata: {
         source: 'LINE',
         module: 'LBK',
-        version: '3.1.0',
-        createdAt: Date.now(),
+        version: '2.0.0',
+        createdAt: now,
         inMemory: true,
         stateConsistency: true
       },
-      status: 'memory_active'
+      status: 'active' // 符合0070規範的status欄位
     };
 
     // 階段二修復：儲存到記憶體快取並驗證狀態一致性
@@ -3444,20 +3453,35 @@ async function LBK_createPendingRecord(userId, originalInput, parsedData, initia
       LBK_logDebug(`記憶體快取清理，移除過期Session: ${oldestKey} [${processId}]`, "記憶體管理", userId, functionName);
     }
 
+    // 階段二：設定5分鐘超時定時器
+    const timeoutId = setTimeout(async () => {
+      try {
+        LBK_logInfo(`階段二：Pending Record超時觸發: ${pendingId} [${processId}]`, "超時處理", userId, functionName);
+        await LBK_handlePendingRecordTimeout(userId, pendingId, processId);
+      } catch (timeoutError) {
+        LBK_logError(`階段二：超時處理失敗: ${timeoutError.toString()} [${processId}]`, "超時處理", userId, "TIMEOUT_HANDLER_ERROR", timeoutError.toString(), functionName);
+      }
+    }, 5 * 60 * 1000); // 5分鐘
+
+    // 將定時器ID存儲到Session中
+    memorySession.timeoutId = timeoutId;
+
     // 階段二修復：記錄狀態同步驗證結果
-    LBK_logInfo(`階段二修復：記憶體Session創建成功，狀態同步驗證通過: ${pendingId} [${processId}]`, "記憶體Session", userId, functionName);
-    LBK_logDebug(`階段二修復：Session初始狀態 - 科目已選: ${initialStageData.categorySelected}, 錢包已選: ${initialStageData.walletSelected} [${processId}]`, "狀態同步", userId, functionName);
+    LBK_logInfo(`階段二：記憶體Session創建成功，5分鐘超時定時器已設定: ${pendingId} [${processId}]`, "記憶體Session", userId, functionName);
+    LBK_logDebug(`階段二：Session初始狀態 - 科目已選: ${initialStageData.categorySelected}, 錢包已選: ${initialStageData.walletSelected}, 過期時間: ${expiresAt.toISOString()} [${processId}]`, "狀態同步", userId, functionName);
 
     return {
       success: true,
       pendingId: pendingId,
       data: memorySession,
       memoryMode: true,
-      stateConsistency: true
+      stateConsistency: true,
+      expiresAt: firestoreExpiresAt,
+      timeoutSet: true
     };
 
   } catch (error) {
-    LBK_logError(`階段二修復：創建記憶體Session失敗: ${error.toString()} [${processId}]`, "記憶體Session", userId, "CREATE_MEMORY_SESSION_ERROR", error.toString(), functionName);
+    LBK_logError(`階段二：創建記憶體Session失敗: ${error.toString()} [${processId}]`, "記憶體Session", userId, "CREATE_MEMORY_SESSION_ERROR", error.toString(), functionName);
     return {
       success: false,
       error: error.toString()
@@ -3913,6 +3937,134 @@ function LBK_getErrorSuggestion(errorType) {
   };
 
   return suggestions[errorType] || '請重新嘗試，如問題持續請聯絡技術支援';
+}
+
+/**
+ * 階段二新增：處理Pending Record超時機制
+ * @version 2025-12-31-V2.0.0
+ * @param {string} userId - 用戶ID
+ * @param {string} pendingId - Pending Record ID
+ * @param {string} processId - 處理ID
+ * @returns {Promise<Object>} 超時處理結果
+ * @description 階段二：5分鐘超時自動歧義消除機制，自動歸類到"999其他"
+ */
+async function LBK_handlePendingRecordTimeout(userId, pendingId, processId) {
+  const functionName = "LBK_handlePendingRecordTimeout";
+  try {
+    LBK_logInfo(`階段二：處理Pending Record超時: ${pendingId} [${processId}]`, "超時處理", userId, functionName);
+
+    // 獲取Pending Record資料
+    const pendingRecordResult = await LBK_getPendingRecord(userId, pendingId, processId);
+    if (!pendingRecordResult.success) {
+      throw new Error(`無法獲取Pending Record: ${pendingRecordResult.error}`);
+    }
+
+    const pendingData = pendingRecordResult.data;
+    const currentStage = pendingData.processingStage || pendingData.currentStage;
+
+    // 階段二：根據當前階段執行不同的超時處理
+    if (currentStage === PENDING_STATES.PENDING_CATEGORY) {
+      // 科目歧義消除超時：自動歸類到"999其他"
+      LBK_logInfo(`階段二：科目歧義消除超時，自動歸類到"999其他" [${processId}]`, "超時處理", userId, functionName);
+      
+      // 更新Pending Record狀態
+      await LBK_updatePendingRecord(
+        userId,
+        pendingId,
+        {
+          stageData: {
+            categorySelected: true,
+            electedCategory: {
+              categoryId: "999",
+              categoryName: "其他"
+            },
+            walletSelected: false,
+            selectedWallet: null
+          }
+        },
+        PENDING_STATES.PENDING_CATEGORY,
+        processId
+      );
+
+      // 建立同義詞關聯
+      const originalSubject = pendingData.parsedData?.rawCategory || pendingData.parsedData?.subject || pendingData.originalInput || "未知項目";
+      await LBK_addSubjectSynonym(originalSubject, "999", "其他", userId, processId);
+
+      // 繼續處理支付方式或完成記帳
+      const advanceResult = await LBK_advancePendingFlow(userId, pendingId, processId);
+      
+      return {
+        success: true,
+        action: "category_timeout_resolved",
+        message: `超時自動歸類：「${originalSubject}」→「其他」`,
+        nextStep: advanceResult
+      };
+
+    } else if (currentStage === PENDING_STATES.PENDING_WALLET) {
+      // 支付方式歧義消除超時：自動歸類到"其他"錢包
+      LBK_logInfo(`階段二：支付方式歧義消除超時，自動歸類到"其他" [${processId}]`, "超時處理", userId, functionName);
+
+      // 獲取"其他"錢包配置
+      const defaultWalletResult = await LBK_getDefaultPaymentMethod(userId, processId);
+      const defaultWallet = defaultWalletResult.success ? {
+        walletId: defaultWalletResult.walletId,
+        walletName: defaultWalletResult.walletName
+      } : {
+        walletId: "other",
+        walletName: "其他"
+      };
+
+      // 更新Pending Record狀態
+      await LBK_updatePendingRecord(
+        userId,
+        pendingId,
+        {
+          stageData: {
+            walletSelected: true,
+            selectedWallet: defaultWallet
+          }
+        },
+        PENDING_STATES.PENDING_WALLET,
+        processId
+      );
+
+      // 完成記帳
+      const completionResult = await LBK_completePendingRecord(userId, pendingId, processId);
+      
+      return {
+        success: true,
+        action: "wallet_timeout_resolved", 
+        message: `超時自動使用支付方式：「${defaultWallet.walletName}」`,
+        completionResult: completionResult
+      };
+
+    } else {
+      // 其他狀態的超時處理
+      LBK_logWarning(`階段二：未知狀態的超時處理: ${currentStage} [${processId}]`, "超時處理", userId, functionName);
+      
+      // 標記為過期
+      await LBK_updatePendingRecord(
+        userId,
+        pendingId,
+        { status: 'expired' },
+        'EXPIRED',
+        processId
+      );
+
+      return {
+        success: true,
+        action: "record_expired",
+        message: "記錄已過期"
+      };
+    }
+
+  } catch (error) {
+    LBK_logError(`階段二：處理Pending Record超時失敗: ${error.toString()} [${processId}]`, "超時處理", userId, "PENDING_TIMEOUT_ERROR", error.toString(), functionName);
+    return {
+      success: false,
+      error: error.toString()
+    };
+  }
 }
 
 /**
@@ -5583,7 +5735,7 @@ async function LBK_advancePendingFlow(userId, pendingId, processId) {
   }
 }
 
-// 更新模組導出，添加階段三錯誤處理優化函數
+// 更新模組導出，添加階段二超時處理機制函數
 module.exports = {
   LBK_processQuickBookkeeping: LBK_processQuickBookkeeping,
   LBK_parseUserMessage: LBK_parseUserMessage,
@@ -5676,6 +5828,9 @@ module.exports = {
   LBK_processPendingToTransaction: LBK_completePendingRecord, // Rename for phase 4
   LBK_handleSubjectSelectionComplete, // Exported for phase 4 integration
 
+  // 階段二新增：超時處理機制函數
+  LBK_handlePendingRecordTimeout, // 階段二新增：處理Pending Record超時
+
   // 階段四新增：狀態機相關函數
   LBK_advancePendingFlow,
   LBK_completePendingRecord, // Now handles the final transaction completion
@@ -5690,8 +5845,8 @@ module.exports = {
   LBK_preprocessCommaNumbers: LBK_preprocessCommaNumbers,
   LBK_isValidCommaNumber: LBK_isValidCommaNumber,
 
-  // 版本資訊 - 階段一更新
-  MODULE_VERSION: "4.0.0", // 階段一：千位分隔符解析修復版本
+  // 版本資訊 - 階段二更新
+  MODULE_VERSION: "2.0.0", // 階段二：5分鐘超時自動歧義消除機制
   MODULE_NAME: "LBK",
-  MODULE_UPDATE: "階段一千位分隔符解析修復完成：1)修復LBK_parseInputFormat函數：更新正則表達式支援千位分隔符格式識別。2)增強LBK_extractAmount函數：優先處理千位分隔符數字，支援到百兆位數（999,999,999,999）。3)新增預處理函數：LBK_preprocessCommaNumbers和LBK_isValidCommaNumber確保千位分隔符格式驗證。4)行為改善：Before「口香糖9,999」→科目=\"口香糖9\",金額=\"\",支付方式=\",999\" | After「口香糖9,999」→科目=\"口香糖\",金額=\"9999\",支付方式=null。預期效果：完全解決千位分隔符被誤判為支付方式分隔符的問題，提升大額金額輸入的用戶體驗。"
+  MODULE_UPDATE: "階段二5分鐘超時自動歧義消除機制完成：1)新增LBK_handlePendingRecordTimeout函數：處理科目與支付方式的超時自動歧義消除。2)修改LBK_createPendingRecord函數：設定5分鐘定時器和0070規範的expiresAt欄位。3)整合超時處理邏輯：科目歧義消除超時自動歸類到「999其他」，支付方式超時自動歸類到預設支付方式。4)行為改善：Before用戶未回應時pending record永久保留 | After 5分鐘後自動歸類並完成記帳流程。預期效果：完全解決用戶未回應導致記帳流程卡死的問題，提升系統自動化處理能力和用戶體驗。"
 };
