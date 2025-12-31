@@ -4004,23 +4004,37 @@ async function LBK_handlePendingRecordTimeout(userId, pendingId, processId) {
       // 解決方案3：支付方式歧義消除超時，自動歸類到"other"錢包
       LBK_logInfo(`解決方案3：支付方式歧義消除超時，自動歸類到"other"錢包 [${processId}]`, "超時處理", userId, functionName);
 
-      // 解決方案3：調用0302配置文件獲取"other"錢包設定
-      const otherWalletResult = await LBK_getOtherWalletFromConfig(userId, processId);
+      // 解決方案3：直接從WCM模組獲取"other"錢包設定
       let targetWallet;
 
-      if (otherWalletResult.success) {
-        targetWallet = {
-          walletId: otherWalletResult.walletId,
-          walletName: otherWalletResult.walletName
-        };
-        LBK_logInfo(`解決方案3：從0302配置獲取"other"錢包: ${targetWallet.walletName} [${processId}]`, "超時處理", userId, functionName);
-      } else {
+      try {
+        const WCM = require('./1350. WCM.js');
+        const configResult = WCM.WCM_loadDefaultConfigs();
+
+        if (configResult.success && configResult.configs.wallets && configResult.configs.wallets.default_wallets) {
+          const otherWallet = configResult.configs.wallets.default_wallets.find(wallet => 
+            wallet.walletId === "other" && wallet.isActive === true
+          );
+
+          if (otherWallet) {
+            targetWallet = {
+              walletId: otherWallet.walletId,
+              walletName: otherWallet.walletName
+            };
+            LBK_logInfo(`解決方案3：從WCM配置獲取"other"錢包: ${targetWallet.walletName} [${processId}]`, "超時處理", userId, functionName);
+          } else {
+            throw new Error("未找到other錢包");
+          }
+        } else {
+          throw new Error("WCM配置載入失敗");
+        }
+      } catch (error) {
         // 備用方案：使用硬編碼的"other"錢包
         targetWallet = {
           walletId: "other",
           walletName: "其他支付方式"
         };
-        LBK_logWarning(`解決方案3：0302配置讀取失敗，使用備用"other"錢包 [${processId}]`, "超時處理", userId, functionName);
+        LBK_logWarning(`解決方案3：WCM配置讀取失敗，使用備用"other"錢包: ${error.message} [${processId}]`, "超時處理", userId, functionName);
       }
 
       // 解決方案3：更新Pending Record狀態，確保與0070規範的walletId欄位對應
@@ -4092,93 +4106,7 @@ async function LBK_handlePendingRecordTimeout(userId, pendingId, processId) {
   }
 }
 
-/**
- * 解決方案3：調用WCM模組獲取"other"錢包設定
- * @version 2025-12-31-V3.1.0
- * @param {string} userId - 用戶ID
- * @param {string} processId - 處理ID
- * @returns {Promise<Object>} "other"錢包結果
- * @description 解決方案3：調用WCM模組的WCM_loadDefaultConfigs函數獲取"other"錢包設定
- */
-async function LBK_getOtherWalletFromConfig(userId, processId) {
-  const functionName = "LBK_getOtherWalletFromConfig";
-  try {
-    LBK_logDebug(`解決方案3：調用WCM模組獲取"other"錢包設定 [${processId}]`, "其他錢包", userId, functionName);
 
-    // 引入WCM模組並調用WCM_loadDefaultConfigs
-    const WCM = require('./1350. WCM.js');
-    const configResult = WCM.WCM_loadDefaultConfigs();
-
-    if (!configResult.success) {
-      throw new Error(`WCM載入配置失敗: ${configResult.error}`);
-    }
-
-    const wallets = configResult.configs.wallets;
-    if (!wallets || !wallets.default_wallets || !Array.isArray(wallets.default_wallets)) {
-      throw new Error("WCM配置格式錯誤：缺少default_wallets陣列");
-    }
-
-    // 解決方案3：查找walletId="other"的錢包
-    const otherWallet = wallets.default_wallets.find(wallet => 
-      wallet.walletId === "other" && wallet.isActive === true
-    );
-
-    if (otherWallet) {
-      LBK_logInfo(`解決方案3：從WCM配置獲取到"other"錢包: "${otherWallet.walletName}" [${processId}]`, "其他錢包", userId, functionName);
-      return {
-        success: true,
-        walletId: otherWallet.walletId,
-        walletName: otherWallet.walletName,
-        type: otherWallet.type || "other",
-        isOtherWallet: true,
-        queryMethod: "wcm_config_other_wallet",
-        configVersion: wallets.version || configResult.configVersion
-      };
-    }
-
-    // 如果沒有找到walletId="other"的錢包，查找walletName包含"其他"的錢包
-    const fallbackOtherWallet = wallets.default_wallets.find(wallet => 
-      wallet.walletName && wallet.walletName.includes("其他") && wallet.isActive === true
-    );
-
-    if (fallbackOtherWallet) {
-      LBK_logInfo(`解決方案3：使用WCM配置中包含"其他"的錢包: "${fallbackOtherWallet.walletName}" [${processId}]`, "其他錢包", userId, functionName);
-      return {
-        success: true,
-        walletId: fallbackOtherWallet.walletId,
-        walletName: fallbackOtherWallet.walletName,
-        type: fallbackOtherWallet.type || "other",
-        isOtherWallet: true,
-        queryMethod: "wcm_config_fallback_other",
-        configVersion: wallets.version || configResult.configVersion
-      };
-    }
-
-    // 備用方案：使用硬編碼的"other"錢包設定
-    LBK_logWarning(`解決方案3：WCM配置中未找到"other"錢包，使用備用方案 [${processId}]`, "其他錢包", userId, functionName);
-    return {
-      success: true,
-      walletId: "other",
-      walletName: "其他支付方式",
-      isOtherWallet: true,
-      queryMethod: "hardcoded_fallback",
-      fallbackReason: "WCM配置中未找到other錢包"
-    };
-
-  } catch (error) {
-    LBK_logError(`解決方案3：獲取"other"錢包失敗: ${error.toString()} [${processId}]`, "其他錢包", userId, "GET_OTHER_WALLET_ERROR", error.toString(), functionName);
-    
-    // 最終備用方案
-    return {
-      success: true,
-      walletId: "other",
-      walletName: "其他支付方式",
-      isOtherWallet: true,
-      queryMethod: "error_fallback",
-      fallbackReason: error.toString()
-    };
-  }
-}
 
 /**
  * 階段二：調用WCM模組獲取預設支付方式配置
@@ -5942,8 +5870,7 @@ module.exports = {
   // 階段二新增：超時處理機制函數
   LBK_handlePendingRecordTimeout, // 階段二新增：處理Pending Record超時
   
-  // 解決方案3新增：支付方式超時自動歧義消除函數
-  LBK_getOtherWalletFromConfig, // 解決方案3：從0302配置獲取"other"錢包
+  
 
   // 階段四新增：狀態機相關函數
   LBK_advancePendingFlow,
