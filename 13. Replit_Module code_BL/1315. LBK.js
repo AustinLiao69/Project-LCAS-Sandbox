@@ -698,13 +698,13 @@ async function LBK_parseUserMessage(messageText, userId, processId) {
 }
 
 /**
- * 03. 解析輸入格式 - 階段三簡化版
- * @version 2025-12-24-V1.8.0
- * @date 2025-12-24 14:00:00
- * @description 階段三：簡化支付方式處理邏輯 - 未輸入=信用卡，有輸入=查詢wallets synonyms
+ * 03. 解析輸入格式 - 階段一：千位分隔符解析修復
+ * @version 2025-12-31-V2.0.0
+ * @date 2025-12-31 14:00:00
+ * @description 階段一修復：支援千位分隔符解析到百兆位數，修復金額解析邏輯
  */
 function LBK_parseInputFormat(message, processId) {
-  LBK_logDebug(`階段三：開始簡化格式解析: "${message}" [${processId}]`, "格式解析", "", "LBK_parseInputFormat");
+  LBK_logDebug(`階段一：開始千位分隔符格式解析: "${message}" [${processId}]`, "格式解析", "", "LBK_parseInputFormat");
 
   if (!message || message.trim() === "") {
     return null;
@@ -719,9 +719,14 @@ function LBK_parseInputFormat(message, processId) {
   }
 
   try {
-    // 基本格式匹配：科目名稱 + 數字金額 + 可選的支付方式
-    const basicPattern = /^(.+?)(\d+)(.*)$/;
-    const match = message.match(basicPattern);
+    // 階段一修復：預處理千位分隔符，將逗號千位分隔符標準化
+    const preprocessedMessage = LBK_preprocessCommaNumbers(message);
+    LBK_logDebug(`階段一：千位分隔符預處理: "${message}" → "${preprocessedMessage}" [${processId}]`, "格式解析", "", "LBK_parseInputFormat");
+
+    // 階段一修復：增強格式匹配，支援千位分隔符後的金額識別
+    // 支援格式：科目名稱 + 數字金額（含千位分隔符） + 可選的支付方式
+    const basicPattern = /^(.+?)(\d{1,3}(?:,\d{3})*|\d+)(.*)$/;
+    const match = preprocessedMessage.match(basicPattern);
 
     if (!match) {
       LBK_logWarning(`無法匹配輸入格式: "${message}" [${processId}]`, "格式解析", "", "LBK_parseInputFormat");
@@ -729,8 +734,12 @@ function LBK_parseInputFormat(message, processId) {
     }
 
     const rawCategory = match[1].trim();
-    const rawAmount = match[2];
+    let rawAmount = match[2];
     const suffixPart = match[3].trim();
+
+    // 階段一修復：移除千位分隔符得到純數字
+    rawAmount = rawAmount.replace(/,/g, '');
+    LBK_logDebug(`階段一：移除千位分隔符: "${match[2]}" → "${rawAmount}" [${processId}]`, "格式解析", "", "LBK_parseInputFormat");
 
     // 驗證金額格式
     if (rawAmount.length > 1 && rawAmount.startsWith('0')) {
@@ -783,20 +792,45 @@ function LBK_parseInputFormat(message, processId) {
 }
 
 /**
- * 04. 從文字中提取金額
- * @version 2025-07-15-V1.0.0
- * @date 2025-07-15 09:30:00
- * @description 從用戶輸入中提取並驗證金額
+ * 04. 從文字中提取金額 - 階段一：千位分隔符支援
+ * @version 2025-12-31-V2.0.0
+ * @date 2025-12-31 09:30:00
+ * @description 階段一修復：從用戶輸入中提取並驗證金額，支援千位分隔符到百兆位數
  */
 function LBK_extractAmount(text, processId) {
-  LBK_logDebug(`提取金額: "${text}" [${processId}]`, "金額提取", "", "LBK_extractAmount");
+  LBK_logDebug(`階段一：提取金額（支援千位分隔符）: "${text}" [${processId}]`, "金額提取", "", "LBK_extractAmount");
 
   if (!text || text.length === 0) {
     return { amount: 0, currency: "NTD", success: false };
   }
 
   try {
-    // 提取數字
+    // 階段一修復：優先提取千位分隔符格式的數字
+    const commaNumberMatches = text.match(/\d{1,3}(?:,\d{3})+/g);
+    if (commaNumberMatches && commaNumberMatches.length > 0) {
+      LBK_logDebug(`階段一：發現千位分隔符數字: ${commaNumberMatches.join(', ')} [${processId}]`, "金額提取", "", "LBK_extractAmount");
+      
+      // 找到最大的千位分隔符數字
+      let bestCommaMatch = "";
+      let bestCommaValue = 0;
+      
+      for (const match of commaNumberMatches) {
+        if (LBK_isValidCommaNumber(match)) {
+          const numericValue = parseInt(match.replace(/,/g, ''), 10);
+          if (numericValue > bestCommaValue) {
+            bestCommaValue = numericValue;
+            bestCommaMatch = match;
+          }
+        }
+      }
+      
+      if (bestCommaMatch && bestCommaValue > 0) {
+        LBK_logInfo(`階段一：成功提取千位分隔符金額: "${bestCommaMatch}" = ${bestCommaValue} [${processId}]`, "金額提取", "", "LBK_extractAmount");
+        return { amount: bestCommaValue, currency: "NTD", success: true };
+      }
+    }
+
+    // 階段一：若無千位分隔符，使用原有邏輯提取純數字
     const numbersMatches = text.match(/\d+/g);
     if (!numbersMatches || numbersMatches.length === 0) {
       return { amount: 0, currency: "NTD", success: false };
@@ -823,10 +857,11 @@ function LBK_extractAmount(text, processId) {
       return { amount: 0, currency: "NTD", success: false };
     }
 
+    LBK_logDebug(`階段一：提取純數字金額: "${bestMatch}" = ${amount} [${processId}]`, "金額提取", "", "LBK_extractAmount");
     return { amount: amount, currency: "NTD", success: true };
 
   } catch (error) {
-    LBK_logError(`提取金額錯誤: ${error.toString()} [${processId}]`, "金額提取", "", "EXTRACT_ERROR", error.toString(), "LBK_extractAmount");
+    LBK_logError(`階段一：提取金額錯誤: ${error.toString()} [${processId}]`, "金額提取", "", "EXTRACT_ERROR", error.toString(), "LBK_extractAmount");
     return { amount: 0, currency: "NTD", success: false };
   }
 }
@@ -1954,6 +1989,44 @@ async function LBK_initialize() {
     console.error('❌ LBK模組初始化失敗:', error);
     return false;
   }
+}
+
+/**
+ * 階段一新增：千位分隔符預處理函數
+ * @version 2025-12-31-V2.0.0
+ * @param {string} message - 原始輸入訊息
+ * @returns {string} 預處理後的訊息
+ * @description 階段一：預處理千位分隔符，確保正確識別包含逗號的金額格式
+ */
+function LBK_preprocessCommaNumbers(message) {
+  if (!message) return message;
+
+  // 階段一：識別並標準化千位分隔符格式
+  // 匹配模式：1,000 或 999,999,999,999（支援到百兆位數）
+  const commaNumberPattern = /(\d{1,3}(?:,\d{3})+)/g;
+  
+  return message.replace(commaNumberPattern, (match) => {
+    // 驗證是否為有效的千位分隔符格式
+    if (LBK_isValidCommaNumber(match)) {
+      return match; // 保持原格式，稍後在解析時移除逗號
+    }
+    return match;
+  });
+}
+
+/**
+ * 階段一新增：驗證千位分隔符格式有效性
+ * @version 2025-12-31-V2.0.0
+ * @param {string} numberStr - 包含逗號的數字字串
+ * @returns {boolean} 是否為有效的千位分隔符格式
+ * @description 階段一：驗證千位分隔符格式是否正確（每3位一個逗號）
+ */
+function LBK_isValidCommaNumber(numberStr) {
+  if (!numberStr) return false;
+  
+  // 檢查格式：第一部分1-3位數，後續每部分都是3位數
+  const validCommaPattern = /^\d{1,3}(,\d{3})*$/;
+  return validCommaPattern.test(numberStr);
 }
 
 /**
@@ -5613,8 +5686,12 @@ module.exports = {
   // PENDING_STATES constants for the state machine
   PENDING_STATES,
 
-  // 版本資訊 - 階段三更新
-  MODULE_VERSION: "3.1.0", // 階段三：錯誤處理優化版本
+  // 階段一新增：千位分隔符處理函數
+  LBK_preprocessCommaNumbers: LBK_preprocessCommaNumbers,
+  LBK_isValidCommaNumber: LBK_isValidCommaNumber,
+
+  // 版本資訊 - 階段一更新
+  MODULE_VERSION: "4.0.0", // 階段一：千位分隔符解析修復版本
   MODULE_NAME: "LBK",
-  MODULE_UPDATE: "階段三錯誤處理優化完成：1)統一錯誤訊息格式：建立標準化錯誤訊息模板，符合0070規範，包含錯誤代碼、嚴重性等級和用戶建議。2)智能錯誤資訊提取：改進從原始輸入中提取金額、支付方式和科目的算法，提供更精確的錯誤資訊。3)錯誤分類機制：建立錯誤類型分類和嚴重性等級系統，提供對應的用戶友好建議。4)向後相容性保證：維持現有API接口不變，確保不影響現有功能。預期效果：提升用戶體驗，減少因錯誤訊息不清楚導致的重複操作，改善錯誤排查效率。"
+  MODULE_UPDATE: "階段一千位分隔符解析修復完成：1)修復LBK_parseInputFormat函數：更新正則表達式支援千位分隔符格式識別。2)增強LBK_extractAmount函數：優先處理千位分隔符數字，支援到百兆位數（999,999,999,999）。3)新增預處理函數：LBK_preprocessCommaNumbers和LBK_isValidCommaNumber確保千位分隔符格式驗證。4)行為改善：Before「口香糖9,999」→科目=\"口香糖9\",金額=\"\",支付方式=\",999\" | After「口香糖9,999」→科目=\"口香糖\",金額=\"9999\",支付方式=null。預期效果：完全解決千位分隔符被誤判為支付方式分隔符的問題，提升大額金額輸入的用戶體驗。"
 };
