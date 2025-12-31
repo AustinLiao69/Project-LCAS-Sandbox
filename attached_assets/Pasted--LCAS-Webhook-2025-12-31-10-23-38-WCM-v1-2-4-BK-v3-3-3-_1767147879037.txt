@@ -1,0 +1,101 @@
+🚀 LCAS Webhook 啟動中... 2025/12/31 上午10:23:38
+✅ 核心模組載入完成
+✅ WCM模組v1.2.4載入完成
+✅ BK模組v3.3.3載入完成
+✅ Firebase Admin SDK已初始化
+✅ BM預算管理模組v2.3.0載入完成
+🤝 CM 協作管理模組初始化中...
+[2025-12-31T02:23:38.408Z] [INFO] [CM] CM 協作管理模組初始化完成 [Location: CM_initialize]
+✅ CM協作管理模組v2.4.0載入完成
+✅ Firebase Admin SDK已初始化
+✅ WH模組環境變數檢查完整
+[WH 2.0.16 LOG] WH 2.3.0: 環境變數檢查完整 (INFO)
+✅ Webhook 模組載入完成
+ 📅 已載入 0 個排程設定
+[2025-12-31T02:23:39.362Z] [INFO] [SR] SR 排程提醒模組初始化完成 [Location: SR_initialize]
+[WH 2.0.16 LOG] WH 2.0.7: 收到LINE Webhook請求 [876a58d4] (INFO)
+檢測到需要回覆的訊息，啟用同步處理 [876a58d4]
+[WH 2.0.16 LOG] WH 2.0.16: 檢測到需要回覆的訊息，啟用同步處理 [876a58d4] (INFO)
+開始非同步處理請求 [876a58d4]
+[WH 2.0.16 LOG] WH 2.0.7: 開始非同步處理請求 [876a58d4] (INFO)
+[WH 2.0.16 LOG] WH 2.0.3: 開始處理事件: message [876a58d4] (INFO)
+處理消息事件: text [876a58d4]
+收到文本消息: "狗飼料3333" [876a58d4]
+[WH 2.0.16 LOG] WH 2.0.3: 收到文本消息: "狗飼料3333" [876a58d4] (INFO)
+開始AM用戶驗證流程 [876a58d4]
+[WH 2.0.16 LOG] WH 階段一: 開始AM用戶驗證流程 [876a58d4] (INFO)
+[2025-12-31T02:23:57.526Z] [INFO] [DL] AM [User: 帳號存在性驗證: Uae47d9d496e4596d70ed724a7d6e2948 (LINE)] [Location: Object.DL_info]
+用戶帳本驗證流程完成: Uae47d9d496e4596d70ed724a7d6e2948 [876a58d4]
+🔍 AM_getUserDefaultLedger: 查詢用戶 Uae47d9d496e4596d70ed724a7d6e2948 預設帳本...
+✅ AM_getUserDefaultLedger: 找到用戶預設帳本: user_Uae47d9d496e4596d70ed724a7d6e2948
+用戶帳本驗證通過: user_Uae47d9d496e4596d70ed724a7d6e2948 [876a58d4]
+AM驗證完成，轉發至LBK [876a58d4]
+[WH 2.0.16 LOG] WH 階段一: AM驗證完成，轉發至LBK [876a58d4] (INFO)
+WH v2.5.0: 純粹轉發至LBK處理 - 狗飼料3333
+[2025-12-31T02:23:57.949Z] [INFO] [DL] 開始處理LINE OA請求 [876a58d4] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_processQuickBookkeeping]
+[2025-12-31T02:23:57.949Z] [DEBUG] [DL] 階段二：檢查統計查詢關鍵字: "狗飼料3333" [876a58d4] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_checkStatisticsKeyword]
+[2025-12-31T02:23:57.950Z] [DEBUG] [DL] 階段二：未檢測到統計查詢關鍵字: "狗飼料3333" [876a58d4] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_checkStatisticsKeyword]
+[2025-12-31T02:23:57.950Z] [DEBUG] [DL] 用戶訊息解析: "狗飼料3333" [876a58d4] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_parseUserMessage]
+[2025-12-31T02:23:57.950Z] [DEBUG] [DL] 階段一：開始千位分隔符格式解析: "狗飼料3333" [876a58d4] [Code: DEBUG] [Location: LBK_parseInputFormat]
+[2025-12-31T02:23:57.950Z] [DEBUG] [DL] 階段一：千位分隔符預處理: "狗飼料3333" → "狗飼料3333" [876a58d4] [Code: DEBUG] [Location: LBK_parseInputFormat]
+[2025-12-31T02:23:57.951Z] [DEBUG] [DL] 階段一：移除千位分隔符: "333" → "333" [876a58d4] [Code: DEBUG] [Location: LBK_parseInputFormat]
+[2025-12-31T02:23:57.951Z] [DEBUG] [DL] 階段三：提取支付方式: "3" [876a58d4] [Code: DEBUG] [Location: LBK_parseInputFormat]
+[2025-12-31T02:23:57.951Z] [INFO] [DL] 階段三：簡化解析結果: 科目="狗飼料", 金額=333, 支付方式="3" [876a58d4] [Code: INFO] [Location: LBK_parseInputFormat]
+[2025-12-31T02:23:57.951Z] [DEBUG] [DL] 階段一：提取金額（支援千位分隔符）: "狗飼料333" [876a58d4] [Code: DEBUG] [Location: LBK_extractAmount]
+[2025-12-31T02:23:57.951Z] [DEBUG] [DL] 階段一：提取純數字金額: "333" = 333 [876a58d4] [Code: DEBUG] [Location: LBK_extractAmount]
+[2025-12-31T02:23:57.952Z] [DEBUG] [DL] 查詢科目代碼: "狗飼料" [876a58d4] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:23:57.952Z] [INFO] [DL] Firestore連線初始化成功 [Code: INFO] [Location: LBK_initializeFirestore]
+[2025-12-31T02:23:57.953Z] [DEBUG] [DL] 開始同義詞匹配，輸入: "狗飼料" [876a58d4] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:23:58.126Z] [DEBUG] [DL] 查詢categories集合結果: 11 筆資料 [876a58d4] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:23:58.126Z] [DEBUG] [DL] 處理同義詞匹配: "狗飼料"，科目: "生鮮雜貨"，同義詞數量: 1，同義詞內容: [家樂福] [876a58d4] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:23:58.126Z] [DEBUG] [DL] 比較同義詞: "家樂福" vs "狗飼料" [876a58d4] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:23:58.126Z] [DEBUG] [DL] 處理同義詞匹配: "狗飼料"，科目: "生活家用"，同義詞數量: 3，同義詞內容: [滑鼠墊, 香菸, 文具] [876a58d4] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:23:58.126Z] [DEBUG] [DL] 比較同義詞: "滑鼠墊" vs "狗飼料" [876a58d4] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:23:58.126Z] [DEBUG] [DL] 比較同義詞: "香菸" vs "狗飼料" [876a58d4] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:23:58.126Z] [DEBUG] [DL] 比較同義詞: "文具" vs "狗飼料" [876a58d4] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:23:58.126Z] [DEBUG] [DL] 處理同義詞匹配: "狗飼料"，科目: "交通費用"，同義詞數量: 2，同義詞內容: [停車費, 國道通行費] [876a58d4] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:23:58.126Z] [DEBUG] [DL] 比較同義詞: "停車費" vs "狗飼料" [876a58d4] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:23:58.126Z] [DEBUG] [DL] 比較同義詞: "國道通行費" vs "狗飼料" [876a58d4] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:23:58.127Z] [DEBUG] [DL] 處理同義詞匹配: "狗飼料"，科目: "餐飲費用"，同義詞數量: 4，同義詞內容: [口香糖, 綠茶, 麵包, 滷蛋] [876a58d4] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:23:58.127Z] [DEBUG] [DL] 比較同義詞: "口香糖" vs "狗飼料" [876a58d4] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:23:58.127Z] [DEBUG] [DL] 比較同義詞: "綠茶" vs "狗飼料" [876a58d4] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:23:58.128Z] [DEBUG] [DL] 比較同義詞: "麵包" vs "狗飼料" [876a58d4] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:23:58.128Z] [DEBUG] [DL] 比較同義詞: "滷蛋" vs "狗飼料" [876a58d4] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:23:58.128Z] [DEBUG] [DL] 處理同義詞匹配: "狗飼料"，科目: "娛樂消遣"，同義詞數量: 1，同義詞內容: [鑰匙圈] [876a58d4] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:23:58.128Z] [DEBUG] [DL] 比較同義詞: "鑰匙圈" vs "狗飼料" [876a58d4] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:23:58.128Z] [DEBUG] [DL] 處理同義詞匹配: "狗飼料"，科目: "運動嗜好"，同義詞數量: 0，同義詞內容: [] [876a58d4] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:23:58.128Z] [DEBUG] [DL] 處理同義詞匹配: "狗飼料"，科目: "寵物生活"，同義詞數量: 0，同義詞內容: [] [876a58d4] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:23:58.128Z] [DEBUG] [DL] 處理同義詞匹配: "狗飼料"，科目: "醫療費用"，同義詞數量: 0，同義詞內容: [] [876a58d4] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:23:58.128Z] [DEBUG] [DL] 處理同義詞匹配: "狗飼料"，科目: "財務收入"，同義詞數量: 0，同義詞內容: [] [876a58d4] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:23:58.128Z] [DEBUG] [DL] 處理同義詞匹配: "狗飼料"，科目: "財務支出"，同義詞數量: 0，同義詞內容: [] [876a58d4] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:23:58.128Z] [DEBUG] [DL] 處理同義詞匹配: "狗飼料"，科目: "其他"，同義詞數量: 0，同義詞內容: [] [876a58d4] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:23:58.129Z] [INFO] [DL] 需要新科目歸類: 狗飼料 [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_parseUserMessage]
+[2025-12-31T02:23:58.129Z] [INFO] [DL] 觸發新科目歸類流程: 狗飼料 [876a58d4] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_processQuickBookkeeping]
+[2025-12-31T02:23:58.129Z] [INFO] [DL] 觸發新科目歧義消除流程: 狗飼料 [876a58d4] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_processQuickBookkeeping]
+[2025-12-31T02:23:58.129Z] [INFO] [DL] 階段二：記憶體Session創建成功，5分鐘超時定時器已設定: 1767147838129 [876a58d4] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_createPendingRecord]
+[2025-12-31T02:23:58.129Z] [DEBUG] [DL] 階段二：Session初始狀態 - 科目已選: false, 錢包已選: false, 過期時間: 2025-12-31T02:28:58.129Z [876a58d4] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_createPendingRecord]
+[2025-12-31T02:23:58.130Z] [INFO] [DL] 處理新科目歸類: 狗飼料 [876a58d4] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_handleNewSubjectClassification]
+[2025-12-31T02:23:58.130Z] [DEBUG] [DL] 成功載入0099.json，共11筆科目資料 [Code: DEBUG] [Location: LBK_load0099SubjectConfig]
+[2025-12-31T02:23:58.130Z] [INFO] [DL] v1.4.3 生成科目歸類選單和Quick Reply，共11個動態選項 (來源:0099.json) [Code: INFO] [Location: LBK_buildClassificationMessage]
+已儲存pending記帳資料到快取: WH_PENDING_Uae47d9d496e4596d70ed724a7d6e2948 [876a58d4]
+[WH 2.0.16 LOG] WH 2.5.1: 已儲存pending記帳資料，等待用戶選擇科目 [876a58d4] (INFO)
+WH_replyMessage: 收到類型 object 的訊息對象
+WH_replyMessage: 訊息對象結構: ["success","message","responseMessage","quickReply","moduleCode","module","processingTime","moduleVersion","requiresUserSelection","pendingData"]
+WH_replyMessage: 訊息對象預覽: {"success":true,"message":"您的科目庫無此科目，請問「狗飼料」屬於什麼科目？","responseMessage":"您的科目庫無此科目，請問「狗飼料」屬於什麼科目？","quickReply":{"items":[{"type":"action","action":{"type":"postback","label":"101 生鮮雜貨","data":"classif...
+WH_replyMessage: 發現responseMessage屬性 (string), 長度=24
+WH_replyMessage: 發現message屬性 (string)
+WH_replyMessage: 使用responseMessage屬性 (您的科目庫無此科目，請問「狗飼料」屬於什麼科目？...)
+WH_replyMessage: 開始回覆訊息: 您的科目庫無此科目，請問「狗飼料」屬於什麼科目？
+[WH 2.0.16 LOG] WH 2.0.3: 開始回覆訊息: 您的科目庫無此科目，請問「狗飼料」屬於什麼科目？ (INFO)
+[WH 2.0.16 LOG] WH 2.0.3: 發送API請求到LINE平台 (INFO)
+WH_replyMessage 錯誤: AxiosError: Request failed with status code 400
+錯誤響應: {"message":"Invalid reply token"}
+[WH 2.0.16 LOG] WH 2.0.3: 回覆訊息異常: AxiosError: Request failed with status code 400 (ERROR)
+LBK處理完成 [876a58d4]
+[WH 2.0.16 LOG] WH 階段一: LBK處理完成 [876a58d4] (INFO)
+DD_distributeData處理完成，結果預覽: {"success":true,"hasResponseMessage":true,"responseMsgLength":24,"errorType":"無","moduleCode":"LBK","hasPartialData":false} [876a58d4]
+WH v2.5.0: 完全信任LBK處理結果，準備轉發回覆 [876a58d4]
+[WH 2.0.16 LOG] WH 2.5.1: DCN-0024 階段二 - 正確傳遞Quick Reply參數 [876a58d4] (INFO)
+訊息處理結果: {"success":true,"message":"您的科目庫無此科目，請問「狗飼料」屬於什麼科目？","responseMessage":"您的科目庫無此科目，請問「狗飼料」屬於什麼科目？","quickReply":{"items":[{"type":"action","action":{"type":"postback","label":"101 生鮮雜貨","data":"classify_101_{\"subject\":\"狗飼料\",\"amount\":333,\"rawAmount\":\"333\",\"paymentMethod\":\"3\",\"userId\":\"Uae47d9d496e4596d70ed724a7d6e2948\",\"pendingId\":\"1767147838129\"}","displayText":"101 生鮮雜貨"}},{"type":"action","action":{"type":"postback","label":"102 生活家用","data":"classify_102_{\"subject\":\"狗飼料\",\"amount\":333,\"rawAmount\":\"333\",\"paymentMethod\":\"3\",\"userId\":\"Uae47d9d496e4596d70ed724a7d6e2948\",\"pendingId\":\"1767147838129\"}","displayText":"102 生活家用"}},{"type":"action","action":{"type":"postback","label":"103 交通費用","data":"classify_103_{\"subject\":\"狗飼料\",\"amount\":333,\"rawAmount\":\"333\",\"paymentMethod\":\"3\",\"userId\":\"Uae47d9d496e4596d70ed724a7d6e2948\",\"pendingId\":\"1767147838129\"}","displayText":"103 交通費用"}},{"type":"action","action":{"type":"postback","label":"104 餐飲費用","data":"classify_104_{\"subject\":\"狗飼料\",\"amount\":333,\"rawAmount\":\"333\",\"paymentMethod\":\"3\",\"userId\":\"Uae47d9d496e4596d70ed724a7d6e2948\",\"pendingId\":\"1767147838129\"}","displayText":"104 餐飲費用"}},{"type":"action","action":{"type":"postback","label":"105 娛樂消遣","data":"classify_105_{\"subject\":\"狗飼料\",\"amount\":333,\"rawAmount\":\"333\",\"paymentMethod\":\"3\",\"userId\":\"Uae47d9d496e4596d70ed724a7d6e2948\",\"pendingId\":\"1767147838129\"}","displayText":"105 娛樂消遣"}},{"type":"action","action":{"type":"postback","label":"106 運動嗜好","data":"classify_106_{\"subject\":\"狗飼料\",\"amount\":333,\"rawAmount\":\"333\",\"paymentMethod\":\"3\",\"userId\":\"Uae47d9d496e4596d70ed724a7d6e2948\",\"pendingId\":\"1767147838129\"}","displayText":"106 運動嗜好"}},{"type":"action","action":{"type":"postback","label":"107 寵物生活","data":"classify_107_{\"subject\":\"狗飼料\",\"amount\":333,\"rawAmount\":\"333\",\"paymentMethod\":\"3\",\"userId\":\"Uae47d9d496e4596d70ed724a7d6e2948\",\"pendingId\":\"1767147838129\"}","displayText":"107 寵物生活"}},{"type":"action","action":{"type":"postback","label":"108 醫療費用","data":"classify_108_{\"subject\":\"狗飼料\",\"amount\":333,\"rawAmount\":\"333\",\"paymentMethod\":\"3\",\"userId\":\"Uae47d9d496e4596d70ed724a7d6e2948\",\"pendingId\":\"1767147838129\"}","displayText":"108 醫療費用"}},{"type":"action","action":{"type":"postback","label":"201 財務收入","data":"classify_201_{\"subject\":\"狗飼料\",\"amount\":333,\"rawAmount\":\"333\",\"paymentMethod\":\"3\",\"userId\":\"Uae47d9d496e4596d70ed724a7d6e2948\",\"pendingId\":\"1767147838129\"}","displayText":"201 財務收入"}},{"type":"action","action":{"type":"postback","label":"301 財務支出","data":"classify_301_{\"subject\":\"狗飼料\",\"amount\":333,\"rawAmount\":\"333\",\"paymentMethod\":\"3\",\"userId\":\"Uae47d9d496e4596d70ed724a7d6e2948\",\"pendingId\":\"1767147838129\"}","displayText":"301 財務支出"}},{"type":"action","action":{"type":"postback","label":"999 其他","data":"classify_999_{\"subject\":\"狗飼料\",\"amount\":333,\"rawAmount\":\"333\",\"paymentMethod\":\"3\",\"userId\":\"Uae47d9d496e4596d70ed724a7d6e2948\",\"pendingId\":\"1767147838129\"}","displayText":"999 其他"}}]},"moduleCode":"LBK","module":"LBK","processingTime":1764875944.415,"moduleVersion":"1.4.3","requiresUserSelection":true,"pendingData":{"subject":"狗飼料","amount":333,"rawAmount":"333","paymentMethod":"3","userId":"Uae47d9d496e4596d70ed724a7d6e2948","timestamp":"2025-12-31T02:23:58.131Z","processId":"876a58d4","originalInput":"狗飼料3333","stageData":{"electedCategory":{},"categorySelected":true}}} [876a58d4]
+非同步處理完成，已清理數據 [876a58d4]
+[WH 2.0.16 LOG] WH 2.0.7: 非同步處理完成 [876a58d4] (INFO)
