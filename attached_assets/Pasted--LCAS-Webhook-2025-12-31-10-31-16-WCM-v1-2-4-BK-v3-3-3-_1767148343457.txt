@@ -1,0 +1,159 @@
+🚀 LCAS Webhook 啟動中... 2025/12/31 上午10:31:16
+✅ 核心模組載入完成
+✅ WCM模組v1.2.4載入完成
+✅ BK模組v3.3.3載入完成
+ ✅ Firebase Admin SDK已初始化
+✅ BM預算管理模組v2.3.0載入完成
+🤝 CM 協作管理模組初始化中...
+[2025-12-31T02:31:17.112Z] [INFO] [CM] CM 協作管理模組初始化完成 [Location: CM_initialize]
+✅ CM協作管理模組v2.4.0載入完成
+✅ Firebase Admin SDK已初始化
+✅ WH模組環境變數檢查完整
+[WH 2.0.16 LOG] WH 2.3.0: 環境變數檢查完整 (INFO)
+✅ Webhook 模組載入完成
+📅 已載入 0 個排程設定
+[2025-12-31T02:31:17.994Z] [INFO] [SR] SR 排程提醒模組初始化完成 [Location: SR_initialize]
+[WH 2.0.16 LOG] WH 2.0.7: 收到LINE Webhook請求 [a7454a65] (INFO)
+檢測到需要回覆的訊息，啟用同步處理 [a7454a65]
+[WH 2.0.16 LOG] WH 2.0.16: 檢測到需要回覆的訊息，啟用同步處理 [a7454a65] (INFO)
+開始非同步處理請求 [a7454a65]
+[WH 2.0.16 LOG] WH 2.0.7: 開始非同步處理請求 [a7454a65] (INFO)
+[WH 2.0.16 LOG] WH 2.0.3: 開始處理事件: message [a7454a65] (INFO)
+處理消息事件: text [a7454a65]
+收到文本消息: "豬耳朵33333" [a7454a65]
+[WH 2.0.16 LOG] WH 2.0.3: 收到文本消息: "豬耳朵33333" [a7454a65] (INFO)
+開始AM用戶驗證流程 [a7454a65]
+[WH 2.0.16 LOG] WH 階段一: 開始AM用戶驗證流程 [a7454a65] (INFO)
+[2025-12-31T02:31:47.694Z] [INFO] [DL] AM [User: 帳號存在性驗證: Uae47d9d496e4596d70ed724a7d6e2948 (LINE)] [Location: Object.DL_info]
+用戶帳本驗證流程完成: Uae47d9d496e4596d70ed724a7d6e2948 [a7454a65]
+🔍 AM_getUserDefaultLedger: 查詢用戶 Uae47d9d496e4596d70ed724a7d6e2948 預設帳本...
+✅ AM_getUserDefaultLedger: 找到用戶預設帳本: user_Uae47d9d496e4596d70ed724a7d6e2948
+用戶帳本驗證通過: user_Uae47d9d496e4596d70ed724a7d6e2948 [a7454a65]
+AM驗證完成，轉發至LBK [a7454a65]
+[WH 2.0.16 LOG] WH 階段一: AM驗證完成，轉發至LBK [a7454a65] (INFO)
+WH v2.5.0: 純粹轉發至LBK處理 - 豬耳朵33333
+[2025-12-31T02:31:48.109Z] [INFO] [DL] 開始處理LINE OA請求 [a7454a65] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_processQuickBookkeeping]
+[2025-12-31T02:31:48.110Z] [DEBUG] [DL] 階段二：檢查統計查詢關鍵字: "豬耳朵33333" [a7454a65] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_checkStatisticsKeyword]
+[2025-12-31T02:31:48.110Z] [DEBUG] [DL] 階段二：未檢測到統計查詢關鍵字: "豬耳朵33333" [a7454a65] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_checkStatisticsKeyword]
+[2025-12-31T02:31:48.110Z] [DEBUG] [DL] 用戶訊息解析: "豬耳朵33333" [a7454a65] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_parseUserMessage]
+[2025-12-31T02:31:48.111Z] [DEBUG] [DL] 階段一：開始千位分隔符格式解析: "豬耳朵33333" [a7454a65] [Code: DEBUG] [Location: LBK_parseInputFormat]
+[2025-12-31T02:31:48.111Z] [DEBUG] [DL] 階段一：千位分隔符預處理: "豬耳朵33333" → "豬耳朵33333" [a7454a65] [Code: DEBUG] [Location: LBK_parseInputFormat]
+[2025-12-31T02:31:48.111Z] [DEBUG] [DL] 階段一：移除千位分隔符: "333" → "333" [a7454a65] [Code: DEBUG] [Location: LBK_parseInputFormat]
+[2025-12-31T02:31:48.111Z] [DEBUG] [DL] 階段三：提取支付方式: "33" [a7454a65] [Code: DEBUG] [Location: LBK_parseInputFormat]
+[2025-12-31T02:31:48.112Z] [INFO] [DL] 階段三：簡化解析結果: 科目="豬耳朵", 金額=333, 支付方式="33" [a7454a65] [Code: INFO] [Location: LBK_parseInputFormat]
+[2025-12-31T02:31:48.112Z] [DEBUG] [DL] 階段一：提取金額（支援千位分隔符）: "豬耳朵333" [a7454a65] [Code: DEBUG] [Location: LBK_extractAmount]
+[2025-12-31T02:31:48.112Z] [DEBUG] [DL] 階段一：提取純數字金額: "333" = 333 [a7454a65] [Code: DEBUG] [Location: LBK_extractAmount]
+[2025-12-31T02:31:48.113Z] [DEBUG] [DL] 查詢科目代碼: "豬耳朵" [a7454a65] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:31:48.113Z] [INFO] [DL] Firestore連線初始化成功 [Code: INFO] [Location: LBK_initializeFirestore]
+[2025-12-31T02:31:48.114Z] [DEBUG] [DL] 開始同義詞匹配，輸入: "豬耳朵" [a7454a65] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:31:48.266Z] [DEBUG] [DL] 查詢categories集合結果: 11 筆資料 [a7454a65] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:31:48.266Z] [DEBUG] [DL] 處理同義詞匹配: "豬耳朵"，科目: "生鮮雜貨"，同義詞數量: 1，同義詞內容: [家樂福] [a7454a65] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:31:48.266Z] [DEBUG] [DL] 比較同義詞: "家樂福" vs "豬耳朵" [a7454a65] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:31:48.266Z] [DEBUG] [DL] 處理同義詞匹配: "豬耳朵"，科目: "生活家用"，同義詞數量: 3，同義詞內容: [滑鼠墊, 香菸, 文具] [a7454a65] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:31:48.266Z] [DEBUG] [DL] 比較同義詞: "滑鼠墊" vs "豬耳朵" [a7454a65] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:31:48.266Z] [DEBUG] [DL] 比較同義詞: "香菸" vs "豬耳朵" [a7454a65] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:31:48.266Z] [DEBUG] [DL] 比較同義詞: "文具" vs "豬耳朵" [a7454a65] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:31:48.267Z] [DEBUG] [DL] 處理同義詞匹配: "豬耳朵"，科目: "交通費用"，同義詞數量: 2，同義詞內容: [停車費, 國道通行費] [a7454a65] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:31:48.267Z] [DEBUG] [DL] 比較同義詞: "停車費" vs "豬耳朵" [a7454a65] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:31:48.267Z] [DEBUG] [DL] 比較同義詞: "國道通行費" vs "豬耳朵" [a7454a65] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:31:48.267Z] [DEBUG] [DL] 處理同義詞匹配: "豬耳朵"，科目: "餐飲費用"，同義詞數量: 4，同義詞內容: [口香糖, 綠茶, 麵包, 滷蛋] [a7454a65] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:31:48.267Z] [DEBUG] [DL] 比較同義詞: "口香糖" vs "豬耳朵" [a7454a65] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:31:48.267Z] [DEBUG] [DL] 比較同義詞: "綠茶" vs "豬耳朵" [a7454a65] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:31:48.267Z] [DEBUG] [DL] 比較同義詞: "麵包" vs "豬耳朵" [a7454a65] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:31:48.267Z] [DEBUG] [DL] 比較同義詞: "滷蛋" vs "豬耳朵" [a7454a65] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:31:48.267Z] [DEBUG] [DL] 處理同義詞匹配: "豬耳朵"，科目: "娛樂消遣"，同義詞數量: 1，同義詞內容: [鑰匙圈] [a7454a65] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:31:48.267Z] [DEBUG] [DL] 比較同義詞: "鑰匙圈" vs "豬耳朵" [a7454a65] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:31:48.267Z] [DEBUG] [DL] 處理同義詞匹配: "豬耳朵"，科目: "運動嗜好"，同義詞數量: 0，同義詞內容: [] [a7454a65] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:31:48.267Z] [DEBUG] [DL] 處理同義詞匹配: "豬耳朵"，科目: "寵物生活"，同義詞數量: 0，同義詞內容: [] [a7454a65] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:31:48.267Z] [DEBUG] [DL] 處理同義詞匹配: "豬耳朵"，科目: "醫療費用"，同義詞數量: 0，同義詞內容: [] [a7454a65] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:31:48.268Z] [DEBUG] [DL] 處理同義詞匹配: "豬耳朵"，科目: "財務收入"，同義詞數量: 0，同義詞內容: [] [a7454a65] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:31:48.268Z] [DEBUG] [DL] 處理同義詞匹配: "豬耳朵"，科目: "財務支出"，同義詞數量: 0，同義詞內容: [] [a7454a65] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:31:48.268Z] [DEBUG] [DL] 處理同義詞匹配: "豬耳朵"，科目: "其他"，同義詞數量: 1，同義詞內容: [狗飼料] [a7454a65] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:31:48.268Z] [DEBUG] [DL] 比較同義詞: "狗飼料" vs "豬耳朵" [a7454a65] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:31:48.268Z] [INFO] [DL] 需要新科目歸類: 豬耳朵 [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_parseUserMessage]
+[2025-12-31T02:31:48.268Z] [INFO] [DL] 觸發新科目歸類流程: 豬耳朵 [a7454a65] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_processQuickBookkeeping]
+[2025-12-31T02:31:48.268Z] [INFO] [DL] 觸發新科目歧義消除流程: 豬耳朵 [a7454a65] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_processQuickBookkeeping]
+[2025-12-31T02:31:48.269Z] [INFO] [DL] 階段二：記憶體Session創建成功，5分鐘超時定時器已設定: 1767148308269 [a7454a65] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_createPendingRecord]
+[2025-12-31T02:31:48.269Z] [DEBUG] [DL] 階段二：Session初始狀態 - 科目已選: false, 錢包已選: false, 過期時間: 2025-12-31T02:36:48.269Z [a7454a65] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_createPendingRecord]
+[2025-12-31T02:31:48.269Z] [INFO] [DL] 處理新科目歸類: 豬耳朵 [a7454a65] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_handleNewSubjectClassification]
+[2025-12-31T02:31:48.270Z] [DEBUG] [DL] 成功載入0099.json，共11筆科目資料 [Code: DEBUG] [Location: LBK_load0099SubjectConfig]
+[2025-12-31T02:31:48.270Z] [INFO] [DL] v1.4.3 生成科目歸類選單和Quick Reply，共11個動態選項 (來源:0099.json) [Code: INFO] [Location: LBK_buildClassificationMessage]
+已儲存pending記帳資料到快取: WH_PENDING_Uae47d9d496e4596d70ed724a7d6e2948 [a7454a65]
+[WH 2.0.16 LOG] WH 2.5.1: 已儲存pending記帳資料，等待用戶選擇科目 [a7454a65] (INFO)
+WH_replyMessage: 收到類型 object 的訊息對象
+WH_replyMessage: 訊息對象結構: ["success","message","responseMessage","quickReply","moduleCode","module","processingTime","moduleVersion","requiresUserSelection","pendingData"]
+WH_replyMessage: 訊息對象預覽: {"success":true,"message":"您的科目庫無此科目，請問「豬耳朵」屬於什麼科目？","responseMessage":"您的科目庫無此科目，請問「豬耳朵」屬於什麼科目？","quickReply":{"items":[{"type":"action","action":{"type":"postback","label":"101 生鮮雜貨","data":"classif...
+WH_replyMessage: 發現responseMessage屬性 (string), 長度=24
+WH_replyMessage: 發現message屬性 (string)
+WH_replyMessage: 使用responseMessage屬性 (您的科目庫無此科目，請問「豬耳朵」屬於什麼科目？...)
+WH_replyMessage: 開始回覆訊息: 您的科目庫無此科目，請問「豬耳朵」屬於什麼科目？
+[WH 2.0.16 LOG] WH 2.0.3: 開始回覆訊息: 您的科目庫無此科目，請問「豬耳朵」屬於什麼科目？ (INFO)
+[WH 2.0.16 LOG] WH 2.0.3: 發送API請求到LINE平台 (INFO)
+LINE API 回覆結果: 200
+回覆訊息成功
+[WH 2.0.16 LOG] WH 2.0.3: 回覆訊息成功發送 (INFO)
+LBK處理完成 [a7454a65]
+[WH 2.0.16 LOG] WH 階段一: LBK處理完成 [a7454a65] (INFO)
+DD_distributeData處理完成，結果預覽: {"success":true,"hasResponseMessage":true,"responseMsgLength":24,"errorType":"無","moduleCode":"LBK","hasPartialData":false} [a7454a65]
+WH v2.5.0: 完全信任LBK處理結果，準備轉發回覆 [a7454a65]
+[WH 2.0.16 LOG] WH 2.5.1: DCN-0024 階段二 - 正確傳遞Quick Reply參數 [a7454a65] (INFO)
+訊息處理結果: {"success":true,"message":"您的科目庫無此科目，請問「豬耳朵」屬於什麼科目？","responseMessage":"您的科目庫無此科目，請問「豬耳朵」屬於什麼科目？","quickReply":{"items":[{"type":"action","action":{"type":"postback","label":"101 生鮮雜貨","data":"classify_101_{\"subject\":\"豬耳朵\",\"amount\":333,\"rawAmount\":\"333\",\"paymentMethod\":\"33\",\"userId\":\"Uae47d9d496e4596d70ed724a7d6e2948\",\"pendingId\":\"1767148308269\"}","displayText":"101 生鮮雜貨"}},{"type":"action","action":{"type":"postback","label":"102 生活家用","data":"classify_102_{\"subject\":\"豬耳朵\",\"amount\":333,\"rawAmount\":\"333\",\"paymentMethod\":\"33\",\"userId\":\"Uae47d9d496e4596d70ed724a7d6e2948\",\"pendingId\":\"1767148308269\"}","displayText":"102 生活家用"}},{"type":"action","action":{"type":"postback","label":"103 交通費用","data":"classify_103_{\"subject\":\"豬耳朵\",\"amount\":333,\"rawAmount\":\"333\",\"paymentMethod\":\"33\",\"userId\":\"Uae47d9d496e4596d70ed724a7d6e2948\",\"pendingId\":\"1767148308269\"}","displayText":"103 交通費用"}},{"type":"action","action":{"type":"postback","label":"104 餐飲費用","data":"classify_104_{\"subject\":\"豬耳朵\",\"amount\":333,\"rawAmount\":\"333\",\"paymentMethod\":\"33\",\"userId\":\"Uae47d9d496e4596d70ed724a7d6e2948\",\"pendingId\":\"1767148308269\"}","displayText":"104 餐飲費用"}},{"type":"action","action":{"type":"postback","label":"105 娛樂消遣","data":"classify_105_{\"subject\":\"豬耳朵\",\"amount\":333,\"rawAmount\":\"333\",\"paymentMethod\":\"33\",\"userId\":\"Uae47d9d496e4596d70ed724a7d6e2948\",\"pendingId\":\"1767148308269\"}","displayText":"105 娛樂消遣"}},{"type":"action","action":{"type":"postback","label":"106 運動嗜好","data":"classify_106_{\"subject\":\"豬耳朵\",\"amount\":333,\"rawAmount\":\"333\",\"paymentMethod\":\"33\",\"userId\":\"Uae47d9d496e4596d70ed724a7d6e2948\",\"pendingId\":\"1767148308269\"}","displayText":"106 運動嗜好"}},{"type":"action","action":{"type":"postback","label":"107 寵物生活","data":"classify_107_{\"subject\":\"豬耳朵\",\"amount\":333,\"rawAmount\":\"333\",\"paymentMethod\":\"33\",\"userId\":\"Uae47d9d496e4596d70ed724a7d6e2948\",\"pendingId\":\"1767148308269\"}","displayText":"107 寵物生活"}},{"type":"action","action":{"type":"postback","label":"108 醫療費用","data":"classify_108_{\"subject\":\"豬耳朵\",\"amount\":333,\"rawAmount\":\"333\",\"paymentMethod\":\"33\",\"userId\":\"Uae47d9d496e4596d70ed724a7d6e2948\",\"pendingId\":\"1767148308269\"}","displayText":"108 醫療費用"}},{"type":"action","action":{"type":"postback","label":"201 財務收入","data":"classify_201_{\"subject\":\"豬耳朵\",\"amount\":333,\"rawAmount\":\"333\",\"paymentMethod\":\"33\",\"userId\":\"Uae47d9d496e4596d70ed724a7d6e2948\",\"pendingId\":\"1767148308269\"}","displayText":"201 財務收入"}},{"type":"action","action":{"type":"postback","label":"301 財務支出","data":"classify_301_{\"subject\":\"豬耳朵\",\"amount\":333,\"rawAmount\":\"333\",\"paymentMethod\":\"33\",\"userId\":\"Uae47d9d496e4596d70ed724a7d6e2948\",\"pendingId\":\"1767148308269\"}","displayText":"301 財務支出"}},{"type":"action","action":{"type":"postback","label":"999 其他","data":"classify_999_{\"subject\":\"豬耳朵\",\"amount\":333,\"rawAmount\":\"333\",\"paymentMethod\":\"33\",\"userId\":\"Uae47d9d496e4596d70ed724a7d6e2948\",\"pendingId\":\"1767148308269\"}","displayText":"999 其他"}}]},"moduleCode":"LBK","module":"LBK","processingTime":1764341972.169,"moduleVersion":"1.4.3","requiresUserSelection":true,"pendingData":{"subject":"豬耳朵","amount":333,"rawAmount":"333","paymentMethod":"33","userId":"Uae47d9d496e4596d70ed724a7d6e2948","timestamp":"2025-12-31T02:31:48.270Z","processId":"a7454a65","originalInput":"豬耳朵33333","stageData":{"electedCategory":{},"categorySelected":true}}} [a7454a65]
+非同步處理完成，已清理數據 [a7454a65]
+[WH 2.0.16 LOG] WH 2.0.7: 非同步處理完成 [a7454a65] (INFO)
+[WH 2.0.16 LOG] WH 2.0.7: 收到LINE Webhook請求 [4b0f6dbc] (INFO)
+非回覆事件，使用非同步處理 [4b0f6dbc]
+開始非同步處理請求 [4b0f6dbc]
+[WH 2.0.16 LOG] WH 2.0.7: 開始非同步處理請求 [4b0f6dbc] (INFO)
+WH v2.5.3: 收到postback事件: classify_104_{"subject":"豬耳朵","amount":333,"rawAmount":"333","paymentMethod":"33","userId":"Uae47d9d496e4596d70ed724a7d6e2948","pendingId":"1767148308269"}
+[WH 2.0.16 LOG] WH 2.5.3: 階段一修復 - 識別postback事件類型: classify_104_{"subject":"豬耳朵","amount":333,"rawAmount":"333","paymentMethod":"33","userId":"Uae47d9d496e4596d70ed724a7d6e2948","pendingId":"1767148308269"} [4b0f6dbc] (INFO)
+WH v2.5.0: 純粹轉發至LBK處理 - classify_104_{"subject":"豬耳朵","amount":333,"rawAmount":"333","paymentMethod":"33","userId":"Uae47d9d496e4596d70ed724a7d6e2948","pendingId":"1767148308269"}
+[2025-12-31T02:31:53.908Z] [INFO] [DL] 開始處理LINE OA請求 [4b0f6dbc] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_processQuickBookkeeping]
+[2025-12-31T02:31:53.908Z] [INFO] [DL] 檢測到科目歸類postback格式訊息 [4b0f6dbc] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_processQuickBookkeeping]
+[2025-12-31T02:31:53.908Z] [INFO] [DL] 科目選擇完成，開始執行記帳: categoryId=104 [4b0f6dbc] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_processQuickBookkeeping]
+[2025-12-31T02:31:53.914Z] [INFO] [DL] 處理科目歸類postback: categoryId=104 [4b0f6dbc] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_handleClassificationPostback]
+[2025-12-31T02:31:53.919Z] [DEBUG] [DL] 成功載入0099.json，共11筆科目資料 [Code: DEBUG] [Location: LBK_load0099SubjectConfig]
+[2025-12-31T02:31:53.924Z] [DEBUG] [DL] 成功載入0099.json，共11筆科目資料 [Code: DEBUG] [Location: LBK_load0099SubjectConfig]
+[2025-12-31T02:31:53.928Z] [DEBUG] [DL] 建立科目映射表，共11個選項 (來源:0099.json) [Code: DEBUG] [Location: LBK_buildCategoryMapping]
+[2025-12-31T02:31:53.935Z] [INFO] [DL] 科目歸類選擇: 餐飲費用 [4b0f6dbc] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_handleClassificationPostback]
+[2025-12-31T02:31:53.949Z] [INFO] [DL] 階段一修復：添加科目同義詞: 豬耳朵 → 餐飲費用 (ID: 104) [4b0f6dbc] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_addSubjectSynonym]
+[2025-12-31T02:31:54.225Z] [INFO] [DL] 階段一修復：現有同義詞: [口香糖, 綠茶, 麵包, 滷蛋] [4b0f6dbc] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_addSubjectSynonym]
+[2025-12-31T02:31:54.454Z] [INFO] [DL] 階段一修復：科目同義詞事務更新成功: "口香糖,綠茶,麵包,滷蛋,豬耳朵" [4b0f6dbc] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_addSubjectSynonym]
+[2025-12-31T02:31:54.454Z] [INFO] [DL] 成功建立同義詞關聯: 豬耳朵 → 餐飲費用 [4b0f6dbc] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_handleClassificationPostback]
+[2025-12-31T02:31:54.455Z] [INFO] [DL] 階段二修復：記憶體Session更新成功: 1767148308269 (PENDING_CATEGORY → PENDING_CATEGORY) [4b0f6dbc] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_updatePendingRecord]
+[2025-12-31T02:31:54.455Z] [DEBUG] [DL] 階段二修復：狀態變更詳情 - 科目選擇: false → true, 錢包選擇: false → false [4b0f6dbc] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_updatePendingRecord]
+[2025-12-31T02:31:54.455Z] [INFO] [DL] 階段一修復：Pending Record 科目資訊更新成功: 餐飲費用 [4b0f6dbc] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_handleClassificationPostback]
+[2025-12-31T02:31:54.455Z] [INFO] [DL] 階段二修復：科目選擇完成，檢查支付方式: 33 [4b0f6dbc] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_handleClassificationPostback]
+[2025-12-31T02:31:54.455Z] [DEBUG] [DL] 階段二：嚴格驗證錢包存在: walletId="null", walletName="33" [4b0f6dbc] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_validateWalletExists]
+[2025-12-31T02:31:54.455Z] [DEBUG] [DL] 階段二：使用 walletName 嚴格查詢: "33" [4b0f6dbc] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_validateWalletExists]
+[2025-12-31T02:31:54.456Z] [DEBUG] [DL] 階段二：嚴格查詢錢包: "33" [4b0f6dbc] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getWalletByName]
+[2025-12-31T02:31:54.456Z] [DEBUG] [DL] 階段二：開始嚴格匹配，輸入: "33" [4b0f6dbc] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getWalletByName]
+[2025-12-31T02:31:54.615Z] [DEBUG] [DL] 階段二：查詢 wallets 集合結果: 3 筆 active 資料 [4b0f6dbc] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getWalletByName]
+[2025-12-31T02:31:54.615Z] [DEBUG] [DL] 階段二：檢查同義詞: "33"，錢包: "現金"，同義詞: [現金] [4b0f6dbc] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getWalletByName]
+[2025-12-31T02:31:54.616Z] [DEBUG] [DL] 階段二：檢查同義詞: "33"，錢包: "信用卡"，同義詞: [信用卡, 星展, line pay] [4b0f6dbc] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getWalletByName]
+[2025-12-31T02:31:54.616Z] [DEBUG] [DL] 階段二：檢查同義詞: "33"，錢包: "銀行轉帳"，同義詞: [銀行轉帳] [4b0f6dbc] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getWalletByName]
+[2025-12-31T02:31:54.616Z] [INFO] [DL] 階段二：未在 wallets 子集合中找到精確匹配: "33" [4b0f6dbc] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_getWalletByName]
+[2025-12-31T02:31:54.616Z] [INFO] [DL] 階段二：錢包未在 wallets 子集合中找到，觸發用戶確認: 33 [4b0f6dbc] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_validateWalletExists]
+[2025-12-31T02:31:54.616Z] [INFO] [DL] 支付方式需要歧義消除: undefined，轉入PENDING_WALLET狀態 [4b0f6dbc] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_handleClassificationPostback]
+[2025-12-31T02:31:54.616Z] [INFO] [DL] 階段二修復：記憶體Session更新成功: 1767148308269 (PENDING_CATEGORY → PENDING_WALLET) [4b0f6dbc] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_updatePendingRecord]
+[2025-12-31T02:31:54.616Z] [DEBUG] [DL] 階段二修復：狀態變更詳情 - 科目選擇: true → true, 錢包選擇: false → false [4b0f6dbc] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_updatePendingRecord]
+WH_replyMessage: 收到類型 object 的訊息對象
+WH_replyMessage: 訊息對象結構: ["success","message","responseMessage","quickReply","moduleCode","module","processingTime","moduleVersion","requiresUserSelection","classificationCompleted","nextStage"]
+WH_replyMessage: 訊息對象預覽: {"success":true,"message":"科目歸類完成！已選擇「餐飲費用」\n\n檢測到未知支付方式「33」，請問這屬於何種支付方式：","responseMessage":"科目歸類完成！已選擇「餐飲費用」\n\n檢測到未知支付方式「33」，請問這屬於何種支付方式：","quickReply":{"items":[{"type":"action","action":{"type":"...
+WH_replyMessage: 發現responseMessage屬性 (string), 長度=44
+WH_replyMessage: 發現message屬性 (string)
+WH_replyMessage: 使用responseMessage屬性 (科目歸類完成！已選擇「餐飲費用」
+
+檢測到未知支付方式「33...)
+WH_replyMessage: 開始回覆訊息: 科目歸類完成！已選擇「餐飲費用」
+
+檢測到未知支付方式「33」，請問這屬於何種支付方式：
+[WH 2.0.16 LOG] WH 2.0.3: 開始回覆訊息: 科目歸類完成！已選擇「餐飲費用」
+
+檢測到未知支付方式「33」，請問這屬於何種支付方式： (INFO)
+[WH 2.0.16 LOG] WH 2.0.3: 發送API請求到LINE平台 (INFO)
+LINE API 回覆結果: 200
+回覆訊息成功
+[WH 2.0.16 LOG] WH 2.0.3: 回覆訊息成功發送 (INFO)
+[WH 2.0.16 LOG] WH 2.5.3: postback處理完成並回覆用戶 [4b0f6dbc] (INFO)
+非同步處理完成，已清理數據 [4b0f6dbc]
+[WH 2.0.16 LOG] WH 2.0.7: 非同步處理完成 [4b0f6dbc] (INFO)
