@@ -3373,8 +3373,8 @@ async function LBK_createPendingRecord(userId, originalInput, parsedData, initia
     const pendingId = Date.now().toString();
     const now = Date.now();
     
-    // 階段二：設定5分鐘超時時間（符合0070規範）
-    const expiresAt = new Date(now + 5 * 60 * 1000); // 5分鐘後過期
+    // 階段二：設定15秒超時時間（符合0070規範）
+    const expiresAt = new Date(now + 15 * 1000); // 15秒後過期
     const firestoreExpiresAt = admin.firestore.Timestamp.fromDate(expiresAt);
 
     // 階段二修復：強化解析資料的狀態保存
@@ -3464,7 +3464,7 @@ async function LBK_createPendingRecord(userId, originalInput, parsedData, initia
       LBK_logDebug(`記憶體快取清理，移除過期Session: ${oldestKey} [${processId}]`, "記憶體管理", userId, functionName);
     }
 
-    // 階段二：設定5分鐘超時定時器
+    // 階段二：設定15秒超時定時器
     const timeoutId = setTimeout(async () => {
       try {
         LBK_logInfo(`階段二：Pending Record超時觸發: ${pendingId} [${processId}]`, "超時處理", userId, functionName);
@@ -3472,13 +3472,13 @@ async function LBK_createPendingRecord(userId, originalInput, parsedData, initia
       } catch (timeoutError) {
         LBK_logError(`階段二：超時處理失敗: ${timeoutError.toString()} [${processId}]`, "超時處理", userId, "TIMEOUT_HANDLER_ERROR", timeoutError.toString(), functionName);
       }
-    }, 5 * 60 * 1000); // 5分鐘
+    }, 15 * 1000); // 15秒
 
     // 將定時器ID存儲到Session中
     memorySession.timeoutId = timeoutId;
 
     // 階段二修復：記錄狀態同步驗證結果
-    LBK_logInfo(`階段二：記憶體Session創建成功，5分鐘超時定時器已設定: ${pendingId} [${processId}]`, "記憶體Session", userId, functionName);
+    LBK_logInfo(`階段二：記憶體Session創建成功，15秒超時定時器已設定: ${pendingId} [${processId}]`, "記憶體Session", userId, functionName);
     LBK_logDebug(`階段二：Session初始狀態 - 科目已選: ${initialStageData.categorySelected}, 錢包已選: ${initialStageData.walletSelected}, 過期時間: ${expiresAt.toISOString()} [${processId}]`, "狀態同步", userId, functionName);
 
     return {
@@ -3957,7 +3957,7 @@ function LBK_getErrorSuggestion(errorType) {
  * @param {string} pendingId - Pending Record ID
  * @param {string} processId - 處理ID
  * @returns {Promise<Object>} 超時處理結果
- * @description 階段二：5分鐘超時自動歧義消除機制，自動歸類到"999其他"
+ * @description 階段二：15秒超時自動歧義消除機制，自動歸類到"999其他"
  */
 async function LBK_handlePendingRecordTimeout(userId, pendingId, processId) {
   const functionName = "LBK_handlePendingRecordTimeout";
@@ -5900,5 +5900,5 @@ module.exports = {
   // 版本資訊 - 解決方案3更新
   MODULE_VERSION: "2.1.0", // 解決方案3：支付方式超時自動歧義消除機制
   MODULE_NAME: "LBK",
-  MODULE_UPDATE: "解決方案3支付方式超時自動歧義消除機制完成：1)新增LBK_getOtherWalletFromConfig函數：專門從0302配置文件讀取\"other\"錢包設定。2)修改LBK_handlePendingRecordTimeout函數：支付方式歧義消除超時時自動歸類到walletId=\"other\"。3)整合0070規範：確保walletId欄位對應正確。4)行為改善：Before用戶未選擇支付方式時記錄卡在pending狀態 | After 5分鐘後自動歸類到walletId=\"other\"，walletName=\"其他支付方式\"並完成記帳。5)同義詞學習：支付方式超時處理時自動建立同義詞關聯。預期效果：徹底解決支付方式歧義導致的記帳流程停滯問題。"
+  MODULE_UPDATE: "解決方案3支付方式超時自動歧義消除機制完成：1)新增LBK_getOtherWalletFromConfig函數：專門從0302配置文件讀取\"other\"錢包設定。2)修改LBK_handlePendingRecordTimeout函數：支付方式歧義消除超時時自動歸類到walletId=\"other\"。3)整合0070規範：確保walletId欄位對應正確。4)行為改善：Before用戶未選擇支付方式時記錄卡在pending狀態 | After 15秒後自動歸類到walletId=\"other\"，walletName=\"其他支付方式\"並完成記帳。5)同義詞學習：支付方式超時處理時自動建立同義詞關聯。預期效果：徹底解決支付方式歧義導致的記帳流程停滯問題。"
 };
