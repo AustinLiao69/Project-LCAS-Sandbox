@@ -53,4 +53,3 @@ args = "node ASL.js"
 [userenv]
 
 [userenv.shared]
-Webhook_URL_Sandbox = "https://877c0e9a-c320-480d-9922-1c4716ff840c-00-hawt7l09pqbl.pike.replit.dev/"
