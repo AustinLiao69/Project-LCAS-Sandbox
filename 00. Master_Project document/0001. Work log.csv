@@ -464,7 +464,7 @@ MM 	 DD 	 Description 	    Progress
 12	17	 研究Replit裡面sandbox改的代碼要如何push到PROD環境(用git branch去控制?)  	 Closed
 12	17	 修改wallets子集合資料欄位  	 Closed
 12	18	 建立LINE quick reply功能：帳戶(wallets,支付方式)  	 Closed
-12	18	 研究如何讓LINE quick reply功能的科目歸類邏輯與支付方式歸類邏輯能讓user在一次互動中完成  	 Ongoing
+12	18	 研究如何讓LINE quick reply功能的科目歸類邏輯與支付方式歸類邏輯能讓user在一次互動中完成  	 Closed
 12	19	 建立Branch：20251218.科目與支付方式歸類邏輯一次性互動方案  	 Closed
 12	19	 整理9601與9602文件  	 Closed
 12	19	 修改0070文件  	 Ongoing
@@ -481,7 +481,7 @@ MM 	 DD 	 Description 	    Progress
 12	24	 以0070文件規範去檢視各模組之collection與subcollection  	 Ongoing
 12	24	 盤點各模組之資料庫資料欄位  	 Ongoing
 12	26	 修復科目歸類、支付歸類邏輯併merge到main  	 Closed
-12	26	 降低firestore寫入量  	 Critical
+12	26	 降低firestore寫入量  	 Closed
 12	26	 研究rich menu統計查詢導入quick reply按鈕  	 Closed
 12	26	 修復統計查詢按鈕失靈問題  	 Closed
 12	26	 需刪除SR模組FEATURE_USEAGE集合  	 Closed
@@ -493,11 +493,12 @@ MM 	 DD 	 Description 	    Progress
 12	29	 刪除LINE OA加入說明  	 Closed
 12	29	 修改workflow(index.js/ASL.js in parellel)  	 Closed
 12	29	 修改index.js log過多問題  	 Closed
-12	29	 檢視0070文件：wallets子集合  	 Ongoing
+12	29	 檢視0070文件：wallets子集合  	 Closed
 12	29	 修改ASL.js log過多問題  	 Ongoing
 12	30	 分析記帳時間  	 Closed
 12	30	 修改WH health check 時間到168小時  	 Closed
-12	30	 建立0003文件PBI  	 Ongoing
-12	30	 部署LINE webhook  	 Ongoing
+12	30	 建立0003文件PBI  	 Closed
+12	30	 部署LINE webhook  	 Closed
 12	30	 整理0002與0003文件  	 Ongoing
 12	31	 Debug：千分位顯示問題  	 Ongoing
+12	31	 修改0070文件  	 Ongoing
