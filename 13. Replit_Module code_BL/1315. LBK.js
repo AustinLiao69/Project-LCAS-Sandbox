@@ -5889,5 +5889,5 @@ module.exports = {
   // 版本資訊 - 解決方案3更新
   MODULE_VERSION: "2.1.0", // 解決方案3：支付方式超時自動歧義消除機制
   MODULE_NAME: "LBK",
-  MODULE_UPDATE: "解決方案3支付方式超時自動歧義消除機制完成：1)新增LBK_getOtherWalletFromConfig函數：專門從0302配置文件讀取"other"錢包設定。2)修改LBK_handlePendingRecordTimeout函數：支付方式歧義消除超時時自動歸類到walletId='other'。3)整合0070規範：確保walletId欄位對應正確。4)行為改善：Before用戶未選擇支付方式時記錄卡在pending狀態 | After 5分鐘後自動歸類到walletId='other'，walletName='其他支付方式'並完成記帳。5)同義詞學習：支付方式超時處理時自動建立同義詞關聯。預期效果：徹底解決支付方式歧義導致的記帳流程停滯問題。"
+  MODULE_UPDATE: "解決方案3支付方式超時自動歧義消除機制完成：1)新增LBK_getOtherWalletFromConfig函數：專門從0302配置文件讀取\"other\"錢包設定。2)修改LBK_handlePendingRecordTimeout函數：支付方式歧義消除超時時自動歸類到walletId=\"other\"。3)整合0070規範：確保walletId欄位對應正確。4)行為改善：Before用戶未選擇支付方式時記錄卡在pending狀態 | After 5分鐘後自動歸類到walletId=\"other\"，walletName=\"其他支付方式\"並完成記帳。5)同義詞學習：支付方式超時處理時自動建立同義詞關聯。預期效果：徹底解決支付方式歧義導致的記帳流程停滯問題。"
 };
