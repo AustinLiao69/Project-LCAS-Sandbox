@@ -4001,32 +4001,55 @@ async function LBK_handlePendingRecordTimeout(userId, pendingId, processId) {
       };
 
     } else if (currentStage === PENDING_STATES.PENDING_WALLET) {
-      // 支付方式歧義消除超時：自動歸類到"其他"錢包
-      LBK_logInfo(`階段二：支付方式歧義消除超時，自動歸類到"其他" [${processId}]`, "超時處理", userId, functionName);
+      // 解決方案3：支付方式歧義消除超時，自動歸類到"other"錢包
+      LBK_logInfo(`解決方案3：支付方式歧義消除超時，自動歸類到"other"錢包 [${processId}]`, "超時處理", userId, functionName);
 
-      // 獲取"其他"錢包配置
-      const defaultWalletResult = await LBK_getDefaultPaymentMethod(userId, processId);
-      const defaultWallet = defaultWalletResult.success ? {
-        walletId: defaultWalletResult.walletId,
-        walletName: defaultWalletResult.walletName
-      } : {
-        walletId: "other",
-        walletName: "其他"
-      };
+      // 解決方案3：調用0302配置文件獲取"other"錢包設定
+      const otherWalletResult = await LBK_getOtherWalletFromConfig(userId, processId);
+      let targetWallet;
 
-      // 更新Pending Record狀態
+      if (otherWalletResult.success) {
+        targetWallet = {
+          walletId: otherWalletResult.walletId,
+          walletName: otherWalletResult.walletName
+        };
+        LBK_logInfo(`解決方案3：從0302配置獲取"other"錢包: ${targetWallet.walletName} [${processId}]`, "超時處理", userId, functionName);
+      } else {
+        // 備用方案：使用硬編碼的"other"錢包
+        targetWallet = {
+          walletId: "other",
+          walletName: "其他支付方式"
+        };
+        LBK_logWarning(`解決方案3：0302配置讀取失敗，使用備用"other"錢包 [${processId}]`, "超時處理", userId, functionName);
+      }
+
+      // 解決方案3：更新Pending Record狀態，確保與0070規範的walletId欄位對應
       await LBK_updatePendingRecord(
         userId,
         pendingId,
         {
           stageData: {
             walletSelected: true,
-            selectedWallet: defaultWallet
+            selectedWallet: targetWallet
           }
         },
         PENDING_STATES.PENDING_WALLET,
         processId
       );
+
+      // 解決方案3：建立支付方式同義詞學習
+      const originalPaymentMethod = pendingData.parsedData?.paymentMethod || pendingData.parsedData?.rawWallet || "未知支付方式";
+      if (originalPaymentMethod && originalPaymentMethod !== "未知支付方式") {
+        const synonymsResult = await LBK_executeWalletSynonymsUpdate(
+          originalPaymentMethod,
+          targetWallet.walletId,
+          userId,
+          processId
+        );
+        if (synonymsResult.success) {
+          LBK_logInfo(`解決方案3：支付方式同義詞學習完成: "${originalPaymentMethod}" → "${targetWallet.walletName}" [${processId}]`, "超時處理", userId, functionName);
+        }
+      }
 
       // 完成記帳
       const completionResult = await LBK_completePendingRecord(userId, pendingId, processId);
@@ -4034,8 +4057,10 @@ async function LBK_handlePendingRecordTimeout(userId, pendingId, processId) {
       return {
         success: true,
         action: "wallet_timeout_resolved", 
-        message: `超時自動使用支付方式：「${defaultWallet.walletName}」`,
-        completionResult: completionResult
+        message: `超時自動歸類到支付方式：「${targetWallet.walletName}」`,
+        completionResult: completionResult,
+        walletId: targetWallet.walletId,
+        walletName: targetWallet.walletName
       };
 
     } else {
@@ -4060,6 +4085,94 @@ async function LBK_handlePendingRecordTimeout(userId, pendingId, processId) {
 
   } catch (error) {
     LBK_logError(`階段二：處理Pending Record超時失敗: ${error.toString()} [${processId}]`, "超時處理", userId, "PENDING_TIMEOUT_ERROR", error.toString(), functionName);
+    return {
+      success: false,
+      error: error.toString()
+    };
+  }
+}
+
+/**
+ * 解決方案3：從0302配置文件獲取"other"錢包設定
+ * @version 2025-12-31-V3.0.0
+ * @param {string} userId - 用戶ID
+ * @param {string} processId - 處理ID
+ * @returns {Promise<Object>} "other"錢包結果
+ * @description 解決方案3：專門用於支付方式超時處理，調用0302配置文件的"other"錢包設定
+ */
+async function LBK_getOtherWalletFromConfig(userId, processId) {
+  const functionName = "LBK_getOtherWalletFromConfig";
+  try {
+    LBK_logDebug(`解決方案3：從0302配置讀取"other"錢包設定 [${processId}]`, "其他錢包", userId, functionName);
+
+    // 讀取0302配置文件
+    try {
+      const configPath = path.join(__dirname, '../03. Default_config/0302. Default_wallet.json');
+
+      if (!fs.existsSync(configPath)) {
+        throw new Error(`0302配置文件不存在: ${configPath}`);
+      }
+
+      const configData = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+
+      if (!configData.default_wallets || !Array.isArray(configData.default_wallets)) {
+        throw new Error("0302配置格式錯誤：缺少default_wallets陣列");
+      }
+
+      // 解決方案3：查找walletId="other"的錢包
+      const otherWallet = configData.default_wallets.find(wallet => 
+        wallet.walletId === "other" && wallet.isActive === true
+      );
+
+      if (otherWallet) {
+        LBK_logInfo(`解決方案3：從0302配置讀取到"other"錢包: "${otherWallet.walletName}" [${processId}]`, "其他錢包", userId, functionName);
+        return {
+          success: true,
+          walletId: otherWallet.walletId,
+          walletName: otherWallet.walletName,
+          type: otherWallet.type || "other",
+          isOtherWallet: true,
+          queryMethod: "config_0302_other_wallet",
+          configVersion: configData.version
+        };
+      }
+
+      // 如果沒有找到walletId="other"的錢包，查找walletName包含"其他"的錢包
+      const fallbackOtherWallet = configData.default_wallets.find(wallet => 
+        wallet.walletName && wallet.walletName.includes("其他") && wallet.isActive === true
+      );
+
+      if (fallbackOtherWallet) {
+        LBK_logInfo(`解決方案3：使用0302配置中包含"其他"的錢包: "${fallbackOtherWallet.walletName}" [${processId}]`, "其他錢包", userId, functionName);
+        return {
+          success: true,
+          walletId: fallbackOtherWallet.walletId,
+          walletName: fallbackOtherWallet.walletName,
+          type: fallbackOtherWallet.type || "other",
+          isOtherWallet: true,
+          queryMethod: "config_0302_fallback_other",
+          configVersion: configData.version
+        };
+      }
+
+      throw new Error('0302配置中沒有找到"other"錢包或包含"其他"的錢包');
+
+    } catch (configError) {
+      LBK_logError(`解決方案3：讀取0302配置失敗: ${configError.toString()} [${processId}]`, "其他錢包", userId, "CONFIG_READ_ERROR", configError.toString(), functionName);
+      
+      // 備用方案：使用硬編碼的"other"錢包設定
+      return {
+        success: true,
+        walletId: "other",
+        walletName: "其他支付方式",
+        isOtherWallet: true,
+        queryMethod: "hardcoded_fallback",
+        fallbackReason: configError.toString()
+      };
+    }
+
+  } catch (error) {
+    LBK_logError(`解決方案3：獲取"other"錢包失敗: ${error.toString()} [${processId}]`, "其他錢包", userId, "GET_OTHER_WALLET_ERROR", error.toString(), functionName);
     return {
       success: false,
       error: error.toString()
@@ -5830,6 +5943,9 @@ module.exports = {
 
   // 階段二新增：超時處理機制函數
   LBK_handlePendingRecordTimeout, // 階段二新增：處理Pending Record超時
+  
+  // 解決方案3新增：支付方式超時自動歧義消除函數
+  LBK_getOtherWalletFromConfig, // 解決方案3：從0302配置獲取"other"錢包
 
   // 階段四新增：狀態機相關函數
   LBK_advancePendingFlow,
@@ -5845,8 +5961,8 @@ module.exports = {
   LBK_preprocessCommaNumbers: LBK_preprocessCommaNumbers,
   LBK_isValidCommaNumber: LBK_isValidCommaNumber,
 
-  // 版本資訊 - 階段二更新
-  MODULE_VERSION: "2.0.0", // 階段二：5分鐘超時自動歧義消除機制
+  // 版本資訊 - 解決方案3更新
+  MODULE_VERSION: "2.1.0", // 解決方案3：支付方式超時自動歧義消除機制
   MODULE_NAME: "LBK",
-  MODULE_UPDATE: "階段二5分鐘超時自動歧義消除機制完成：1)新增LBK_handlePendingRecordTimeout函數：處理科目與支付方式的超時自動歧義消除。2)修改LBK_createPendingRecord函數：設定5分鐘定時器和0070規範的expiresAt欄位。3)整合超時處理邏輯：科目歧義消除超時自動歸類到「999其他」，支付方式超時自動歸類到預設支付方式。4)行為改善：Before用戶未回應時pending record永久保留 | After 5分鐘後自動歸類並完成記帳流程。預期效果：完全解決用戶未回應導致記帳流程卡死的問題，提升系統自動化處理能力和用戶體驗。"
+  MODULE_UPDATE: "解決方案3支付方式超時自動歧義消除機制完成：1)新增LBK_getOtherWalletFromConfig函數：專門從0302配置文件讀取"other"錢包設定。2)修改LBK_handlePendingRecordTimeout函數：支付方式歧義消除超時時自動歸類到walletId='other'。3)整合0070規範：確保walletId欄位對應正確。4)行為改善：Before用戶未選擇支付方式時記錄卡在pending狀態 | After 5分鐘後自動歸類到walletId='other'，walletName='其他支付方式'並完成記帳。5)同義詞學習：支付方式超時處理時自動建立同義詞關聯。預期效果：徹底解決支付方式歧義導致的記帳流程停滯問題。"
 };
