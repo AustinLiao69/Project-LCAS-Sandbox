@@ -128,7 +128,7 @@ function WH_checkEnvironmentVariables() {
   const requiredEnvVars = [
     'LINE_CHANNEL_SECRET',
     'LINE_CHANNEL_ACCESS_TOKEN',
-    'Webhook_URL'
+    'Webhook_URL_Sandbox'
   ];
 
   const missingVars = [];
