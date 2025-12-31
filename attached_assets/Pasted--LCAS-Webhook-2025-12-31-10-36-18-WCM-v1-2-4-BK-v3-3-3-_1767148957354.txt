@@ -1,0 +1,307 @@
+🚀 LCAS Webhook 啟動中... 2025/12/31 上午10:36:18
+✅ 核心模組載入完成
+✅ WCM模組v1.2.4載入完成
+✅ BK模組v3.3.3載入完成
+✅ Firebase Admin SDK已初始化
+✅ BM預算管理模組v2.3.0載入完成
+🤝 CM 協作管理模組初始化中...
+[2025-12-31T02:36:18.857Z] [INFO] [CM] CM 協作管理模組初始化完成 [Location: CM_initialize]
+✅ CM協作管理模組v2.4.0載入完成
+✅ Firebase Admin SDK已初始化
+✅ WH模組環境變數檢查完整
+[WH 2.0.16 LOG] WH 2.3.0: 環境變數檢查完整 (INFO)
+✅ Webhook 模組載入完成
+📅 已載入 0 個排程設定
+[2025-12-31T02:36:19.756Z] [INFO] [SR] SR 排程提醒模組初始化完成 [Location: SR_initialize]
+[WH 2.0.16 LOG] WH 2.0.7: 收到LINE Webhook請求 [13215da0] (INFO)
+檢測到需要回覆的訊息，啟用同步處理 [13215da0]
+[WH 2.0.16 LOG] WH 2.0.16: 檢測到需要回覆的訊息，啟用同步處理 [13215da0] (INFO)
+開始非同步處理請求 [13215da0]
+[WH 2.0.16 LOG] WH 2.0.7: 開始非同步處理請求 [13215da0] (INFO)
+[WH 2.0.16 LOG] WH 2.0.3: 開始處理事件: message [13215da0] (INFO)
+處理消息事件: text [13215da0]
+收到文本消息: "口香糖22222" [13215da0]
+[WH 2.0.16 LOG] WH 2.0.3: 收到文本消息: "口香糖22222" [13215da0] (INFO)
+開始AM用戶驗證流程 [13215da0]
+[WH 2.0.16 LOG] WH 階段一: 開始AM用戶驗證流程 [13215da0] (INFO)
+[2025-12-31T02:41:31.016Z] [INFO] [DL] AM [User: 帳號存在性驗證: Uae47d9d496e4596d70ed724a7d6e2948 (LINE)] [Location: Object.DL_info]
+用戶帳本驗證流程完成: Uae47d9d496e4596d70ed724a7d6e2948 [13215da0]
+🔍 AM_getUserDefaultLedger: 查詢用戶 Uae47d9d496e4596d70ed724a7d6e2948 預設帳本...
+✅ AM_getUserDefaultLedger: 找到用戶預設帳本: user_Uae47d9d496e4596d70ed724a7d6e2948
+用戶帳本驗證通過: user_Uae47d9d496e4596d70ed724a7d6e2948 [13215da0]
+AM驗證完成，轉發至LBK [13215da0]
+[WH 2.0.16 LOG] WH 階段一: AM驗證完成，轉發至LBK [13215da0] (INFO)
+WH v2.5.0: 純粹轉發至LBK處理 - 口香糖22222
+[2025-12-31T02:41:31.769Z] [INFO] [DL] 開始處理LINE OA請求 [13215da0] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_processQuickBookkeeping]
+[2025-12-31T02:41:31.770Z] [DEBUG] [DL] 階段二：檢查統計查詢關鍵字: "口香糖22222" [13215da0] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_checkStatisticsKeyword]
+[2025-12-31T02:41:31.770Z] [DEBUG] [DL] 階段二：未檢測到統計查詢關鍵字: "口香糖22222" [13215da0] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_checkStatisticsKeyword]
+[2025-12-31T02:41:31.771Z] [DEBUG] [DL] 用戶訊息解析: "口香糖22222" [13215da0] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_parseUserMessage]
+[2025-12-31T02:41:31.771Z] [DEBUG] [DL] 階段一：開始千位分隔符格式解析: "口香糖22222" [13215da0] [Code: DEBUG] [Location: LBK_parseInputFormat]
+[2025-12-31T02:41:31.771Z] [DEBUG] [DL] 階段一：千位分隔符預處理: "口香糖22222" → "口香糖22222" [13215da0] [Code: DEBUG] [Location: LBK_parseInputFormat]
+[2025-12-31T02:41:31.772Z] [INFO] [DL] 階段三：解析結果: 科目="口香糖", 金額=22222, 支付方式="未指定" [13215da0] [Code: INFO] [Location: LBK_parseInputFormat]
+[2025-12-31T02:41:31.772Z] [DEBUG] [DL] 階段一：提取金額（支援千位分隔符）: "口香糖22222" [13215da0] [Code: DEBUG] [Location: LBK_extractAmount]
+[2025-12-31T02:41:31.772Z] [DEBUG] [DL] 階段一：提取純數字金額: "22222" = 22222 [13215da0] [Code: DEBUG] [Location: LBK_extractAmount]
+[2025-12-31T02:41:31.773Z] [DEBUG] [DL] 查詢科目代碼: "口香糖" [13215da0] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:41:31.773Z] [INFO] [DL] Firestore連線初始化成功 [Code: INFO] [Location: LBK_initializeFirestore]
+[2025-12-31T02:41:31.774Z] [DEBUG] [DL] 開始同義詞匹配，輸入: "口香糖" [13215da0] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:41:32.007Z] [DEBUG] [DL] 查詢categories集合結果: 11 筆資料 [13215da0] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:41:32.007Z] [DEBUG] [DL] 處理同義詞匹配: "口香糖"，科目: "生鮮雜貨"，同義詞數量: 1，同義詞內容: [家樂福] [13215da0] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:41:32.008Z] [DEBUG] [DL] 比較同義詞: "家樂福" vs "口香糖" [13215da0] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:41:32.008Z] [DEBUG] [DL] 處理同義詞匹配: "口香糖"，科目: "生活家用"，同義詞數量: 3，同義詞內容: [滑鼠墊, 香菸, 文具] [13215da0] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:41:32.008Z] [DEBUG] [DL] 比較同義詞: "滑鼠墊" vs "口香糖" [13215da0] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:41:32.008Z] [DEBUG] [DL] 比較同義詞: "香菸" vs "口香糖" [13215da0] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:41:32.008Z] [DEBUG] [DL] 比較同義詞: "文具" vs "口香糖" [13215da0] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:41:32.008Z] [DEBUG] [DL] 處理同義詞匹配: "口香糖"，科目: "交通費用"，同義詞數量: 2，同義詞內容: [停車費, 國道通行費] [13215da0] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:41:32.008Z] [DEBUG] [DL] 比較同義詞: "停車費" vs "口香糖" [13215da0] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:41:32.008Z] [DEBUG] [DL] 比較同義詞: "國道通行費" vs "口香糖" [13215da0] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:41:32.008Z] [DEBUG] [DL] 處理同義詞匹配: "口香糖"，科目: "餐飲費用"，同義詞數量: 5，同義詞內容: [口香糖, 綠茶, 麵包, 滷蛋, 豬耳朵] [13215da0] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:41:32.008Z] [DEBUG] [DL] 比較同義詞: "口香糖" vs "口香糖" [13215da0] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:41:32.008Z] [INFO] [DL] 找到精確同義詞匹配: "口香糖" → 同義詞:"口香糖" → 科目:"餐飲費用" [13215da0] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_getcategoryId]
+[2025-12-31T02:41:32.008Z] [DEBUG] [DL] 處理同義詞匹配: "口香糖"，科目: "娛樂消遣"，同義詞數量: 1，同義詞內容: [鑰匙圈] [13215da0] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:41:32.009Z] [DEBUG] [DL] 比較同義詞: "鑰匙圈" vs "口香糖" [13215da0] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:41:32.009Z] [DEBUG] [DL] 處理同義詞匹配: "口香糖"，科目: "運動嗜好"，同義詞數量: 0，同義詞內容: [] [13215da0] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:41:32.009Z] [DEBUG] [DL] 處理同義詞匹配: "口香糖"，科目: "寵物生活"，同義詞數量: 0，同義詞內容: [] [13215da0] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:41:32.009Z] [DEBUG] [DL] 處理同義詞匹配: "口香糖"，科目: "醫療費用"，同義詞數量: 0，同義詞內容: [] [13215da0] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:41:32.009Z] [DEBUG] [DL] 處理同義詞匹配: "口香糖"，科目: "財務收入"，同義詞數量: 0，同義詞內容: [] [13215da0] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:41:32.009Z] [DEBUG] [DL] 處理同義詞匹配: "口香糖"，科目: "財務支出"，同義詞數量: 0，同義詞內容: [] [13215da0] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:41:32.009Z] [DEBUG] [DL] 處理同義詞匹配: "口香糖"，科目: "其他"，同義詞數量: 1，同義詞內容: [狗飼料] [13215da0] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:41:32.009Z] [DEBUG] [DL] 比較同義詞: "狗飼料" vs "口香糖" [13215da0] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:41:32.009Z] [INFO] [DL] 階段二修復：科目解析成功: 口香糖 → 餐飲費用 (ID: 104) [13215da0] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_parseUserMessage]
+[2025-12-31T02:41:32.010Z] [DEBUG] [DL] 階段二：開始支付方式專項處理: "口香糖22222" [13215da0] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_parsePaymentMethod]
+[2025-12-31T02:41:32.010Z] [DEBUG] [DL] 階段一：開始千位分隔符格式解析: "口香糖22222" [13215da0] [Code: DEBUG] [Location: LBK_parseInputFormat]
+[2025-12-31T02:41:32.010Z] [DEBUG] [DL] 階段一：千位分隔符預處理: "口香糖22222" → "口香糖22222" [13215da0] [Code: DEBUG] [Location: LBK_parseInputFormat]
+[2025-12-31T02:41:32.010Z] [INFO] [DL] 階段三：解析結果: 科目="口香糖", 金額=22222, 支付方式="未指定" [13215da0] [Code: INFO] [Location: LBK_parseInputFormat]
+[2025-12-31T02:41:32.010Z] [INFO] [DL] 階段二：信任第一階段解析結果: "未檢測到" [13215da0] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_parsePaymentMethod]
+[2025-12-31T02:41:32.011Z] [DEBUG] [DL] 階段二：用戶未提供支付方式，動態查詢0302預設配置 [13215da0] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_parsePaymentMethod]
+[2025-12-31T02:41:32.013Z] [DEBUG] [DL] 階段二：調用WCM模組獲取預設支付方式配置 [13215da0] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getDefaultPaymentMethod]
+[2025-12-31T02:41:32.014Z] [INFO] [DL] 開始載入預設配置資料... [Location: Object.DL_info]
+[2025-12-31T02:41:32.015Z] [INFO] [DL] 檢查配置目錄路徑: /home/runner/03. Default_config [Location: Object.DL_info]
+[2025-12-31T02:41:32.015Z] [INFO] [DL] 檢查配置目錄路徑: /home/runner/workspace/03. Default_config [Location: Object.DL_info]
+[2025-12-31T02:41:32.015Z] [INFO] [DL] 成功找到配置目錄: /home/runner/workspace/03. Default_config [Location: Object.DL_info]
+[2025-12-31T02:41:32.015Z] [INFO] [DL] 嘗試載入系統配置: /home/runner/workspace/03. Default_config/0301. Default_config.json [Location: Object.DL_info]
+[2025-12-31T02:41:32.015Z] [INFO] [DL] 載入系統配置成功: 1.0.0 [Location: Object.DL_info]
+[2025-12-31T02:41:32.016Z] [INFO] [DL] 載入0302預設錢包配置: /home/runner/workspace/03. Default_config/0302. Default_wallet.json [Location: Object.DL_info]
+[2025-12-31T02:41:32.016Z] [INFO] [DL] 成功載入0302預設帳戶配置: 4個帳戶定義 [Location: Object.DL_info]
+[2025-12-31T02:41:32.021Z] [INFO] [DL] 嘗試載入貨幣配置: /home/runner/workspace/03. Default_config/0303. Default_currency.json [Location: Object.DL_info]
+[2025-12-31T02:41:32.027Z] [INFO] [DL] 載入貨幣配置成功: 預設貨幣 TWD [Location: Object.DL_info]
+[2025-12-31T02:41:32.032Z] [INFO] [DL] 預設配置載入完成，已建立共用快取 (版本: 1.0.0): system, wallets, currency [Location: Object.DL_info]
+[2025-12-31T02:41:32.036Z] [INFO] [DL] 階段二：從WCM配置獲取到預設錢包: "信用卡" [13215da0] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_getDefaultPaymentMethod]
+[2025-12-31T02:41:32.042Z] [INFO] [DL] 階段二：使用0302預設配置: "信用卡" [13215da0] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_parsePaymentMethod]
+[2025-12-31T02:41:32.062Z] [DEBUG] [DL] 階段二：嚴格驗證錢包存在: walletId="credit", walletName="信用卡" [13215da0] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_validateWalletExists]
+[2025-12-31T02:41:32.088Z] [DEBUG] [DL] 階段二：使用 walletId 查詢: credit [13215da0] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_validateWalletExists]
+[2025-12-31T02:41:32.338Z] [INFO] [DL] 階段二：透過 walletId 驗證成功: credit → 信用卡 [13215da0] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_validateWalletExists]
+[2025-12-31T02:41:32.339Z] [DEBUG] [DL] 執行記帳操作 [13215da0] (嘗試 1/3) [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_executeBookkeeping]
+[2025-12-31T02:41:32.339Z] [DEBUG] [DL] 查詢科目代碼: "口香糖" [13215da0] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:41:32.339Z] [DEBUG] [DL] 開始同義詞匹配，輸入: "口香糖" [13215da0] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:41:32.903Z] [DEBUG] [DL] 查詢categories集合結果: 11 筆資料 [13215da0] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:41:32.903Z] [DEBUG] [DL] 處理同義詞匹配: "口香糖"，科目: "生鮮雜貨"，同義詞數量: 1，同義詞內容: [家樂福] [13215da0] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:41:32.903Z] [DEBUG] [DL] 比較同義詞: "家樂福" vs "口香糖" [13215da0] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:41:32.903Z] [DEBUG] [DL] 處理同義詞匹配: "口香糖"，科目: "生活家用"，同義詞數量: 3，同義詞內容: [滑鼠墊, 香菸, 文具] [13215da0] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:41:32.903Z] [DEBUG] [DL] 比較同義詞: "滑鼠墊" vs "口香糖" [13215da0] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:41:32.903Z] [DEBUG] [DL] 比較同義詞: "香菸" vs "口香糖" [13215da0] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:41:32.903Z] [DEBUG] [DL] 比較同義詞: "文具" vs "口香糖" [13215da0] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:41:32.903Z] [DEBUG] [DL] 處理同義詞匹配: "口香糖"，科目: "交通費用"，同義詞數量: 2，同義詞內容: [停車費, 國道通行費] [13215da0] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:41:32.903Z] [DEBUG] [DL] 比較同義詞: "停車費" vs "口香糖" [13215da0] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:41:32.903Z] [DEBUG] [DL] 比較同義詞: "國道通行費" vs "口香糖" [13215da0] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:41:32.903Z] [DEBUG] [DL] 處理同義詞匹配: "口香糖"，科目: "餐飲費用"，同義詞數量: 5，同義詞內容: [口香糖, 綠茶, 麵包, 滷蛋, 豬耳朵] [13215da0] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:41:32.904Z] [DEBUG] [DL] 比較同義詞: "口香糖" vs "口香糖" [13215da0] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:41:32.904Z] [INFO] [DL] 找到精確同義詞匹配: "口香糖" → 同義詞:"口香糖" → 科目:"餐飲費用" [13215da0] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_getcategoryId]
+[2025-12-31T02:41:32.904Z] [DEBUG] [DL] 處理同義詞匹配: "口香糖"，科目: "娛樂消遣"，同義詞數量: 1，同義詞內容: [鑰匙圈] [13215da0] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:41:32.904Z] [DEBUG] [DL] 比較同義詞: "鑰匙圈" vs "口香糖" [13215da0] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:41:32.904Z] [DEBUG] [DL] 處理同義詞匹配: "口香糖"，科目: "運動嗜好"，同義詞數量: 0，同義詞內容: [] [13215da0] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:41:32.904Z] [DEBUG] [DL] 處理同義詞匹配: "口香糖"，科目: "寵物生活"，同義詞數量: 0，同義詞內容: [] [13215da0] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:41:32.904Z] [DEBUG] [DL] 處理同義詞匹配: "口香糖"，科目: "醫療費用"，同義詞數量: 0，同義詞內容: [] [13215da0] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:41:32.904Z] [DEBUG] [DL] 處理同義詞匹配: "口香糖"，科目: "財務收入"，同義詞數量: 0，同義詞內容: [] [13215da0] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:41:32.904Z] [DEBUG] [DL] 處理同義詞匹配: "口香糖"，科目: "財務支出"，同義詞數量: 0，同義詞內容: [] [13215da0] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:41:32.905Z] [DEBUG] [DL] 處理同義詞匹配: "口香糖"，科目: "其他"，同義詞數量: 1，同義詞內容: [狗飼料] [13215da0] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:41:32.905Z] [DEBUG] [DL] 比較同義詞: "狗飼料" vs "口香糖" [13215da0] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:41:33.042Z] [INFO] [DL] 記帳ID生成成功（純毫秒時間戳）: 1767148892905 [13215da0] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_generateBookkeepingId]
+[2025-12-31T02:41:33.043Z] [INFO] [DL] 使用1301標準路徑儲存: ledgers/user_Uae47d9d496e4596d70ed724a7d6e2948/transactions [13215da0] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_saveToFirestore]
+✅ 記帳成功: 1767148892905
+[2025-12-31T02:41:33.314Z] [INFO] [DL] 快速記帳完成 [13215da0] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_processQuickBookkeeping]
+[2025-12-31T02:41:33.315Z] [DEBUG] [DL] 階段二：開始處理備註文字: "口香糖", 金額: 22222, 支付方式: "信用卡" [undefined] [Code: DEBUG] [Location: LBK_removeAmountFromText]
+[2025-12-31T02:41:33.315Z] [INFO] [DL] 階段二：備註處理完成: "口香糖" → "口香糖" [undefined] [Code: INFO] [Location: LBK_removeAmountFromText]
+WH_replyMessage: 收到類型 object 的訊息對象
+WH_replyMessage: 訊息對象結構: ["success","message","responseMessage","moduleCode","module","data","processingTime","moduleVersion","errorType"]
+WH_replyMessage: 訊息對象預覽: {"success":true,"message":"✅ 記帳成功！\n💰 金額：22,222元 (支出)\n💳 支付方式：信用卡\n📅 時間：2025/12/31 上午10:41\n📂 科目：餐飲費用\n📝 備註：口香糖\n🔖 交易ID：1767148892905","responseMessage":"✅ 記帳成功！\n💰 金額：22,222元 (支出)\n💳 支付方式：信用卡...
+WH_replyMessage: 發現responseMessage屬性 (string), 長度=106
+WH_replyMessage: 發現message屬性 (string)
+WH_replyMessage: 使用responseMessage屬性 (✅ 記帳成功！
+💰 金額：22,222元 (支出)
+💳 ...)
+WH_replyMessage: 開始回覆訊息: ✅ 記帳成功！
+💰 金額：22,222元 (支出)
+💳 支付方式：信用卡
+📅 時間：2025/...
+[WH 2.0.16 LOG] WH 2.0.3: 開始回覆訊息: ✅ 記帳成功！
+💰 金額：22,222元 (支出)
+💳 支付方式：信用卡
+📅 時間：2025/... (INFO)
+[WH 2.0.16 LOG] WH 2.0.3: 發送API請求到LINE平台 (INFO)
+LINE API 回覆結果: 200
+回覆訊息成功
+[WH 2.0.16 LOG] WH 2.0.3: 回覆訊息成功發送 (INFO)
+LBK處理完成 [13215da0]
+[WH 2.0.16 LOG] WH 階段一: LBK處理完成 [13215da0] (INFO)
+DD_distributeData處理完成，結果預覽: {"success":true,"hasResponseMessage":true,"responseMsgLength":106,"errorType":"SUCCESS","moduleCode":"LBK","hasPartialData":false} [13215da0]
+WH v2.5.0: 完全信任LBK處理結果，準備轉發回覆 [13215da0]
+[WH 2.0.16 LOG] WH 2.5.1: DCN-0024 階段二 - 正確傳遞Quick Reply參數 [13215da0] (INFO)
+訊息處理結果: {"success":true,"message":"✅ 記帳成功！\n💰 金額：22,222元 (支出)\n💳 支付方式：信用卡\n📅 時間：2025/12/31 上午10:41\n📂 科目：餐飲費用\n📝 備註：口香糖\n🔖 交易ID：1767148892905","responseMessage":"✅ 記帳成功！\n💰 金額：22,222元 (支出)\n💳 支付方式：信用卡\n📅 時間：2025/12/31 上午10:41\n📂 科目：餐飲費用\n📝 備註：口香糖\n🔖 交易ID：1767148892905","moduleCode":"LBK","module":"LBK","data":{"id":"1767148892905","transactionId":"1767148892905","amount":22222,"type":"expense","category":"104","subject":"餐飲費用","categoryName":"餐飲費用","description":"口香糖","paymentMethod":"信用卡","date":"2025-12-31","timestamp":"2025-12-31T02:41:33.314Z","ledgerId":"user_Uae47d9d496e4596d70ed724a7d6e2948","remark":"口香糖"},"processingTime":1766827939.56,"moduleVersion":"1.9.2","errorType":"SUCCESS"} [13215da0]
+非同步處理完成，已清理數據 [13215da0]
+[WH 2.0.16 LOG] WH 2.0.7: 非同步處理完成 [13215da0] (INFO)
+[WH 2.0.16 LOG] WH 2.0.7: 收到LINE Webhook請求 [403a05e2] (INFO)
+檢測到需要回覆的訊息，啟用同步處理 [403a05e2]
+[WH 2.0.16 LOG] WH 2.0.16: 檢測到需要回覆的訊息，啟用同步處理 [403a05e2] (INFO)
+開始非同步處理請求 [403a05e2]
+[WH 2.0.16 LOG] WH 2.0.7: 開始非同步處理請求 [403a05e2] (INFO)
+[WH 2.0.16 LOG] WH 2.0.3: 開始處理事件: message [403a05e2] (INFO)
+處理消息事件: text [403a05e2]
+收到文本消息: "口香糖2,222" [403a05e2]
+[WH 2.0.16 LOG] WH 2.0.3: 收到文本消息: "口香糖2,222" [403a05e2] (INFO)
+開始AM用戶驗證流程 [403a05e2]
+[WH 2.0.16 LOG] WH 階段一: 開始AM用戶驗證流程 [403a05e2] (INFO)
+[2025-12-31T02:41:41.959Z] [INFO] [DL] AM [User: 帳號存在性驗證: Uae47d9d496e4596d70ed724a7d6e2948 (LINE)] [Location: Object.DL_info]
+用戶帳本驗證流程完成: Uae47d9d496e4596d70ed724a7d6e2948 [403a05e2]
+🔍 AM_getUserDefaultLedger: 查詢用戶 Uae47d9d496e4596d70ed724a7d6e2948 預設帳本...
+✅ AM_getUserDefaultLedger: 找到用戶預設帳本: user_Uae47d9d496e4596d70ed724a7d6e2948
+用戶帳本驗證通過: user_Uae47d9d496e4596d70ed724a7d6e2948 [403a05e2]
+AM驗證完成，轉發至LBK [403a05e2]
+[WH 2.0.16 LOG] WH 階段一: AM驗證完成，轉發至LBK [403a05e2] (INFO)
+WH v2.5.0: 純粹轉發至LBK處理 - 口香糖2,222
+[2025-12-31T02:41:42.171Z] [INFO] [DL] 開始處理LINE OA請求 [403a05e2] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_processQuickBookkeeping]
+[2025-12-31T02:41:42.171Z] [DEBUG] [DL] 階段二：檢查統計查詢關鍵字: "口香糖2,222" [403a05e2] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_checkStatisticsKeyword]
+[2025-12-31T02:41:42.171Z] [DEBUG] [DL] 階段二：未檢測到統計查詢關鍵字: "口香糖2,222" [403a05e2] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_checkStatisticsKeyword]
+[2025-12-31T02:41:42.171Z] [DEBUG] [DL] 用戶訊息解析: "口香糖2,222" [403a05e2] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_parseUserMessage]
+[2025-12-31T02:41:42.171Z] [DEBUG] [DL] 階段一：開始千位分隔符格式解析: "口香糖2,222" [403a05e2] [Code: DEBUG] [Location: LBK_parseInputFormat]
+[2025-12-31T02:41:42.171Z] [DEBUG] [DL] 階段一：千位分隔符預處理: "口香糖2,222" → "口香糖2,222" [403a05e2] [Code: DEBUG] [Location: LBK_parseInputFormat]
+[2025-12-31T02:41:42.171Z] [DEBUG] [DL] 階段一：千位分隔符金額處理: "2,222" → "2222" [403a05e2] [Code: DEBUG] [Location: LBK_parseInputFormat]
+[2025-12-31T02:41:42.171Z] [DEBUG] [DL] 階段三：提取支付方式: ",222" [403a05e2] [Code: DEBUG] [Location: LBK_parseInputFormat]
+[2025-12-31T02:41:42.172Z] [INFO] [DL] 階段三：解析結果: 科目="口香糖", 金額=2222, 支付方式=",222" [403a05e2] [Code: INFO] [Location: LBK_parseInputFormat]
+[2025-12-31T02:41:42.172Z] [DEBUG] [DL] 階段一：提取金額（支援千位分隔符）: "口香糖2222" [403a05e2] [Code: DEBUG] [Location: LBK_extractAmount]
+[2025-12-31T02:41:42.172Z] [DEBUG] [DL] 階段一：提取純數字金額: "2222" = 2222 [403a05e2] [Code: DEBUG] [Location: LBK_extractAmount]
+[2025-12-31T02:41:42.172Z] [DEBUG] [DL] 查詢科目代碼: "口香糖" [403a05e2] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:41:42.172Z] [DEBUG] [DL] 開始同義詞匹配，輸入: "口香糖" [403a05e2] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:41:42.308Z] [DEBUG] [DL] 查詢categories集合結果: 11 筆資料 [403a05e2] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:41:42.308Z] [DEBUG] [DL] 處理同義詞匹配: "口香糖"，科目: "生鮮雜貨"，同義詞數量: 1，同義詞內容: [家樂福] [403a05e2] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:41:42.308Z] [DEBUG] [DL] 比較同義詞: "家樂福" vs "口香糖" [403a05e2] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:41:42.308Z] [DEBUG] [DL] 處理同義詞匹配: "口香糖"，科目: "生活家用"，同義詞數量: 3，同義詞內容: [滑鼠墊, 香菸, 文具] [403a05e2] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:41:42.308Z] [DEBUG] [DL] 比較同義詞: "滑鼠墊" vs "口香糖" [403a05e2] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:41:42.308Z] [DEBUG] [DL] 比較同義詞: "香菸" vs "口香糖" [403a05e2] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:41:42.308Z] [DEBUG] [DL] 比較同義詞: "文具" vs "口香糖" [403a05e2] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:41:42.309Z] [DEBUG] [DL] 處理同義詞匹配: "口香糖"，科目: "交通費用"，同義詞數量: 2，同義詞內容: [停車費, 國道通行費] [403a05e2] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:41:42.309Z] [DEBUG] [DL] 比較同義詞: "停車費" vs "口香糖" [403a05e2] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:41:42.311Z] [DEBUG] [DL] 比較同義詞: "國道通行費" vs "口香糖" [403a05e2] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:41:42.313Z] [DEBUG] [DL] 處理同義詞匹配: "口香糖"，科目: "餐飲費用"，同義詞數量: 5，同義詞內容: [口香糖, 綠茶, 麵包, 滷蛋, 豬耳朵] [403a05e2] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:41:42.315Z] [DEBUG] [DL] 比較同義詞: "口香糖" vs "口香糖" [403a05e2] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:41:42.317Z] [INFO] [DL] 找到精確同義詞匹配: "口香糖" → 同義詞:"口香糖" → 科目:"餐飲費用" [403a05e2] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_getcategoryId]
+[2025-12-31T02:41:42.319Z] [DEBUG] [DL] 處理同義詞匹配: "口香糖"，科目: "娛樂消遣"，同義詞數量: 1，同義詞內容: [鑰匙圈] [403a05e2] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:41:42.322Z] [DEBUG] [DL] 比較同義詞: "鑰匙圈" vs "口香糖" [403a05e2] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:41:42.324Z] [DEBUG] [DL] 處理同義詞匹配: "口香糖"，科目: "運動嗜好"，同義詞數量: 0，同義詞內容: [] [403a05e2] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:41:42.326Z] [DEBUG] [DL] 處理同義詞匹配: "口香糖"，科目: "寵物生活"，同義詞數量: 0，同義詞內容: [] [403a05e2] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:41:42.329Z] [DEBUG] [DL] 處理同義詞匹配: "口香糖"，科目: "醫療費用"，同義詞數量: 0，同義詞內容: [] [403a05e2] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:41:42.331Z] [DEBUG] [DL] 處理同義詞匹配: "口香糖"，科目: "財務收入"，同義詞數量: 0，同義詞內容: [] [403a05e2] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:41:42.334Z] [DEBUG] [DL] 處理同義詞匹配: "口香糖"，科目: "財務支出"，同義詞數量: 0，同義詞內容: [] [403a05e2] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:41:42.336Z] [DEBUG] [DL] 處理同義詞匹配: "口香糖"，科目: "其他"，同義詞數量: 1，同義詞內容: [狗飼料] [403a05e2] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:41:42.338Z] [DEBUG] [DL] 比較同義詞: "狗飼料" vs "口香糖" [403a05e2] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getcategoryId]
+[2025-12-31T02:41:42.344Z] [INFO] [DL] 階段二修復：科目解析成功: 口香糖 → 餐飲費用 (ID: 104) [403a05e2] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_parseUserMessage]
+[2025-12-31T02:41:42.347Z] [DEBUG] [DL] 階段二：開始支付方式專項處理: "口香糖2,222" [403a05e2] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_parsePaymentMethod]
+[2025-12-31T02:41:42.349Z] [DEBUG] [DL] 階段一：開始千位分隔符格式解析: "口香糖2,222" [403a05e2] [Code: DEBUG] [Location: LBK_parseInputFormat]
+[2025-12-31T02:41:42.351Z] [DEBUG] [DL] 階段一：千位分隔符預處理: "口香糖2,222" → "口香糖2,222" [403a05e2] [Code: DEBUG] [Location: LBK_parseInputFormat]
+[2025-12-31T02:41:42.353Z] [DEBUG] [DL] 階段一：千位分隔符金額處理: "2,222" → "2222" [403a05e2] [Code: DEBUG] [Location: LBK_parseInputFormat]
+[2025-12-31T02:41:42.354Z] [DEBUG] [DL] 階段三：提取支付方式: ",222" [403a05e2] [Code: DEBUG] [Location: LBK_parseInputFormat]
+[2025-12-31T02:41:42.357Z] [INFO] [DL] 階段三：解析結果: 科目="口香糖", 金額=2222, 支付方式=",222" [403a05e2] [Code: INFO] [Location: LBK_parseInputFormat]
+[2025-12-31T02:41:42.359Z] [INFO] [DL] 階段二：信任第一階段解析結果: ",222" [403a05e2] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_parsePaymentMethod]
+[2025-12-31T02:41:42.361Z] [DEBUG] [DL] 階段二：使用第一階段結果查詢wallet: ",222" [403a05e2] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_parsePaymentMethod]
+[2025-12-31T02:41:42.364Z] [DEBUG] [DL] 階段二：嚴格查詢錢包: ",222" [403a05e2] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getWalletByName]
+[2025-12-31T02:41:42.398Z] [DEBUG] [DL] 階段二：開始嚴格匹配，輸入: ",222" [403a05e2] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getWalletByName]
+[2025-12-31T02:41:42.887Z] [DEBUG] [DL] 階段二：查詢 wallets 集合結果: 3 筆 active 資料 [403a05e2] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getWalletByName]
+[2025-12-31T02:41:42.888Z] [DEBUG] [DL] 階段二：檢查同義詞: ",222"，錢包: "現金"，同義詞: [現金] [403a05e2] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getWalletByName]
+[2025-12-31T02:41:42.888Z] [DEBUG] [DL] 階段二：檢查同義詞: ",222"，錢包: "信用卡"，同義詞: [信用卡, 星展, line pay] [403a05e2] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getWalletByName]
+[2025-12-31T02:41:42.888Z] [DEBUG] [DL] 階段二：檢查同義詞: ",222"，錢包: "銀行轉帳"，同義詞: [銀行轉帳] [403a05e2] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getWalletByName]
+[2025-12-31T02:41:42.888Z] [INFO] [DL] 階段二：未在 wallets 子集合中找到精確匹配: ",222" [403a05e2] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_getWalletByName]
+[2025-12-31T02:41:42.888Z] [INFO] [DL] 階段二：未在wallet子集合中找到",222"，觸發歧義消除 [403a05e2] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_parsePaymentMethod]
+[2025-12-31T02:41:42.888Z] [INFO] [DL] 檢測到需要Wallet確認流程: ,222 [403a05e2] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_processQuickBookkeeping]
+[2025-12-31T02:41:42.888Z] [INFO] [DL] 階段二修復：創建Session時檢測到已解析科目: 餐飲費用 [403a05e2] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_createPendingRecord]
+[2025-12-31T02:41:42.889Z] [INFO] [DL] 階段二：記憶體Session創建成功，5分鐘超時定時器已設定: 1767148902888 [403a05e2] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_createPendingRecord]
+[2025-12-31T02:41:42.889Z] [DEBUG] [DL] 階段二：Session初始狀態 - 科目已選: true, 錢包已選: false, 過期時間: 2025-12-31T02:46:42.888Z [403a05e2] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_createPendingRecord]
+[2025-12-31T02:41:42.889Z] [INFO] [DL] 處理新錢包: ,222 [403a05e2] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_handleNewWallet]
+WH_replyMessage: 收到類型 object 的訊息對象
+WH_replyMessage: 訊息對象結構: ["success","message","responseMessage","quickReply","moduleCode","module","processingTime","moduleVersion","requiresUserSelection"]
+WH_replyMessage: 訊息對象預覽: {"success":true,"message":"檢測到未知支付方式「,222」，請問這屬於何種支付方式：","responseMessage":"檢測到未知支付方式「,222」，請問這屬於何種支付方式：","quickReply":{"items":[{"type":"action","action":{"type":"postback","label":"💵 現金","data":"wa...
+WH_replyMessage: 發現responseMessage屬性 (string), 長度=28
+WH_replyMessage: 發現message屬性 (string)
+WH_replyMessage: 使用responseMessage屬性 (檢測到未知支付方式「,222」，請問這屬於何種支付方式：...)
+WH_replyMessage: 開始回覆訊息: 檢測到未知支付方式「,222」，請問這屬於何種支付方式：
+[WH 2.0.16 LOG] WH 2.0.3: 開始回覆訊息: 檢測到未知支付方式「,222」，請問這屬於何種支付方式： (INFO)
+[WH 2.0.16 LOG] WH 2.0.3: 發送API請求到LINE平台 (INFO)
+LINE API 回覆結果: 200
+回覆訊息成功
+[WH 2.0.16 LOG] WH 2.0.3: 回覆訊息成功發送 (INFO)
+LBK處理完成 [403a05e2]
+[WH 2.0.16 LOG] WH 階段一: LBK處理完成 [403a05e2] (INFO)
+DD_distributeData處理完成，結果預覽: {"success":true,"hasResponseMessage":true,"responseMsgLength":28,"errorType":"無","moduleCode":"LBK","hasPartialData":false} [403a05e2]
+WH v2.5.0: 完全信任LBK處理結果，準備轉發回覆 [403a05e2]
+[WH 2.0.16 LOG] WH 2.5.1: DCN-0024 階段二 - 正確傳遞Quick Reply參數 [403a05e2] (INFO)
+訊息處理結果: {"success":true,"message":"檢測到未知支付方式「,222」，請問這屬於何種支付方式：","responseMessage":"檢測到未知支付方式「,222」，請問這屬於何種支付方式：","quickReply":{"items":[{"type":"action","action":{"type":"postback","label":"💵 現金","data":"wallet_yes_{\"walletName\":\"現金\",\"walletId\":\"dynamic_cash\",\"type\":\"cash\",\"originalInput\":\",222\",\"pendingId\":\"1767148902888\",\"dynamicQuery\":true}","displayText":"選擇現金"}},{"type":"action","action":{"type":"postback","label":"🏦 銀行轉帳","data":"wallet_yes_{\"walletName\":\"銀行轉帳\",\"walletId\":\"debit\",\"originalInput\":\",222\",\"pendingId\":\"1767148902888\",\"dynamicQuery\":true}","displayText":"選擇銀行轉帳"}},{"type":"action","action":{"type":"postback","label":"💳 信用卡","data":"wallet_yes_{\"walletName\":\"信用卡\",\"walletId\":\"dynamic_credit\",\"type\":\"credit_card\",\"originalInput\":\",222\",\"pendingId\":\"1767148902888\",\"dynamicQuery\":true}","displayText":"選擇信用卡"}}]},"moduleCode":"LBK","module":"LBK","processingTime":1766071358.471,"moduleVersion":"1.4.9","requiresUserSelection":true} [403a05e2]
+非同步處理完成，已清理數據 [403a05e2]
+[WH 2.0.16 LOG] WH 2.0.7: 非同步處理完成 [403a05e2] (INFO)
+[WH 2.0.16 LOG] WH 2.0.7: 收到LINE Webhook請求 [5a500d7a] (INFO)
+非回覆事件，使用非同步處理 [5a500d7a]
+開始非同步處理請求 [5a500d7a]
+[WH 2.0.16 LOG] WH 2.0.7: 開始非同步處理請求 [5a500d7a] (INFO)
+WH v2.5.3: 收到postback事件: wallet_yes_{"walletName":"信用卡","walletId":"dynamic_credit","type":"credit_card","originalInput":",222","pendingId":"1767148902888","dynamicQuery":true}
+[WH 2.0.16 LOG] WH 2.5.3: 階段一修復 - 識別postback事件類型: wallet_yes_{"walletName":"信用卡","walletId":"dynamic_credit","type":"credit_card","originalInput":",222","pendingId":"1767148902888","dynamicQuery":true} [5a500d7a] (INFO)
+WH v2.5.0: 純粹轉發至LBK處理 - wallet_yes_{"walletName":"信用卡","walletId":"dynamic_credit","type":"credit_card","originalInput":",222","pendingId":"1767148902888","dynamicQuery":true}
+[2025-12-31T02:42:04.552Z] [INFO] [DL] 開始處理LINE OA請求 [5a500d7a] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_processQuickBookkeeping]
+[2025-12-31T02:42:04.552Z] [INFO] [DL] 檢測到wallet postback格式訊息 [5a500d7a] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_processQuickBookkeeping]
+[2025-12-31T02:42:04.553Z] [INFO] [DL] 處理錢包確認postback: wallet_yes_{"walletName":"信用卡","walletId":"dynamic_credit","type":"credit_card","originalInput":",222","pendingId":"1767148902888","dynamicQuery":true} [5a500d7a] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_handleWalletConfirmationPostback]
+[2025-12-31T02:42:04.553Z] [INFO] [DL] 錢包確認選擇: 確認, 錢包: 信用卡 [5a500d7a] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_handleWalletConfirmationPostback]
+[2025-12-31T02:42:04.553Z] [INFO] [DL] 階段二修復：記憶體Session更新成功: 1767148902888 (PENDING_WALLET → PENDING_WALLET) [5a500d7a] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_updatePendingRecord]
+[2025-12-31T02:42:04.553Z] [DEBUG] [DL] 階段二修復：狀態變更詳情 - 科目選擇: true → true, 錢包選擇: false → true [5a500d7a] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_updatePendingRecord]
+[2025-12-31T02:42:04.554Z] [INFO] [DL] 階段一修復：執行錢包同義詞更新: ",222" → 目標:dynamic_credit [5a500d7a] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_executeWalletSynonymsUpdate]
+[2025-12-31T02:42:04.554Z] [DEBUG] [DL] 階段一：開始千位分隔符格式解析: ",222" [5a500d7a] [Code: DEBUG] [Location: LBK_parseInputFormat]
+[2025-12-31T02:42:04.554Z] [DEBUG] [DL] 階段一：千位分隔符預處理: ",222" → ",222" [5a500d7a] [Code: DEBUG] [Location: LBK_parseInputFormat]
+[2025-12-31T02:42:04.554Z] [INFO] [DL] 階段三：解析結果: 科目=",", 金額=222, 支付方式="未指定" [5a500d7a] [Code: INFO] [Location: LBK_parseInputFormat]
+[2025-12-31T02:42:04.554Z] [INFO] [DL] 階段一修復：將輸入視為支付方式關鍵字: ",222" [5a500d7a] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_executeWalletSynonymsUpdate]
+[2025-12-31T02:42:04.660Z] [INFO] [DL] 階段一修復：開始智能匹配目標錢包 [5a500d7a] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_executeWalletSynonymsUpdate]
+[2025-12-31T02:42:04.660Z] [DEBUG] [DL] 階段二：調用WCM模組獲取預設支付方式配置 [5a500d7a] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getDefaultPaymentMethod]
+[2025-12-31T02:42:04.660Z] [INFO] [DL] ✅ 使用快取的共用配置，避免重複載入 (版本: 1.0.0) [Location: Object.DL_info]
+[2025-12-31T02:42:04.660Z] [INFO] [DL] 階段二：從WCM配置獲取到預設錢包: "信用卡" [5a500d7a] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_getDefaultPaymentMethod]
+[2025-12-31T02:42:04.660Z] [INFO] [DL] 階段一修復：使用預設錢包: 信用卡 [5a500d7a] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_executeWalletSynonymsUpdate]
+[2025-12-31T02:42:04.994Z] [INFO] [DL] 階段一修復：同義詞學習成功: ",222" → 錢包: "信用卡" [5a500d7a] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_executeWalletSynonymsUpdate]
+[2025-12-31T02:42:04.995Z] [DEBUG] [DL] 階段三：從記憶體獲取Session成功: 1767148902888 [5a500d7a] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_getPendingRecord]
+[2025-12-31T02:42:04.995Z] [INFO] [DL] 階段三：最終記帳資料驗證 - 金額: 2222, 科目: 餐飲費用, 支付方式: 信用卡 [5a500d7a] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_completePendingRecord]
+[2025-12-31T02:42:04.996Z] [INFO] [DL] 階段三：Firestore記帳資料最終驗證 - ID: 1767148924995, 金額: 2222, 類型: expense, 科目: undefined, categoryId: 104 [5a500d7a] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_completePendingRecord]
+[2025-12-31T02:42:04.996Z] [INFO] [DL] 階段四：直接執行記帳儲存，跳過重複科目查詢 [5a500d7a] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_completePendingRecord]
+[2025-12-31T02:42:04.996Z] [INFO] [DL] 使用1301標準路徑儲存: ledgers/user_Uae47d9d496e4596d70ed724a7d6e2948/transactions [5a500d7a] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_saveToFirestore]
+[2025-12-31T02:42:05.227Z] [DEBUG] [DL] 階段三：輔助元數據已排程批次寫入: 1767148924995 (佇列長度: 1) [5a500d7a] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_scheduleAuxiliaryDataWrite]
+[2025-12-31T02:42:05.227Z] [INFO] [DL] 階段三：記帳結果資料構建完成 - 所有欄位已驗證無undefined值 [5a500d7a] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_completePendingRecord]
+[2025-12-31T02:42:05.227Z] [DEBUG] [DL] 階段三：記憶體Session清理完成: 1767148902888 [5a500d7a] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: DEBUG] [Location: LBK_completePendingRecord]
+[2025-12-31T02:42:05.227Z] [INFO] [DL] 階段四：Pending Record 記帳完成: 1767148902888 → 1767148924995 [5a500d7a] [User: Uae47d9d496e4596d70ed724a7d6e2948] [Code: INFO] [Location: LBK_completePendingRecord]
+[2025-12-31T02:42:05.227Z] [DEBUG] [DL] 階段二：開始處理備註文字: "記帳項目", 金額: 2222, 支付方式: "信用卡" [undefined] [Code: DEBUG] [Location: LBK_removeAmountFromText]
+[2025-12-31T02:42:05.228Z] [INFO] [DL] 階段二：備註處理完成: "記帳項目" → "記帳項目" [undefined] [Code: INFO] [Location: LBK_removeAmountFromText]
+[2025-12-31T02:42:05.228Z] [DEBUG] [DL] 階段二：開始處理備註文字: "記帳項目", 金額: 2222, 支付方式: "信用卡" [undefined] [Code: DEBUG] [Location: LBK_removeAmountFromText]
+[2025-12-31T02:42:05.228Z] [INFO] [DL] 階段二：備註處理完成: "記帳項目" → "記帳項目" [undefined] [Code: INFO] [Location: LBK_removeAmountFromText]
+WH_replyMessage: 收到類型 object 的訊息對象
+WH_replyMessage: 訊息對象結構: ["success","action","transactionId","bookkeepingData","message","responseMessage","moduleCode","module"]
+WH_replyMessage: 訊息對象預覽: {"success":true,"action":"transaction_completed","transactionId":"1767148924995","bookkeepingData":{"id":"1767148924995","transactionId":"1767148924995","amount":2222,"type":"expense","category":"104"...
+WH_replyMessage: 發現responseMessage屬性 (string), 長度=106
+WH_replyMessage: 發現message屬性 (string)
+WH_replyMessage: 使用responseMessage屬性 (✅ 記帳成功！
+💰 金額：2,222元 (支出)
+💳 支...)
+WH_replyMessage: 開始回覆訊息: ✅ 記帳成功！
+💰 金額：2,222元 (支出)
+💳 支付方式：信用卡
+📅 時間：2025/1...
+[WH 2.0.16 LOG] WH 2.0.3: 開始回覆訊息: ✅ 記帳成功！
+💰 金額：2,222元 (支出)
+💳 支付方式：信用卡
+📅 時間：2025/1... (INFO)
+[WH 2.0.16 LOG] WH 2.0.3: 發送API請求到LINE平台 (INFO)
+LINE API 回覆結果: 200
+回覆訊息成功
+[WH 2.0.16 LOG] WH 2.0.3: 回覆訊息成功發送 (INFO)
+[WH 2.0.16 LOG] WH 2.5.3: postback處理完成並回覆用戶 [5a500d7a] (INFO)
+非同步處理完成，已清理數據 [5a500d7a]
+[WH 2.0.16 LOG] WH 2.0.7: 非同步處理完成 [5a500d7a] (INFO)
