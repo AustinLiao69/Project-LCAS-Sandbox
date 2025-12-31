@@ -99,8 +99,8 @@ const WH_CONFIG = {
     LOG_SUBCOLLECTION: "log", // 日誌子集合名稱
   },
   LINE: {
-    CHANNEL_SECRET: process.env.LINE_CHANNEL_SECRET, // 從環境變數獲取 LINE Channel Secret
-    CHANNEL_ACCESS_TOKEN: process.env.LINE_CHANNEL_ACCESS_TOKEN, // 從環境變數獲取 LINE Channel Access Token
+    CHANNEL_SECRET: process.env.LINE_CHANNEL_SECRET_Sandbox, // 從環境變數獲取 LINE Channel Secret (Sandbox)
+    CHANNEL_ACCESS_TOKEN: process.env.LINE_CHANNEL_ACCESS_TOKEN_Sandbox, // 從環境變數獲取 LINE Channel Access Token (Sandbox)
     Webhook_URL: process.env.Webhook_URL_Sandbox, // 從環境變數獲取 Webhook URL
   },
   RETRY: {
@@ -126,8 +126,8 @@ const WH_QUICK_REPLY_CONFIG = {
  */
 function WH_checkEnvironmentVariables() {
   const requiredEnvVars = [
-    'LINE_CHANNEL_SECRET',
-    'LINE_CHANNEL_ACCESS_TOKEN',
+    'LINE_CHANNEL_SECRET_Sandbox',
+    'LINE_CHANNEL_ACCESS_TOKEN_Sandbox',
     'Webhook_URL_Sandbox'
   ];
 
