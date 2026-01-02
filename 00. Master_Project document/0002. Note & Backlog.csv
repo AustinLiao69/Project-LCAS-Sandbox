@@ -49,5 +49,6 @@ MM 	 DD 	 Description 	    Progress
 12	17	 設定LINE OA裡面輸入?會跳出使用說明	 Open
 12	17	 研究memo qucik reply功能	 Closed
 12	24	 若要編輯工作日誌或任何文件，請在main branch裡面做	 Critical
+01	02	 在LINE裡面圖文選單設定預設支付方式(user沒有輸入現金或信用卡的情況下)	 Ongoing
 
 
